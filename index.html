@@ -241,6 +241,8 @@ input[type=text]{width:100%;font:inherit;font-size:18px;padding:10px 12px;border
 @keyframes tin{from{opacity:0;transform:translateY(8px)}}
 @media (prefers-reduced-motion:reduce){.toast{animation:none}}
 
+/* на сенсорному екрані камера керується пальцями: кнопки нахилу, повороту й масштабу ховаємо */
+@media (pointer:coarse){.camctl,.bcam{display:none!important}}
 /* телефон у альбомному режимі: низький екран — усе компактніше */
 @media (max-height:520px){
   .avatar{width:46px;height:46px}.avatar b{width:22px;height:22px;font-size:11px;left:-5px;bottom:-5px}
@@ -1552,7 +1554,15 @@ function endBattle(o){
   const c=B.c;scene='map';$('#bhud').hidden=true;enterMap();
   applyResult(c,res);B=null;
 }
+// у бою: один палець ліворуч — джойстик; два пальці поза джойстиком — масштаб, поворот і нахил камери
+const BPT=new Map();let bPinch=null;
+const bGest=()=>{const[a,b]=[...BPT.values()];return{d:Math.hypot(a.x-b.x,a.y-b.y)||1,a:Math.atan2(b.y-a.y,b.x-a.x),my:(a.y+b.y)/2}};
 function bPointer(e,type){
+  if(e.pointerType==='touch'&&e.pointerId!==joy.id){
+    if(type==='down'&&(BPT.size>0||e.clientX>=VW*.55)){BPT.set(e.pointerId,{x:e.clientX,y:e.clientY});if(BPT.size===2)bPinch=bGest();if(BPT.size>=1&&e.clientX>=VW*.55)return}
+    else if(type==='move'&&BPT.has(e.pointerId)){BPT.set(e.pointerId,{x:e.clientX,y:e.clientY});if(bPinch&&BPT.size>=2){const g=bGest();camZoom(bPinch.d/g.d);let da=g.a-bPinch.a;da=Math.atan2(Math.sin(da),Math.cos(da));camRot(-da);camTilt((g.my-bPinch.my)*.004);bPinch=g}return}
+    else if(type!=='down'&&BPT.has(e.pointerId)){BPT.delete(e.pointerId);if(BPT.size<2)bPinch=null;return}
+  }
   if(type==='down'){if(e.clientX<VW*.55&&joy.id===null){joy.id=e.pointerId;joy.ox=e.clientX;joy.oy=e.clientY;joy.x=joy.y=0;cv.setPointerCapture?.(e.pointerId)}
     else if(e.pointerType==='mouse'&&e.clientX>=VW*.55){atkHeld=true}}
   else if(type==='move'){if(e.pointerId===joy.id){const dx=e.clientX-joy.ox,dy=e.clientY-joy.oy,l=Math.hypot(dx,dy);if(l>4){const m=Math.min(l,55)/55;joy.x=dx/l*m;joy.y=dy/l*m}else joy.x=joy.y=0}}
@@ -2126,7 +2136,7 @@ function drawMap3D(dt){
   const M=GL.map;if(!M)return;
   const v=VIEW.map;if(cam.follow){cam.x=G.x;cam.y=G.y}cam.x=clamp(cam.x,0,W);cam.y=clamp(cam.y,0,H);
   const ty=Math.max(0,heightAt(cam.x,cam.y));placeCam(v,v.yaw,cam.x,ty,cam.y);
-  M.sc.fog.near=v.d*.95;M.sc.fog.far=v.d*3.4;fitSun(M.sun,cam.x,ty,cam.y,Math.min(1700,v.d*1.15));
+  M.sc.fog.near=v.d*(v.d>3500?1.4:.95);M.sc.fog.far=v.d*(v.d>3500?4.2:3.4);fitSun(M.sun,cam.x,ty,cam.y,Math.min(2600,v.d*1.15));
   M.flags.forEach(f=>{const fc=FAC[f.t.f].color;if(f.c!==fc){f.c=fc;f.flag.material.color.set(fc)}f.flag.rotation.y=Math.sin(performance.now()/500+f.t.id)*.25});
   const {rx,rz}=camVecs(v.yaw),seen=new Set(),now=performance.now();
   const put=(key,x,y,i,kind,moving,dirx,diry,Hw)=>{let F=M.figs.get(key);if(!F){F=figSprite(M.sc);M.figs.set(key,F)}seen.add(key);
@@ -2159,7 +2169,8 @@ function drawMap3D(dt){
     const fx=q.x-w/2-4,fy=q.y-fs*.82,s=fs*.62;ctx.fillStyle=col;ctx.strokeStyle='rgba(12,10,6,.85)';ctx.lineWidth=1.4;
     ctx.beginPath();ctx.moveTo(fx-s*.5,fy);ctx.lineTo(fx+s*.5,fy);ctx.lineTo(fx+s*.5,fy+s*.75);ctx.lineTo(fx,fy+s*1.05);ctx.lineTo(fx-s*.5,fy+s*.75);ctx.closePath();ctx.fill();ctx.stroke()};
   for(const t of G.towns)lab(t.type==='city'?t.name.toUpperCase():t.name,t.x,t.y,heightAt(t.x,t.y)+(t.type==='city'?95:t.type==='castle'?70:40),FAC[t.f].color,t.type!=='village',t.f===0);
-  for(const p of G.parties){lab(`${p.name} · ${total(p.army)}`,p.x,p.y,terAt(p.x,p.y)===T_WATER?30:heightAt(p.x,p.y)+32,isHostile(p)?'#e65c4e':FAC[p.f].color,false)}
+  // здалеку підписуємо лише лордів, щоб назви не налазили
+  for(const p of G.parties){if(v.d>2600&&p.kind!=='lord')continue;lab(`${p.name} · ${total(p.army)}`,p.x,p.y,terAt(p.x,p.y)===T_WATER?30:heightAt(p.x,p.y)+32,isHostile(p)?'#e65c4e':FAC[p.f].color,false)}
   lab(`Ви · ${total(G.army)}`,G.x,G.y,terAt(G.x,G.y)===T_WATER?34:heightAt(G.x,G.y)+34,FAC[0].color,false,true);
   const na=nightA(G.hour);if(na>0){ctx.fillStyle=`rgba(12,18,45,${na})`;ctx.fillRect(0,0,VW,VH)}
   const cmp=$('#zc svg');if(cmp)cmp.style.transform=`rotate(${v.yaw}rad)`;
@@ -2246,7 +2257,7 @@ function drawBattle3D(dt){
 function camView(){return scene==='battle'?VIEW.battle:VIEW.map}
 function camTilt(d){const v=camView();v.pitch=clamp(v.pitch+d,.2,1.4)}
 function camRot(d){const v=camView();v.yaw+=d;if(scene==='battle')v.cyaw=v.yaw}
-function camZoom(f){const v=camView();v.d=clamp(v.d*f,scene==='battle'?380:650,scene==='battle'?2600:3800)}
+function camZoom(f){const v=camView();v.d=clamp(v.d*f,scene==='battle'?380:650,scene==='battle'?3200:7000)}
 
 /* ================= HUD ================= */
 let hudT=0;
