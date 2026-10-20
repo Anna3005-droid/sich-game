@@ -90,6 +90,8 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
 .sidebar button .ic{width:26px;height:26px}
 .sidebar button span{position:absolute;left:52px;white-space:nowrap;background:rgba(20,23,27,.92);border:1px solid #5b4a26;padding:3px 8px;border-radius:4px;font-size:12px;opacity:0;pointer-events:none;transition:opacity .15s}
 .sidebar button:hover span,.sidebar button:focus-visible span{opacity:1}
+.sidebar button em{position:absolute;right:2px;top:2px;min-width:16px;height:16px;padding:0 3px;border-radius:8px;background:var(--blood);color:#fff;font:700 10px/16px 'Alegreya Sans',sans-serif;font-style:normal}
+.sidebar button em:empty{display:none}
 .sidebar button.on{color:var(--gold);background:rgba(216,164,67,.12)}
 .corner{position:fixed;right:max(10px,env(safe-area-inset-right,0px));bottom:calc(env(safe-area-inset-bottom,0px) + 12px);display:flex;align-items:flex-end;gap:6px}
 .camctl{display:flex;flex-direction:column;gap:6px;align-items:center}
@@ -328,6 +330,7 @@ input[type=text]{width:100%;font:inherit;font-size:18px;padding:10px 12px;border
   <symbol id="i-market" viewBox="0 0 24 24"><path d="M3 9l2-5h14l2 5M3 9c0 1.7 1.3 3 3 3s3-1.3 3-3c0 1.7 1.3 3 3 3s3-1.3 3-3c0 1.7 1.3 3 3 3s3-1.3 3-3M5 12v8h14v-8M9 20v-4h6v4"/></symbol>
   <symbol id="i-horse" viewBox="0 0 24 24"><path d="M7 21v-5c-2-1-3-3-3-5 0-4 3-7 7-7l2-2 1 3c3 1 6 4 6 8l-2 1-3-2v9"/><path d="M10 8h.01"/></symbol>
   <symbol id="i-boat" viewBox="0 0 24 24"><path d="M3 14h18l-3 5H6z"/><path d="M12 3v11M12 4l6 8h-6"/></symbol>
+  <symbol id="i-bag" viewBox="0 0 24 24"><path d="M8 7V5a4 4 0 0 1 8 0v2"/><path d="M5 9a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2z"/><path d="M5 13h14M10 13v2h4v-2"/></symbol>
   <symbol id="i-map" viewBox="0 0 24 24"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14M15 6v14"/></symbol>
   <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
   <symbol id="i-lock" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
@@ -347,6 +350,7 @@ input[type=text]{width:100%;font:inherit;font-size:18px;padding:10px 12px;border
 </div>
 <nav class="sidebar" id="side" hidden>
   <button id="dipBtn" aria-label="Дипломатія"><svg class="ic"><use href="#i-scroll"/></svg><span>Дипломатія</span></button>
+  <button id="bagBtn" aria-label="Рюкзак"><svg class="ic"><use href="#i-bag"/></svg><span>Рюкзак</span><em id="bagN"></em></button>
   <button id="eqBtn" aria-label="Спорядження"><svg class="ic"><use href="#i-helmet"/></svg><span>Спорядження</span></button>
   <button id="armyBtn" aria-label="Армія"><svg class="ic"><use href="#i-people"/></svg><span>Армія</span></button>
   <button id="waitBtn" aria-label="Чекати"><svg class="ic"><use href="#i-hourglass"/></svg><span>Чекати</span></button>
@@ -532,7 +536,7 @@ function spawnLord(f,name){
   const home=own.find(t=>t.type==='city')||own[0];
   const sp=cellC(nearestPassable(cellAt(home.x+ri(60)-30,home.y+40)));
   G.parties.push({id:G.nid++,kind:'lord',name,f,x:sp.x,y:sp.y,tx:sp.x,ty:sp.y,
-    army:{militia:8+ri(6),sword:6+ri(6),archer:5+ri(5),knight:2+ri(3)},goal:null,wait:ri(6),cool:0});
+    army:fillArmy({militia:8+ri(6),sword:5+ri(5),axe:ri(4),archer:4+ri(4),musket:ri(3),knight:2+ri(3)}),goal:null,wait:ri(6),cool:0});
   return true;
 }
 function spawnBandit(){
@@ -543,7 +547,7 @@ function spawnBandit(){
     if(!passable(cellAt(x,y))||terAt(x,y)===T_FORD)continue;
     const lvl=Math.min(4,1+G.day/12);
     G.parties.push({id:G.nid++,kind:'bandit',name:BANDIT_NAMES[ri(BANDIT_NAMES.length)],f:4,x,y,tx:x,ty:y,
-      army:{militia:4+ri(5)+ri(3*lvl),sword:ri(2*lvl),archer:ri(2+lvl),knight:0},goal:null,wait:0,cool:0,hx:x,hy:y});
+      army:fillArmy({militia:4+ri(5)+ri(3*lvl),sword:ri(2*lvl),axe:ri(lvl),archer:ri(2+lvl),knight:0}),goal:null,wait:0,cool:0,hx:x,hy:y});
     return;
   }
 }
@@ -838,6 +842,7 @@ function partySpeed(p){return Math.max(28,(p.kind==='bandit'?58:54)-total(p.army
 /* ================= auto-resolve ================= */
 function mkUnits(army,bonus){const a=[];for(const t of ORDER)for(let i=0;i<(army[t]||0);i++){const T=TYPES[t];a.push({t,hp:T.hp*(1+bonus),atk:T.atk/T.cd,def:T.def})}return a}
 function simulate(A,Bk,o={}){
+  fillArmy(A);fillArmy(Bk);
   let a=mkUnits(A,0),b=mkUnits(Bk,o.bonusB||0),hero=null;
   if(o.hero){hero={hero:1,hp:o.heroHp,atk:heroAtk()*2,def:heroDef()};a.push(hero)}
   for(let round=0;round<400&&a.length&&b.length;round++){
@@ -946,7 +951,7 @@ function newDay(){
     if(t.f===0){if(t.type==='village'||Math.random()<.5)t.garrison.militia++}
     else{const cap={city:55,castle:40,village:15}[t.type];if(total(t.garrison)<cap){const k=t.type==='village'?'militia':ORDER[ri(t.type==='castle'?4:3)];t.garrison[k]+=t.type==='city'?2:1}}
   });
-  G.parties.forEach(p=>{if(p.kind==='lord'&&total(p.army)<45){p.army[ORDER[ri(4)]]++;p.army.militia++}});
+  G.parties.forEach(p=>{if(p.kind==='lord'&&total(p.army)<45){fillArmy(p.army);p.army[ORDER[ri(ORDER.length)]]++;p.army.militia++}});
   G.respawn=G.respawn.filter(r=>{if(G.day>=r.day)return!spawnLord(r.f,r.name)&&G.towns.some(t=>t.f===r.f);return true});
   if(G.parties.filter(p=>p.kind==='bandit').length<14)spawnBandit();
   if(!G.won&&G.towns.every(t=>t.f===0)){G.won=true;toast('Усі землі під булавою Січі!')}
@@ -1007,8 +1012,8 @@ function openTown(t,tab){
   if(enemy){const[txt,col]=cmpText(armyPower(t.garrison)*1.15/playerPower());
     show(`${head}<p style="margin-top:12px"><span style="color:var(--blood)">Ви у війні з ними.</span> Ворота зачинені.</p><p class="cmp" style="--c:${col}">${txt}</p>
     <div class="acts"><button class="btn red" data-a="siege">Штурмувати</button><button class="btn ghost" data-a="close">Піти геть</button></div>`);return}
-  const T=[['build','Будівлі'],['hire','Найм'],['garrison','Гарнізон'],['dev','Розвиток']];
-  const body=tab==='build'?buildTab(t):tab==='garrison'?garrisonTab(t):tab==='dev'?devTab(t):hireTab(t);
+  const T=[['build','Будівлі'],['hire','Найм'],['market','Ринок'],['garrison','Гарнізон'],['dev','Розвиток']];
+  const body=tab==='market'?marketTab(t):tab==='build'?buildTab(t):tab==='garrison'?garrisonTab(t):tab==='dev'?devTab(t):hireTab(t);
   show(`${head}<div class="tabs" role="tablist">${T.map(([k,n])=>`<button role="tab" class="${k===tab?'on':''}" data-a="tab" data-v="${k}">${n}</button>`).join('')}</div>${body}
   <div class="acts"><button class="btn ghost" data-a="close">Вийти з міста</button></div>`);
 }
@@ -1034,6 +1039,12 @@ function garrisonTab(t){
     <button class="btn sm" data-a="gar" data-v="${k}:out" ${t.garrison[k]&&total(G.army)<armyLimit()?'':'disabled'}>Забрати</button></div>`).join('');
   return `<p class="muted">Гарнізон захищає місто, коли вас немає. Платня гарнізону вдвічі менша.</p><div class="rows">${rows}</div>
   <div class="acts"><button class="btn" data-a="garAll">Залишити всіх піших</button></div>`;
+}
+function marketTab(t){
+  const m=bldOf(t).market||0;
+  return `<p class="muted">Купці беруть речі з вашого рюкзака${m?`, ринок ${m}-го рівня платить на ${m*15}% більше`:''}. Рюкзак: ${bag().length} з ${BAG_CAP}.</p>
+  <div class="rows">${bagRows(t)||'<p class="muted">Рюкзак порожній. Трофеї з перемог кладіть у рюкзак, а тут продавайте.</p>'}</div>
+  ${bag().length?`<div class="acts"><button class="btn gold" data-a="bagSellAll">Продати все · ${bag().reduce((s,o)=>s+marketPrice(o,t),0)}</button></div>`:''}`;
 }
 function devTab(t){
   const own=t.f===0;
@@ -1070,8 +1081,8 @@ function equipPanel(){
     <div><svg class="ic"><use href="#i-shield"/></svg><b>${Math.round(heroDef()*100)}</b><small>Захист %</small></div>
     <div><svg class="ic"><use href="#i-banner"/></svg><b>${armyLimit()}</b><small>Лідерство</small></div>
   </div>
-  <p class="muted">Нове спорядження купуйте в коваля в містах і замках.</p>
-  <div class="acts"><button class="btn gold" data-a="close">Закрити</button></div>`);
+  <p class="muted">Нове спорядження купуйте в коваля в містах і замках або здобувайте в бою.</p>
+  <div class="acts"><button class="btn" data-a="bag">Рюкзак · ${bag().length}</button><button class="btn gold" data-a="close">Закрити</button></div>`);
 }
 function diplomacyPanel(){
   const rows=[1,2,3].map(f=>{const n=G.towns.filter(t=>t.f===f).length;return `<div class="row"><span><b style="color:${FAC[f].color}">${FAC[f].name}</b><span class="sub">володінь: ${n}${f===G.pf?' · ваша рідна фракція':''}</span></span>
@@ -1108,6 +1119,7 @@ function autoBattle(c){
   applyResult(c,{win:r.aWin,aSurv:r.aSurv,bSurv:r.bSurv,heroHp:r.heroHp,startA,startB,auto:true});
 }
 function applyResult(c,r){
+  fillArmy(r.startA);fillArmy(r.startB);fillArmy(r.aSurv);fillArmy(r.bSurv);fillArmy(G.army);if(!isFinite(G.gold))G.gold=0;
   const lost=zero(),killed=zero();let back=0,kTot=0,lTot=0,xp=0,loot=0;
   const rate=r.win||r.retreat?.35:.15;
   ORDER.forEach(k=>{const d=Math.max(0,r.startA[k]-r.aSurv[k]),b=Math.round(d*rate);G.army[k]=r.aSurv[k]+b;lost[k]=d-b;back+=b;lTot+=d-b;
@@ -1201,12 +1213,16 @@ const ACT={
   toTitle:()=>{save();closeModal();showTitle()},
   boats:()=>{const nx=BOAT_LV[(G.boatLv||0)+1];if(!nx||G.gold<nx.cost)return;G.gold-=nx.cost;G.boatLv=(G.boatLv||0)+1;G.path=null;SFX.play('coin');toast(`Нові човни: ${nx.n}. Пливемо швидше.`);openTown(CUR.town,'dev')},
   loot:()=>{SFX.play('loot');lootPanel()},
-  lootTake:i=>{const o=CUR.loot[+i];if(!o)return;const old=gearLv(o.slot),oldP=old?Math.round(GEAR[o.slot].items[old].cost*.4):0;G.hero[o.slot]=o.tier;G.gold+=oldP;CUR.loot.splice(+i,1);
-    toast(`Вдягнуто: ${GEAR[o.slot].items[o.tier].n}${oldP?` · старе продано за ${oldP}`:''}`);SFX.play('loot');lootPanel()},
-  lootSell:i=>{const o=CUR.loot[+i];if(!o)return;G.gold+=lootPrice(o);CUR.loot.splice(+i,1);SFX.play('coin');lootPanel()},
-  lootSellAll:()=>{const g=CUR.loot.reduce((s,o)=>s+lootPrice(o),0);G.gold+=g;CUR.loot=[];SFX.play('coin');toast(`Трофеї продано: +${g}`);lootPanel()},
-  // нерозібрані трофеї продаються самі, щоб нічого не пропало
-  lootDone:()=>{const L=CUR.loot||[];if(L.length){const g=L.reduce((s,o)=>s+lootPrice(o),0);G.gold+=g;toast(`Решту трофеїв продано: +${g}`)}CUR.loot=[];save();closeModal()},
+  lootTake:i=>{const o=CUR.loot[+i];if(!o)return;CUR.loot.splice(+i,1);wear(o);lootPanel()},
+  lootBag:i=>{const o=CUR.loot[+i];if(!o||!bagFree())return;CUR.loot.splice(+i,1);bag().push(o);SFX.play('loot');lootPanel()},
+  lootBagAll:()=>{while(CUR.loot.length&&bagFree())bag().push(CUR.loot.shift());SFX.play('loot');lootPanel()},
+  // що не влізло в рюкзак, лишається на полі бою
+  lootDone:()=>{const L=CUR.loot||[];let n=0;while(L.length&&bagFree()){bag().push(L.shift());n++}if(n)toast(`У рюкзак покладено: ${n}`);if(L.length)toast(`Рюкзак повний: ${L.length} ${L.length>1?'речі лишились':'річ лишилась'} на полі бою.`,true);CUR.loot=[];save();closeModal()},
+  bag:()=>bagPanel(),
+  bagWear:i=>{const o=bag()[+i];if(!o)return;bag().splice(+i,1);wear(o);save();CUR&&CUR.tab==='market'?openTown(CUR.town,'market'):bagPanel()},
+  bagDrop:i=>{bag().splice(+i,1);save();bagPanel()},
+  bagSell:i=>{const o=bag()[+i],t=CUR.town;if(!o||!t)return;const pr=marketPrice(o,t);G.gold+=pr;bag().splice(+i,1);SFX.play('coin');toast(`Продано за ${pr}`);save();CUR.tab==='market'?openTown(t,'market'):bagPanel()},
+  bagSellAll:()=>{const t=CUR.town;if(!t)return;const g=bag().reduce((s,o)=>s+marketPrice(o,t),0);G.gold+=g;G.bag=[];SFX.play('coin');toast(`Усе продано: +${g}`);save();CUR.tab==='market'?openTown(t,'market'):bagPanel()},
   help:()=>helpPanel(),
 };
 const peaceCost=()=>200+150*G.towns.filter(t=>t.f===0).length;
@@ -1313,14 +1329,34 @@ function rollLoot(killed,c){
   return out;
 }
 const lootPrice=o=>Math.round(GEAR[o.slot].items[o.tier].cost*.4);
+/* ================= рюкзак ================= */
+// речі з бою носимо з собою; продати можна на ринку в будь-якому місті, вдягнути — будь-коли
+const BAG_CAP=16;
+const bag=()=>G.bag||(G.bag=[]);
+const bagFree=()=>bag().length<BAG_CAP;
+// ринок у місті: що більше рівень ринку, то краща ціна
+const marketPrice=(o,t)=>Math.round(lootPrice(o)*(t?1+.15*(bldOf(t).market||0):1));
+function bagRows(sell){
+  return bag().map((o,i)=>{const S=GEAR[o.slot],it=S.items[o.tier],cur=gearLv(o.slot),better=o.tier>cur;
+    return `<div class="row"><span class="urow"><svg class="ic" style="width:30px;height:30px;color:${better?'var(--gold)':'var(--ash)'}"><use href="#i-${S.icon}"/></svg><span><b>${it.n}</b><span class="sub">${S.n} · ${S.fx(it)} · ${better?'<span style="color:var(--good)">краще за ваше</span>':o.tier===cur?'таке саме':'гірше за ваше'}</span></span></span>
+    <button class="btn sm ${better?'gold':''}" data-a="bagWear" data-v="${i}">Вдягнути</button>${sell?`<button class="btn sm" data-a="bagSell" data-v="${i}">Продати · ${marketPrice(o,sell)}</button>`:`<button class="btn sm ghost" data-a="bagDrop" data-v="${i}">Викинути</button>`}</div>`}).join('');
+}
+function bagPanel(){
+  const t=CUR&&CUR.town&&CUR.tab?CUR.town:null;
+  show(`<span class="eyebrow" style="color:var(--gold)">Рюкзак · ${bag().length} з ${BAG_CAP}</span><h2>Рюкзак</h2>
+  <p class="muted">${t?`Ринок у місті ${esc(t.name)} купує речі.`:'Продати речі можна на ринку в будь-якому місті (вкладка «Ринок»).'}</p>
+  <div class="rows">${bagRows(t)||'<p class="muted">Рюкзак порожній. Трофеї з перемог можна покласти сюди.</p>'}</div>
+  <div class="acts">${t&&bag().length?`<button class="btn" data-a="bagSellAll">Продати все · ${bag().reduce((s,o)=>s+marketPrice(o,t),0)}</button>`:''}<button class="btn gold" data-a="${t?'backTown':'close'}">${t?'До міста':'Закрити'}</button></div>`);
+}
+function wear(o){const old=gearLv(o.slot);G.hero[o.slot]=o.tier;if(old>0){const back={slot:o.slot,tier:old};if(bagFree())bag().push(back);else{G.gold+=lootPrice(back);toast('Рюкзак повний: старе спорядження продано.')}}SFX.play('loot');toast(`Вдягнуто: ${GEAR[o.slot].items[o.tier].n}`)}
 function lootPanel(){
   const L=CUR.loot||[];
   const rows=L.map((o,i)=>{const S=GEAR[o.slot],it=S.items[o.tier],cur=gearLv(o.slot),better=o.tier>cur;
     return `<div class="row"><span class="urow"><svg class="ic" style="width:30px;height:30px;color:${better?'var(--gold)':'var(--ash)'}"><use href="#i-${S.icon}"/></svg><span><b>${it.n}</b><span class="sub">${S.n} · ${S.fx(it)} · ${better?'<span style="color:var(--good)">краще за ваше</span>':o.tier===cur?'таке саме':'гірше за ваше'}</span></span></span>
-    <button class="btn sm ${better?'gold':''}" data-a="lootTake" data-v="${i}">Вдягнути</button><button class="btn sm" data-a="lootSell" data-v="${i}">+${lootPrice(o)}</button></div>`}).join('');
-  show(`<span class="eyebrow" style="color:var(--gold)">Трофеї</span><h2>Здобуте в бою</h2><p class="muted">Переможці мають право на зброю й одяг переможених. Вдягніть краще, решту продайте. Ваше старе спорядження продається само.</p>
+    <button class="btn sm ${better?'gold':''}" data-a="lootTake" data-v="${i}">Вдягнути</button><button class="btn sm" data-a="lootBag" data-v="${i}" ${bagFree()?'':'disabled'}>У рюкзак</button></div>`}).join('');
+  show(`<span class="eyebrow" style="color:var(--gold)">Трофеї</span><h2>Здобуте в бою</h2><p class="muted">Переможці мають право на зброю й одяг переможених. Вдягніть краще, решту покладіть у рюкзак і продайте на ринку в місті. Рюкзак: ${bag().length} з ${BAG_CAP}.</p>
   <div class="rows">${rows||'<p class="muted">Усе розібрано.</p>'}</div>
-  <div class="acts">${L.length?`<button class="btn" data-a="lootSellAll">Продати все · +${L.reduce((s,o)=>s+lootPrice(o),0)}</button>`:''}<button class="btn gold" data-a="lootDone">${CUR.lootNext?'Далі':'На мапу'}</button></div>`);
+  <div class="acts">${L.length?`<button class="btn" data-a="lootBagAll" ${bagFree()?'':'disabled'}>Усе в рюкзак</button>`:''}<button class="btn gold" data-a="lootDone">${CUR.lootNext?'Далі':'На мапу'}</button></div>`);
 }
 
 /* ================= real-time battle ================= */
@@ -1339,6 +1375,7 @@ function buildGround(siege){
   return c;
 }
 function startBattle(c){
+  fillArmy(G.army);if(c.party)fillArmy(c.party.army);if(c.town)fillArmy(c.town.garrison);
   const enemy=enemyArmyOf(c),f=c.party?c.party.f:c.town.f;
   B={c,f,units:[],arrows:[],fx:[],decals:[],corpses:[],shake:0,orders:Object.fromEntries(ORDER.map(k=>[k,'wait'])),order:'wait',fled:[[],[]],resA:[],resB:[],order:'charge',siege:!!c.town,bonus:c.town?.15:0,
     startA:{...G.army},startB:{...enemy},flash:0,over:false,ground:buildGround(!!c.town),uid:0};
@@ -2266,7 +2303,7 @@ function updateHud(){
     {const c=calOf(G.day,G.hour);$('#hDay').textContent=c.m[0].toUpperCase()+c.m.slice(1)+' '+c.y;$('#hDay').parentElement.title='День походу '+G.day}$('#hHour').textContent=String(Math.floor(G.hour)).padStart(2,'0')+':00';
     $('#hGold').textContent=Math.floor(G.gold).toLocaleString('uk-UA');$('#hArmy').innerHTML=`${total(G.army)}<b>/${armyLimit()}</b>`;$('#hSky').setAttribute('href',G.hour<6||G.hour>=20?'#x-moon':'#x-sun');
     $('#hHp').style.width=Math.round(G.hero.hp/G.hero.maxHp*100)+'%';
-    $('#hLvl').textContent=G.hero.lvl;$('#boatBtn').classList.toggle('on',G.sail!==false);$('#hTer').textContent=(terAt(G.x,G.y)===T_WATER?'Пливемо · '+BOAT_LV[G.boatLv||0].n.toLowerCase():TER_N[terAt(G.x,G.y)])+(G.target&&G.slope>.08?' · підйом':G.target&&G.slope<-.08?' · спуск':'')+' · '+SEASONS[G.season||0].n;$('#waitBtn').classList.toggle('on',!!G.waiting);
+    $('#hLvl').textContent=G.hero.lvl;$('#bagN').textContent=G.bag&&G.bag.length?G.bag.length:'';$('#boatBtn').classList.toggle('on',G.sail!==false);$('#hTer').textContent=(terAt(G.x,G.y)===T_WATER?'Пливемо · '+BOAT_LV[G.boatLv||0].n.toLowerCase():TER_N[terAt(G.x,G.y)])+(G.target&&G.slope>.08?' · підйом':G.target&&G.slope<-.08?' · спуск':'')+' · '+SEASONS[G.season||0].n;$('#waitBtn').classList.toggle('on',!!G.waiting);
   }else if(B){
     let a=B.resA.length,b=B.resB.length;B.units.forEach(u=>{if(!u.hero)u.team?b++:a++});
     {let m=0,n=0;B.units.forEach(u=>{if(u.team===0&&!u.hero){m+=u.mor/u.morMax;n++}});const pm=n?Math.round(m/n*100):100;$('#bM').textContent=pm+'%';$('#bM').style.color=pm<35?'#e0675a':pm<60?'#e0aa3e':'#9fd17a'}
@@ -2344,6 +2381,7 @@ $('#zc').onclick=()=>{cam.follow=true;VIEW.map.yaw=0};
 $('#waitBtn').onclick=()=>{G.waiting=!G.waiting;if(G.waiting)G.target=null;updateHud()};
 $('#heroBtn').onclick=()=>{if(!uiOpen)equipPanel()};
 $('#eqBtn').onclick=()=>equipPanel();
+$('#bagBtn').onclick=()=>{CUR={};bagPanel()};
 $('#dipBtn').onclick=()=>diplomacyPanel();
 $('#armyBtn').onclick=()=>armyPanel();
 $('#menuBtn').onclick=()=>menuPanel();
