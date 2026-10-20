@@ -7,6 +7,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#14171b">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="assets/icon.png">
 <style>body{margin:0}</style>
 </head>
 <body>
@@ -97,6 +99,28 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
 .compass circle{fill:rgba(26,22,14,.85);stroke:#8a6420;stroke-width:2}
 .compass path{fill:#6b5326;stroke:#c9a24a;stroke-width:.8}
 .compass path.n{fill:#d8a443}
+
+/* головне меню на весь екран: картинка «вміщається», по боках її ж розмита копія */
+#title{position:fixed;inset:0;z-index:40;background:#0d0f12;overflow:hidden}
+#title[hidden]{display:none!important}
+.tbg{position:absolute;inset:-40px;background:url(assets/title.jpg) center/cover;filter:blur(24px) brightness(.55)}
+.tbox{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);aspect-ratio:1672/941;width:min(100vw,calc(100vh*1672/941));box-shadow:0 0 60px rgba(0,0,0,.6)}
+.tbox img{width:100%;height:100%;display:block;user-select:none;-webkit-user-drag:none}
+.hs{position:absolute;padding:0;border:2px solid transparent;border-radius:6px;background:transparent;cursor:pointer;transition:box-shadow .15s,border-color .15s,background .15s}
+.hs.round{border-radius:50%}
+.hs:hover,.hs:focus-visible{border-color:rgba(255,215,122,.85);box-shadow:0 0 18px rgba(255,200,90,.55);background:rgba(255,215,122,.08);outline:none}
+.hs:active{background:rgba(255,215,122,.2)}
+.hs:disabled{background:rgba(10,10,10,.45);cursor:default}
+.hs.off::after{content:"";position:absolute;left:12%;right:12%;top:50%;height:2px;background:#e0675a;transform:rotate(-45deg)}
+.tload{position:absolute;left:4%;bottom:4%;width:36%;display:flex;flex-direction:column;gap:6px;color:#f3e7c6;font:600 clamp(11px,1.6vw,16px)/1.2 'Alegreya Sans',sans-serif;text-shadow:0 1px 3px #000}
+.tload i{display:block;height:6px;border-radius:3px;background:rgba(0,0,0,.55);overflow:hidden;border:1px solid rgba(216,164,67,.6)}
+.tload b{display:block;height:100%;width:0;background:linear-gradient(90deg,#b8862a,#f0c860);transition:width .3s}
+.tload.done{opacity:0;transition:opacity .6s}
+/* підказка повернути телефон */
+#rotate{display:none;position:fixed;inset:0;z-index:60;background:#14171b;color:#ece5d3;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:24px;font:600 20px 'Alegreya Sans',sans-serif}
+#rotate svg{width:96px;height:96px;fill:none;stroke:#d8a443;stroke-width:3;stroke-linecap:round;animation:rot 2s ease-in-out infinite}
+@keyframes rot{0%,30%{transform:rotate(0)}60%,100%{transform:rotate(-90deg)}}
+@media (orientation:portrait) and (max-width:900px) and (pointer:coarse){#rotate{display:flex}}
 
 /* modal sheet */
 .modal{position:fixed;inset:0;background:rgba(8,10,12,.55);display:flex;align-items:flex-end;justify-content:center;z-index:20}
@@ -216,6 +240,32 @@ input[type=text]{width:100%;font:inherit;font-size:18px;padding:10px 12px;border
 .toast.bad{border-left-color:var(--blood)}
 @keyframes tin{from{opacity:0;transform:translateY(8px)}}
 @media (prefers-reduced-motion:reduce){.toast{animation:none}}
+
+/* телефон у альбомному режимі: низький екран — усе компактніше */
+@media (max-height:520px){
+  .avatar{width:46px;height:46px}.avatar b{width:22px;height:22px;font-size:11px;left:-5px;bottom:-5px}
+  .topbar{gap:8px;padding-top:calc(env(safe-area-inset-top,0px) + 6px)}
+  .tb-right{flex-direction:row;align-items:center;gap:6px}.res{flex-wrap:nowrap}
+  .res .chip{padding:3px 7px;font-size:13px}.xi{width:20px;height:20px}
+  .hpline{width:70px}
+  .sidebar{top:calc(env(safe-area-inset-top,0px) + 60px);padding:2px}.sidebar::before,.sidebar::after{display:none}
+  .sidebar button{width:36px;height:36px}.sidebar button .ic{width:20px;height:20px}
+  .corner{gap:4px;bottom:calc(env(safe-area-inset-bottom,0px) + 6px)}.camctl{gap:4px}.zb{width:30px;height:30px;font-size:16px}.compass{width:48px;height:48px}
+  .bport{top:calc(env(safe-area-inset-top,0px) + 6px)}.avatar.sm{width:40px;height:40px}.bar{width:110px;height:7px}
+  #bhud .side{width:auto;flex-direction:row;flex-wrap:wrap;justify-content:end;max-width:46vw}#bhud .side .btn.sm{padding:5px 8px;font-size:12px}
+  .bcam{grid-template-columns:repeat(6,28px);gap:3px}.bcam .zb{width:28px;height:28px;font-size:14px}
+  .fight{width:140px;height:140px;bottom:calc(env(safe-area-inset-bottom,0px) + 10px)}
+  .rb{width:46px;height:46px}.rb .ic{width:22px;height:22px}.rb.big{width:64px;height:64px}.rb.big .ic{width:30px;height:30px}
+  #blockBtn{right:70px}#dashBtn{bottom:72px}#orderBtn{right:72px;bottom:68px;width:42px;height:42px}.rb small{bottom:-14px;font-size:10px}
+  .joybase{width:92px;height:92px;bottom:calc(env(safe-area-inset-bottom,0px) + 20px)}.joybase::after{inset:28px}
+  .squads{bottom:calc(env(safe-area-inset-bottom,0px) + 4px);gap:4px}.sq{width:42px;height:54px}.sq i{font-size:8px}.sq b{font-size:11px}
+  .modal{align-items:center}.sheet{max-width:min(720px,92vw);max-height:94%;border-radius:12px;border-bottom:1px solid var(--rule);padding:14px 18px}
+  .sheet h2{font-size:22px}.cityhead{height:90px;margin:-14px -18px 0}.tabs{margin:8px 0 6px}.tabs button{padding:6px 4px}
+  .bgrid{grid-template-columns:repeat(4,minmax(0,1fr))}.bico{height:52px}
+  .eq{grid-template-columns:200px 1fr}.eq .big{aspect-ratio:auto;height:240px}.slots{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .colors{grid-template-columns:repeat(8,minmax(0,1fr))}
+  #toasts{top:calc(env(safe-area-inset-top,0px) + 56px)}
+}
 </style>
 
 <canvas id="gl"></canvas>
@@ -332,6 +382,24 @@ input[type=text]{width:100%;font:inherit;font-size:18px;padding:10px 12px;border
   </div>
   <div class="squads" id="squads"></div>
 </div>
+
+<div id="title">
+  <div class="tbg" aria-hidden="true"></div>
+  <div class="tbox">
+    <img src="assets/title.jpg" alt="СІЧ: козак дивиться на місто над річкою на заході сонця">
+    <button class="hs" data-t="start" style="left:72.4%;top:42.1%;width:25.1%;height:10%" aria-label="Почати гру"></button>
+    <button class="hs" data-t="cont" style="left:73.6%;top:54%;width:23.1%;height:7.7%" aria-label="Продовжити"></button>
+    <button class="hs" data-t="settings" style="left:73.6%;top:63.2%;width:23.1%;height:7.7%" aria-label="Налаштування"></button>
+    <button class="hs" data-t="help" style="left:73.6%;top:72.6%;width:23.1%;height:7.7%" aria-label="Довідка"></button>
+    <button class="hs" data-t="exit" style="left:73.6%;top:81.9%;width:23.1%;height:7.9%" aria-label="Вихід"></button>
+    <button class="hs round" data-t="lang" style="left:86.1%;top:2.6%;width:3.4%;height:6%" aria-label="Мова"></button>
+    <button class="hs round" data-t="sound" style="left:90.6%;top:2.6%;width:3.4%;height:6%" aria-label="Звук"></button>
+    <button class="hs round" data-t="music" style="left:95.1%;top:2.6%;width:3.4%;height:6%" aria-label="Музика"></button>
+    <div class="tload" id="tload"><span id="tloadTxt">Завантаження…</span><i><b id="tbar"></b></i></div>
+  </div>
+</div>
+<div id="rotate" aria-live="polite"><svg viewBox="0 0 64 64" aria-hidden="true"><rect x="20" y="8" width="24" height="44" rx="4"/><path d="M50 22a18 18 0 0 1-2 22M46 44l2 0 0-3"/></svg><p>Поверніть телефон горизонтально</p></div>
+<audio id="bgm" src="assets/music.mp3" loop preload="auto"></audio>
 
 <div class="modal" id="modal" hidden><div class="sheet" id="sheet" role="dialog" aria-modal="true"></div></div>
 <div id="toasts"></div>
@@ -1124,6 +1192,11 @@ const ACT={
   menu:()=>menuPanel(),
   save:()=>{save();toast('Гру збережено.')},
   sound:()=>{SFX.toggle();menuPanel()},
+  sound2:()=>{SFX.toggle();settingsPanel()},
+  music2:()=>{setMusic(!musicOn);settingsPanel()},
+  fs:()=>goLandscape(),
+  settings:()=>settingsPanel(),
+  toTitle:()=>{save();closeModal();showTitle()},
   boats:()=>{const nx=BOAT_LV[(G.boatLv||0)+1];if(!nx||G.gold<nx.cost)return;G.gold-=nx.cost;G.boatLv=(G.boatLv||0)+1;G.path=null;SFX.play('coin');toast(`Нові човни: ${nx.n}. Пливемо швидше.`);openTown(CUR.town,'dev')},
   loot:()=>{SFX.play('loot');lootPanel()},
   lootTake:i=>{const o=CUR.loot[+i];if(!o)return;const old=gearLv(o.slot),oldP=old?Math.round(GEAR[o.slot].items[old].cost*.4):0;G.hero[o.slot]=o.tier;G.gold+=oldP;CUR.loot.splice(+i,1);
@@ -1161,7 +1234,7 @@ function colorPanel(change){
 }
 function menuPanel(){
   show(`<div class="title">СІЧ</div><p class="muted">День ${G.day}. Гра зберігається сама щодня і після кожної битви.</p>
-  <div class="acts"><button class="btn gold" data-a="close">Продовжити</button><button class="btn" data-a="colorMenu">Колір прапора</button><button class="btn" data-a="sound">Звук: ${SFX.on?'увімкнено':'вимкнено'}</button><button class="btn" data-a="save">Зберегти</button><button class="btn" data-a="help">Як грати</button><button class="btn red" data-a="newConfirm">Нова гра</button></div>`);
+  <div class="acts"><button class="btn gold" data-a="close">Продовжити</button><button class="btn" data-a="settings">Налаштування</button><button class="btn" data-a="toTitle">Головне меню</button><button class="btn" data-a="sound">Звук: ${SFX.on?'увімкнено':'вимкнено'}</button><button class="btn" data-a="save">Зберегти</button><button class="btn" data-a="help">Як грати</button><button class="btn red" data-a="newConfirm">Нова гра</button></div>`);
 }
 function helpPanel(){
   show(`<h2>Як грати</h2>
@@ -1272,7 +1345,7 @@ function startBattle(c){
   shuffle(B.resA);shuffle(B.resB);
   const h={id:B.uid++,team:0,hero:1,t:'hero',x:210,y:BH/2,vx:0,vy:0,hp:G.hero.hp,maxHp:G.hero.maxHp,atk:heroAtk(),def:heroDef(),spd:165*heroSpd(),sta:100,blocking:false,r:15,face:0,sx:1,ph:0,st:0,at:-1,pend:null,hitT:0,cd:0,dash:0,dashCd:0,mounted:1};
   B.hero=h;B.units.push(h);
-  reinforce();SFX.play('horn');SFX.ambient(true);if(GL.ok){VIEW.battle.cyaw=VIEW.battle.yaw=0;build3DBattle()}
+  reinforce();SFX.play('horn');SFX.ambient(true);if(musicOn&&!BGM.paused)BGM.volume=.22;if(GL.ok){VIEW.battle.cyaw=VIEW.battle.yaw=0;build3DBattle()}
   scene='battle';$('#hud').hidden=true;$('#side').hidden=true;$('#corner').hidden=true;$('#bhud').hidden=false;
   $('#orderLbl').textContent=ORD_N.wait;setTimeout(()=>toast('Військо чекає наказу: кнопка з людьми — наказ усім, картки внизу — окремим загонам.'),400);$('#bLvl').textContent=G.hero.lvl;sqKey='';$('#fleeBtn').disabled=false;
   joy.id=null;joy.x=joy.y=0;atkHeld=false;blockHeld=false;
@@ -1474,7 +1547,7 @@ function finishAuto(){
   endBattle({win:r.aWin,aSurv:r.aSurv,bSurv:r.bSurv,heroHp:B.hero.hp>0?r.heroHp:0});
 }
 function endBattle(o){
-  if(B.over)return;B.over=true;SFX.ambient(false);if(GL.bat){GL.bat.sc.traverse(o=>{if(o.geometry&&o.geometry!==GL.ringGeo&&o.geometry!==GL.shadowGeo)o.geometry.dispose()});GL.bat=null}
+  if(B.over)return;B.over=true;SFX.ambient(false);if(musicOn&&!BGM.paused)BGM.volume=.5;if(GL.bat){GL.bat.sc.traverse(o=>{if(o.geometry&&o.geometry!==GL.ringGeo&&o.geometry!==GL.shadowGeo)o.geometry.dispose()});GL.bat=null}
   const res={win:o.win,retreat:!!o.retreat,aSurv:o.aSurv||bSurv(0),bSurv:o.bSurv||bSurv(1),heroHp:o.heroHp!==undefined?o.heroHp:Math.max(0,B.hero.hp),startA:B.startA,startB:B.startB};
   const c=B.c;scene='map';$('#bhud').hidden=true;enterMap();
   applyResult(c,res);B=null;
@@ -2278,6 +2351,39 @@ $('#orderBtn').onclick=()=>setOrder(B.order==='charge'?'hold':B.order==='hold'?'
 $('#autoBtn').onclick=()=>{if(B&&!B.over)finishAuto()};
 $('#fleeBtn').onclick=()=>{if(B&&!B.over)endBattle({win:false,retreat:true})};
 
+/* ================= головне меню, музика, альбомний режим ================= */
+const BGM=$('#bgm');let musicOn=true;try{musicOn=localStorage.getItem('sich-music')!=='off'}catch(e){}
+function music(play){if(!musicOn||!play){BGM.pause();return}BGM.volume=scene==='battle'?.25:.5;const p=BGM.play();if(p&&p.catch)p.catch(()=>{})}
+function setMusic(on){musicOn=on;try{localStorage.setItem('sich-music',on?'on':'off')}catch(e){}music(on);syncTitleIcons()}
+function syncTitleIcons(){const s=document.querySelector('.hs[data-t="sound"]'),m=document.querySelector('.hs[data-t="music"]');if(s)s.classList.toggle('off',!SFX.on);if(m)m.classList.toggle('off',!musicOn);
+  const c=document.querySelector('.hs[data-t="cont"]');if(c)c.disabled=!loadSave()}
+// на весь екран і горизонтально; на iPhone так не можна — там лишається підказка «поверніть телефон»
+function goLandscape(){const el=document.documentElement;try{const r=el.requestFullscreen?el.requestFullscreen({navigationUI:'hide'}):el.webkitRequestFullscreen&&el.webkitRequestFullscreen();
+  Promise.resolve(r).then(()=>screen.orientation&&screen.orientation.lock&&screen.orientation.lock('landscape')).catch(()=>{})}catch(e){}}
+let titleReady=false;
+function setLoad(p,txt){$('#tbar').style.width=Math.round(p*100)+'%';if(txt)$('#tloadTxt').textContent=txt;if(p>=1){titleReady=true;setTimeout(()=>$('#tload').classList.add('done'),400)}}
+function showTitle(){$('#title').hidden=false;uiOpen=true;syncTitleIcons()}
+function hideTitle(){$('#title').hidden=true;uiOpen=false}
+$('#title').addEventListener('click',e=>{const b=e.target.closest('.hs');if(!b)return;SFX.init();SFX.play('click');const t=b.dataset.t;
+  if(t==='sound'){SFX.toggle();syncTitleIcons();return}
+  if(t==='music'){setMusic(!musicOn);return}
+  if(t==='lang'){toast('Поки що гра лише українською.');return}
+  if(t==='exit'){try{document.exitFullscreen&&document.fullscreenElement&&document.exitFullscreen()}catch(e){}music(false);toast('Гру збережено. До зустрічі, козаче!');save();return}
+  if(!titleReady){toast('Зачекайте, світ ще завантажується…');return}
+  goLandscape();music(true);
+  if(t==='start'){hideTitle();if(loadSave())ACT.newConfirm();else colorPanel(false)}
+  else if(t==='cont'){const g=loadSave();if(!g)return;hideTitle();closeModal();enterMap()}
+  else if(t==='settings'){hideTitle();settingsPanel()}
+  else if(t==='help'){hideTitle();helpPanel()}
+});
+function settingsPanel(){
+  show(`<h2>Налаштування</h2><div class="rows">
+  <div class="row" style="grid-template-columns:1fr auto"><span><b>Звуки</b><span class="sub">удари, постріли, монети</span></span><button class="btn sm ${SFX.on?'gold':''}" data-a="sound2">${SFX.on?'Увімкнено':'Вимкнено'}</button></div>
+  <div class="row" style="grid-template-columns:1fr auto"><span><b>Музика</b><span class="sub">«Beneath the Sacred Ridge»</span></span><button class="btn sm ${musicOn?'gold':''}" data-a="music2">${musicOn?'Увімкнено':'Вимкнено'}</button></div>
+  <div class="row" style="grid-template-columns:1fr auto"><span><b>Колір прапора</b><span class="sub">ваші міста й підписи</span></span><button class="btn sm" data-a="colorMenu">Змінити</button></div>
+  <div class="row" style="grid-template-columns:1fr auto"><span><b>Повний екран</b><span class="sub">гра горизонтально на весь екран</span></span><button class="btn sm" data-a="fs">Увімкнути</button></div>
+  </div><div class="acts"><button class="btn gold" data-a="toTitle">Головне меню</button><button class="btn ghost" data-a="close">Закрити</button></div>`);
+}
 /* ================= save / loop / boot ================= */
 function save(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(G))}catch(e){}}
 function loadSave(){try{const s=localStorage.getItem(SAVE_KEY);if(s){const g=JSON.parse(s);if(g&&g.v===3&&g.towns)return g}}catch(e){}return null}
@@ -2299,15 +2405,15 @@ function boot(data){
   initGL();
   const fromHot=data&&data.save?(()=>{try{return JSON.parse(data.save)}catch(e){return null}})():null;
   const saved=fromHot||loadSave();
-  if(saved){G=saved;applyColor();fillArmy(G.army);G.towns.forEach(t=>{fillArmy(t.garrison);t.recruits=t.recruits||{}});G.parties.forEach(p=>fillArmy(p.army));G.oldMap=!G.towns.some(t=>t.art);if(!G.pf)G.pf=1;G.towns.forEach(t=>{if(t.name==='Вербиця')t.name='Вербовець'});buildTerrain();enterMap();
-    if(!fromHot)show(`<div class="title">СІЧ</div><p class="muted">Похід у середньовічні землі: наймайте військо, бийтеся самі або автобоєм, завойовуйте міста й давайте їм свої назви.</p>
-      ${G.oldMap?'<p class="cmp" style="--c:var(--gold)">Мапа оновилася: Київ, Галич, Січ та інші міста. Щоб побачити їх, почніть нову гру.</p>':''}
-      <div class="acts"><button class="btn gold" data-a="cont">Продовжити · день ${G.day}</button><button class="btn red" data-a="newConfirm">Нова гра</button></div>`);
-  }else{
-    newGame();buildTerrain();enterMap();
-    show(`<div class="title">СІЧ</div><p class="muted">Похід у середньовічні землі: наймайте військо, бийтеся самі або автобоєм, завойовуйте міста й давайте їм свої назви.</p>
-      <div class="acts"><button class="btn gold" data-a="newGo">Нова гра</button><button class="btn" data-a="help">Як грати</button></div>`);
-  }
+  showTitle();setLoad(.15,'Завантаження світу…');
+  // світ будується трохи згодом, щоб меню й смужка завантаження з'явились одразу
+  setTimeout(()=>{
+    if(saved){G=saved;applyColor();fillArmy(G.army);G.towns.forEach(t=>{fillArmy(t.garrison);t.recruits=t.recruits||{}});G.parties.forEach(p=>fillArmy(p.army));G.oldMap=!G.towns.some(t=>t.art);if(!G.pf)G.pf=1;G.towns.forEach(t=>{if(t.name==='Вербиця')t.name='Вербовець'});buildTerrain();enterMap();
+    }else{newGame();buildTerrain();enterMap()}
+    setLoad(.85,'Готуємо військо…');
+    if(fromHot)hideTitle();
+    setTimeout(()=>setLoad(1,'Готово'),300);
+  },60);
   requestAnimationFrame(frame);
   // назви сусідніх земель на мапі малюються шрифтом, тож перебудовуємо мапу, коли він завантажився
   try{document.fonts.ready.then(()=>{if(G)buildTerrain()})}catch(e){}
