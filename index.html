@@ -115,6 +115,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
 .hs:disabled{background:rgba(10,10,10,.45);cursor:default}
 .hs.off::after{content:"";position:absolute;left:12%;right:12%;top:50%;height:2px;background:#e0675a;transform:rotate(-45deg)}
 .tload{position:absolute;left:4%;bottom:4%;width:36%;display:flex;flex-direction:column;gap:6px;color:#f3e7c6;font:600 clamp(11px,1.6vw,16px)/1.2 'Alegreya Sans',sans-serif;text-shadow:0 1px 3px #000}
+.tver{position:absolute;left:1.2%;bottom:.8%;color:rgba(243,231,198,.75);font:500 clamp(9px,1.1vw,12px)/1 'Alegreya Sans',sans-serif;text-shadow:0 1px 2px #000;pointer-events:none}   /* видно, чи завантажилась нова версія */
 .tload i{display:block;height:6px;border-radius:3px;background:rgba(0,0,0,.55);overflow:hidden;border:1px solid rgba(216,164,67,.6)}
 .tload b{display:block;height:100%;width:0;background:linear-gradient(90deg,#b8862a,#f0c860);transition:width .3s}
 .tload.done{opacity:0;transition:opacity .6s}
@@ -964,6 +965,7 @@ body.advon .legend{top:calc(env(safe-area-inset-top,0px) + 74px)}
     <button class="hs round" data-t="lang" style="left:86.1%;top:2.6%;width:3.4%;height:6%" aria-label="Мова"></button>
     <button class="hs round" data-t="sound" style="left:90.6%;top:2.6%;width:3.4%;height:6%" aria-label="Звук"></button>
     <button class="hs round" data-t="music" style="left:95.1%;top:2.6%;width:3.4%;height:6%" aria-label="Музика"></button>
+    <div class="tver">Версія 21.10 · Радник</div>
     <div class="tload" id="tload"><span id="tloadTxt">Завантаження…</span><i><b id="tbar"></b></i></div>
   </div>
 </div>
