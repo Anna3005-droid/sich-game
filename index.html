@@ -552,6 +552,7 @@ button,.hs{transition:transform .09s ease-out,filter .09s,box-shadow .12s}
 .chip.civ .ic{color:#9aa6b4}.chip.civ b{color:#cfd6de}
 .chip.ch{border-color:color-mix(in srgb,var(--c) 60%,#000)}.chip.ch b{color:var(--c);font-size:18px}
 .tnote{font-size:11.5px;color:#8f887a;margin-left:auto}
+.chip.tax .ic{color:#e2b24a}.chip.tax b{color:#ecc77e}.chip.tax small{color:#b9b09c}
 .ecmp .epc{margin-left:auto;font-family:var(--f-body);font-size:13px;color:#cfc6b2}.ecmp .epc b{font-family:var(--f-head);font-size:17px}
 @media (orientation:landscape) and (max-height:520px){.tstrip{padding-top:4px;padding-bottom:4px}.chip{padding:2px 8px}.chip b{font-size:14px}.chip.sol b,.chip.ch b{font-size:15px}.tnote{display:none}}
 </style>
@@ -889,7 +890,7 @@ function newGame(pf=1){
   G={v:3,pf,seed,day:1,hour:8,gold:350,x:W*mx(.5),y:H*my(.55),target:null,waiting:false,zoom:VW<700?.8:1,
     hero:{lvl:1,xp:0,hp:150,maxHp:150,weapon:0,armor:0,helm:0,shield:0,boots:0},
     army:{militia:6,sword:2,axe:0,archer:3,musket:0,knight:0},
-    towns,parties:[],war:{1:false,2:false,3:false},respawn:[],nid:100,won:false,mapW:W};
+    towns,parties:[],war:{1:false,2:false,3:false},respawn:[],nid:100,won:false,mapW:W,lastMo:0};
   LORDS.forEach((ls,fi)=>ls.forEach(n=>spawnLord(fi+1,n)));
   for(let i=0;i<34;i++)spawnBandit();
   cam.follow=true;
@@ -1225,7 +1226,10 @@ function simulate(A,Bk,o={}){
 
 /* ================= жителі й шанси ================= */
 // мирні жителі не воюють: їх просто видно в місті; кількість залежить від типу поселення й житла
-function popOf(t){if(!t.pop){const R=mulberry((G.seed||1)+t.id*13),base=t.type==='city'?6000:t.type==='castle'?600:300;t.pop=Math.round(base*(.7+R()*.8)/10)*10}return Math.round(t.pop*(1+.12*(bldOf(t).house||0))/10)*10}
+function popOf(t){const R=mulberry((G.seed||1)+t.id*13),base=t.type==='city'?1500:t.type==='castle'?500:300;return Math.round(base*(.7+R()*.8)*(1+.12*(bldOf(t).house||0))/10)*10}
+// данина: кожен мирний житель вашого поселення платить 1 монету на місяць; з неї спершу платня гарнізону (1 монета на солдата), решта — герою
+function tributeOf(t){const tax=popOf(t),gar=total(t.garrison);return{tax,gar,net:tax-gar}}
+const monthIdx=d=>Math.floor((d-1)/10*3+1e-6);
 // шанс на перемогу: кілька прорахунків автобою з тими самими правилами, що й у грі
 const CH_CACHE=new Map();
 function winChance(enemy,bonusB){
@@ -1243,8 +1247,8 @@ function townStrip(t){
   const own=t.f===0,g=total(t.garrison);let ch='';
   if(!own){const p=winChance(t.garrison,townDefBonus(t));ch=`<span class="chip ch" style="--c:${chanceCol(p)}"><i>Шанс на перемогу</i><b>${p}%</b><small>${chanceTxt(p)}</small></span>`}
   return `<div class="tstrip"><button class="chip sol" data-a="tab" data-v="garrison"><svg class="ic"><use href="#i-swords"/></svg><i>${own?'Ваш гарнізон':'Солдати'}</i><b>${g}</b></button>
-    <span class="chip civ"><svg class="ic"><use href="#i-people"/></svg><i>Мирні жителі</i><b>${popOf(t).toLocaleString('uk-UA')}</b></span>${ch}
-    <span class="tnote">${own?(g?'Гарнізон боронить місто, коли вас немає.':'Місто без захисту — залиште воїнів у гарнізоні.'):'Б’ються лише солдати, мирні жителі у війні не беруть участі.'}</span></div>`;
+    <span class="chip civ"><svg class="ic"><use href="#i-people"/></svg><i>Мирні жителі</i><b>${popOf(t).toLocaleString('uk-UA')}</b></span>${ch}${own?(()=>{const r=tributeOf(t);return `<span class="chip tax"><svg class="ic"><use href="#i-coin"/></svg><i>Данина на місяць</i><b>${r.tax}</b><small>гарнізону ${Math.min(r.gar,r.tax)} · вам ${r.net>=0?'+'+r.net:r.net}</small></span>`})():''}
+    <span class="tnote">${own?(g?'Жителі платять за свою безпеку: з данини утримують гарнізон.':'Місто без захисту — залиште воїнів у гарнізоні.'):'Б’ються лише солдати, мирні жителі у війні не беруть участі.'}</span></div>`;
 }
 
 /* ================= похідний табір ================= */
@@ -1376,8 +1380,10 @@ function newDay(){
   if(seasonOf(G.day)!==G.season){buildTerrain();toast(`Настала пора: ${SEASONS[G.season].n.toLowerCase()}`)}
   const own=G.towns.filter(t=>t.f===0);
   const inc=own.reduce((s,t)=>s+townIncome(t),0);
-  const garWage=Math.round(own.reduce((s,t)=>s+ORDER.reduce((q,k)=>q+t.garrison[k]*TYPES[k].wage,0),0)*.5);
-  const wage=ORDER.reduce((s,k)=>s+G.army[k]*TYPES[k].wage,0)+garWage;
+  const wage=ORDER.reduce((s,k)=>s+G.army[k]*TYPES[k].wage,0);
+  // новий місяць — жителі платять данину
+  {const mo=monthIdx(G.day);if(G.lastMo==null)G.lastMo=mo;if(mo!==G.lastMo){const prev=MONTHS[((G.lastMo%12)+12)%12];G.lastMo=mo;let tax=0,gar=0;own.forEach(t=>{const r=tributeOf(t);tax+=r.tax;gar+=r.gar});
+    if(own.length){const net=tax-gar;G.gold+=net;G.tribute={m:prev,tax,gar,net};setTimeout(()=>toast(`Данина за ${prev}: ${tax} монет · гарнізонам ${Math.min(gar,tax)} · вам ${net>=0?'+'+net:net}${net<0?' (доплата з казни)':''}`),2600)}}}
   const pay=G.liege?liegePay():0;G.gold+=inc-wage+pay;econDay();
   if(G.gold<0){G.gold=0;let lost=0;ORDER.forEach(k=>{const d=Math.ceil(G.army[k]*.15);G.army[k]-=d;lost+=d});toast(`Нема чим платити. Дезертирувало ${lost} воїнів.`,true)}
   else toast(`День ${G.day}: дохід +${inc+pay}${pay?` (служба ${pay})`:''}, платня −${wage}`);
@@ -1490,7 +1496,7 @@ function garrisonTab(t){
   const rows=ORDER.map(k=>`<div class="row"><span class="urow"><img class="uthumb" src="${UIART[UTHUMB[k]]}" alt=""><span><b>${TYPES[k].n}</b><span class="sub">у загоні ${G.army[k]} · у гарнізоні ${t.garrison[k]}</span></span></span>
     <button class="btn sm" data-a="gar" data-v="${k}:in" ${G.army[k]?'':'disabled'}>Залишити</button>
     <button class="btn sm" data-a="gar" data-v="${k}:out" ${t.garrison[k]&&total(G.army)<armyLimit()?'':'disabled'}>Забрати</button></div>`).join('');
-  return `<p class="muted">Гарнізон захищає місто, коли вас немає. Платня гарнізону вдвічі менша.</p><div class="rows">${rows}</div>
+  return `<p class="muted">Гарнізон захищає місто, коли вас немає. Його утримують жителі: кожен мирний житель платить 1 монету на місяць, з цього кожен солдат гарнізону отримує 1 монету, а решта йде вам.</p><div class="rows">${rows}</div>
   <div class="acts"><button class="btn" data-a="garAll">Залишити всіх піших</button></div>`;
 }
 function marketTab(t){
@@ -1503,7 +1509,7 @@ function marketTab(t){
 }
 function devTab(t){
   const own=t.f===0;
-  return `<div class="stats"><div class="stat"><small>Дохід на день</small><b>${own?'+'+townIncome(t):'—'}</b></div><div class="stat"><small>Гарнізон</small><b>${total(t.garrison)}</b></div><div class="stat"><small>Власник</small><b style="font-size:14px">${FAC[t.f].name}</b></div></div>
+  return `<div class="stats"><div class="stat"><small>Дохід на день</small><b>${own?'+'+townIncome(t):'—'}</b></div>${own?`<div class="stat"><small>Данина вам на місяць</small><b>${tributeOf(t).net>=0?'+':''}${tributeOf(t).net}</b></div>`:''}<div class="stat"><small>Гарнізон</small><b>${total(t.garrison)}</b></div><div class="stat"><small>Власник</small><b style="font-size:14px">${FAC[t.f].name}</b></div></div>
   <div class="acts">${hasSmith(t)?`<button class="btn" data-a="smith">Коваль</button>`:''}<button class="btn" data-a="rest">${own?'Відпочити · безкоштовно':'Відпочити в корчмі · 10'}</button>${BOAT_LV[(G.boatLv||0)+1]?`<button class="btn" data-a="boats" ${G.gold>=BOAT_LV[(G.boatLv||0)+1].cost?'':'disabled'}>Човни: ${BOAT_LV[(G.boatLv||0)+1].n} · ${BOAT_LV[(G.boatLv||0)+1].cost}</button>`:''}${own?`<button class="btn" data-a="rename">Перейменувати</button>`:''}${!own?`<button class="btn red" data-a="attackTown">Напасти</button>`:''}</div>`;
 }
 /* ================= спорядження героя ================= */
@@ -1751,6 +1757,7 @@ function helpPanel(){
   <p><b>Слава й дипломатія.</b> Перемоги додають славу і звання. Дарами покращуйте стосунки з князівствами, укладайте союзи (союзні лорди допомагають у бою), ідіть на службу за щоденну платню або проголосіть власне королівство.</p>
   <p><b>Табір.</b> Кнопка з наметом ліворуч ставить табір будь-де на мапі (не на воді й не біля міста). У таборі час іде сам: герой одужує, поранені стають у стрій, піднімається бойовий дух і йде вишкіл. Якщо нападуть — б'єтеся за частоколом, вороги слабші. Торкніться мапи, щоб рушити далі. У своїх містах відпочинок безкоштовний, у чужих — 10 золотих.</p>
   <p><b>Ранги й тренування.</b> У вікні «Армія» можна купити будь-який ранг героя — досвідченого, отамана чи елітного воїна — і перемикатися між купленими. Наставник за золото підвищує рівень героя.</p>
+  <p><b>Данина.</b> Мирні жителі ваших міст, замків і сіл щомісяця платять по 1 монеті. З цих грошей утримують гарнізон (1 монета на солдата), а решта йде у вашу казну. Що більший гарнізон, то менше лишається вам, але місто краще захищене.</p>
   <p><b>Торгівля.</b> На ринку міста купуйте товари там, де їх виробляють, і везіть туди, де їх потребують. Обоз більший, коли більше війська.</p>
   <p><b>Військо.</b> Ополченці зі списами б'ють далеко й вузько, шаблюки — широким махом і можуть зачепити двох, сокирники пробивають броню, лучники стріляють дугою, пищальники — рідко, але влучно й боляче, кіннота таранить з розгону. Щитоносці самі закриваються від ударів. У кожного воїна є <b>бойовий дух</b>: він падає від ран і смертей товаришів і росте поруч із героєм. Зламаний дух — воїн тікає з поля з білим прапорцем. Перемагає той, хто знищив або розігнав усе вороже військо.</p>
   <p><b>Міста.</b> У своїх містах будуйте житло, кузню, ринок і стайню у вкладці «Будівлі». Спорядження героя — кнопка зі шоломом ліворуч.</p>
