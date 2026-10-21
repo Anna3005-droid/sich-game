@@ -2780,13 +2780,111 @@ function pick3D(sx,sy){
   GL.ray.setFromCamera({x:sx/VW*2-1,y:-(sy/VH*2-1)},GL.cam);const h=GL.ray.intersectObject(GL.map.tm)[0];return h?{x:h.point.x,y:h.point.z}:null;
 }
 /* ---------- бій у 3D ---------- */
-function battleHeight(x,y){const n=GL.bn;if(!n)return 0;const e=Math.min(1,Math.min(x,y,BW-x,BH-y)/120+.3);return(n(clamp(x/BW,0,1),clamp(y/BH,0,1))-.45)*(B&&B.siege?14:46)*e}
+/* поле бою — ділянка тієї самої мапи, де зустрілися загони: її пагорби, ліси, вода, поля й дороги, лише ближче */
+const BK=.45,BEX=2000,BEZ=1700,BHS=20;   // одиниць мапи на одиницю бою; запас місцевості довкола поля; крок сітки висот
+const bOut=(x,y)=>Math.hypot(Math.max(0,-x,x-BW),Math.max(0,-y,y-BH));
+const toMap=(x,y)=>({x:B.site.x+(x-BW/2)*BK,y:B.site.y+(y-BH/2)*BK});
+function battleHeight(x,y){const T=GL.bh;if(!T){const n=GL.bn;if(!n)return 0;const e=Math.min(1,Math.min(x,y,BW-x,BH-y)/120+.3);return(n(clamp(x/BW,0,1),clamp(y/BH,0,1))-.45)*(B&&B.siege?14:46)*e}
+  const fx=clamp((x+BEX)/BHS,0,T.nx-1.001),fy=clamp((y+BEZ)/BHS,0,T.nz-1.001),i=Math.floor(fx),j=Math.floor(fy),u=fx-i,v=fy-j,k=j*T.nx+i,h=T.h;
+  return h[k]*(1-u)*(1-v)+h[k+1]*u*(1-v)+h[k+T.nx]*(1-u)*v+h[k+T.nx+1]*u*v}
+function buildBattleTerrain(){
+  const n=GL.bn,nx=Math.ceil((BW+2*BEX)/BHS)+1,nz=Math.ceil((BH+2*BEZ)/BHS)+1,h=new Float32Array(nx*nz),wet=new Uint8Array(nx*nz);
+  const h0=heightAt(B.site.x,B.site.y),VK=1.9,WL=-Math.max(0,h0)*VK-3,amp=B.siege?14:40;
+  // вода — там, де вона намальована на мапі (синій колір), щоб річки й озера збігалися з малюнком
+  const SM=Math.min(.4,3800/W),a0=toMap(-BEX,-BEZ),px0=Math.floor(a0.x*SM),py0=Math.floor(a0.y*SM),pw=Math.ceil((BW+2*BEX)*BK*SM)+2,ph=Math.ceil((BH+2*BEZ)*BK*SM)+2;
+  let pd=null;try{pd=terrain.getContext('2d').getImageData(px0,py0,pw,ph).data}catch(e){}
+  const waterAt=(mx,my)=>{const x=Math.floor(mx*SM)-px0,y=Math.floor(my*SM)-py0;if(!pd||x<0||y<0||x>=pw||y>=ph||mx<0||my<0||mx>=W||my>=H)return heightAt(clamp(mx,0,W),clamp(my,0,H))<0;
+    const q=(y*pw+x)*4,r=pd[q],g=pd[q+1],b=pd[q+2];return b-r>18&&b>=g-6};
+  for(let j=0;j<nz;j++)for(let i=0;i<nx;i++){const x=-BEX+i*BHS,y=-BEZ+j*BHS,m=toMap(x,y),mh=heightAt(clamp(m.x,0,W),clamp(m.y,0,H)),o=bOut(x,y),w=clamp(o/450,0,1),ws=w*w*(3-2*w);
+    const loc=(n(clamp(x/BW,0,1),clamp(y/BH,0,1))-.45)*amp*(1-ws*.6)+(n((x/BW*3%1+1)%1,(y/BH*3%1+1)%1)-.5)*10;
+    let v=loc+clamp((mh-h0)*VK,-120,400)*(.12+.88*ws);
+    // річка чи озеро біля поля стають мілким бродом: воїни переходять убрід, далі від поля вода глибшає
+    if(waterAt(m.x,m.y)){const df=clamp((o-40)/400,0,1);v=WL-1.6-df*(3+clamp(-mh,4,40)*.25);wet[j*nx+i]=1}else v=Math.max(v,WL+1.5+5*(1-ws));
+    h[j*nx+i]=v}
+  // м'які береги
+  for(let p=0;p<3;p++){const c=h.slice();for(let j=1;j<nz-1;j++)for(let i=1;i<nx-1;i++){const k=j*nx+i;h[k]=(c[k]*4+c[k-1]+c[k+1]+c[k-nx]+c[k+nx])/8}}
+  // після згладжування вода лишається під поверхнею, а суходіл — над нею
+  // пологі береги: суходіл піднімається від води поступово (відстань до води рахуємо двома проходами)
+  const D=new Float32Array(nx*nz).fill(1e9),d1=BHS,d2=BHS*1.414;for(let k=0;k<D.length;k++)if(wet[k])D[k]=0;
+  for(let j=0;j<nz;j++)for(let i=0;i<nx;i++){const k=j*nx+i;if(i>0)D[k]=Math.min(D[k],D[k-1]+d1);if(j>0){D[k]=Math.min(D[k],D[k-nx]+d1);if(i>0)D[k]=Math.min(D[k],D[k-nx-1]+d2);if(i<nx-1)D[k]=Math.min(D[k],D[k-nx+1]+d2)}}
+  for(let j=nz-1;j>=0;j--)for(let i=nx-1;i>=0;i--){const k=j*nx+i;if(i<nx-1)D[k]=Math.min(D[k],D[k+1]+d1);if(j<nz-1){D[k]=Math.min(D[k],D[k+nx]+d1);if(i<nx-1)D[k]=Math.min(D[k],D[k+nx+1]+d2);if(i>0)D[k]=Math.min(D[k],D[k+nx-1]+d2)}}
+  for(let k=0;k<h.length;k++)h[k]=wet[k]?Math.min(h[k],WL-1.2):clamp(h[k],WL+.8,WL+.8+D[k]*.32);
+  GL.bh={h,nx,nz,wet,WL,h0};
+}
+// земля поля: основа — шматок намальованої мапи, поверх — трава, плями, квіти, стежки; далі — дрібна текстура в шейдері
+function battleGroundTex(SE){
+  const PX=.4,EW=BW+2*BEX,EH=BH+2*BEZ,c=document.createElement('canvas');c.width=Math.round(EW*PX);c.height=Math.round(EH*PX);const g=c.getContext('2d');
+  g.fillStyle=SE.snow?'#dfe4e6':SE.g[1];g.fillRect(0,0,c.width,c.height);
+  const S=Math.min(.4,3800/W),a=toMap(-BEX,-BEZ);
+  if(terrain){g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';g.drawImage(terrain,a.x*S,a.y*S,EW*BK*S,EH*BK*S,0,0,c.width,c.height)}
+  g.setTransform(PX,0,0,PX,BEX*PX,BEZ*PX);
+  const R=mulberry((G.seed||1)+B.uid*7+3),T=GL.bh;
+  const blob=(x,y,r,col)=>{g.fillStyle=col;g.beginPath();g.arc(x,y,r,0,7);g.fill()};
+  const inField=(x,y,m)=>bOut(x,y)<(m||0);
+  // плями трави різного відтінку, густіше на самому полі
+  for(let i=0;i<5200;i++){const x=-BEX+R()*EW,y=-BEZ+R()*EH,f=inField(x,y,300);if(!f&&R()<.55)continue;
+    blob(x,y,(f?6:14)+R()*(f?28:60),SE.pa[R()<.5?0:1])}
+  if(!SE.snow){
+    // кущики темнішої трави і сухі латки
+    for(let i=0;i<3800;i++){const x=-300+R()*(BW+600),y=-300+R()*(BH+600);blob(x,y,2+R()*5,R()<.6?'rgba(40,60,22,.28)':'rgba(170,160,90,.22)')}
+    // польові квіти
+    const fl=SE.n==='Осінь'?['#d8a440','#b8642a','#e0d080']:['#e8d36a','#e6e6f2','#c77a9a','#d65c4a','#8fa8e0'];
+    for(let i=0;i<1400;i++){const x=-200+R()*(BW+400),y=-200+R()*(BH+400);g.globalAlpha=.75;g.fillStyle=fl[Math.floor(R()*fl.length)];g.fillRect(x,y,2.6,2.6)}g.globalAlpha=1;
+    // протоптані стежки, що перетинають поле
+    g.lineCap='round';for(let k=0;k<2;k++){const y0=BH*(.2+R()*.6),y1=BH*(.2+R()*.6);g.strokeStyle='rgba(120,98,62,.35)';g.lineWidth=14+R()*8;g.beginPath();g.moveTo(-BEX*.5,y0);g.bezierCurveTo(BW*.3,y0+(R()-.5)*300,BW*.7,y1+(R()-.5)*300,BW+BEX*.5,y1);g.stroke();
+      g.strokeStyle='rgba(150,128,86,.25)';g.lineWidth=5;g.stroke()}
+  }else for(let i=0;i<1600;i++){blob(-BEX+R()*EW,-BEZ+R()*EH,6+R()*26,R()<.5?'rgba(255,255,255,.16)':'rgba(170,185,195,.1)')}
+  // камінці
+  for(let i=0;i<500;i++){const x=-400+R()*(BW+800),y=-400+R()*(BH+800);blob(x,y,1.5+R()*3,SE.snow?'rgba(120,120,115,.5)':'rgba(130,124,110,.55)')}
+  // облога: бруківка за муром
+  if(B.wall){g.fillStyle='#6c665a';g.fillRect(WALLX,-20,BW-WALLX+640,BH+40);g.strokeStyle='rgba(30,28,24,.35)';g.lineWidth=1.5;for(let y=-20;y<BH+20;y+=22)for(let x=WALLX+(((y+20)/22)%2)*18;x<BW+640;x+=36)g.strokeRect(x,y,36,22);
+    for(let i=0;i<400;i++)blob(WALLX+R()*(BW-WALLX+640),-20+R()*(BH+40),6+R()*30,R()<.5?'rgba(40,36,30,.12)':'rgba(170,160,140,.1)');g.fillStyle='#4e4a42';g.fillRect(WALLX-14,-20,28,BH+40)}
+  // ледь помітна межа поля — тут трава витоптана
+  if(!SE.snow){g.strokeStyle='rgba(60,50,30,.07)';g.lineWidth=40;g.strokeRect(-10,-10,BW+20,BH+20)}
+  // край ділянки м'яко переходить у колір землі навколо
+  g.setTransform(1,0,0,1,0,0);const base=SE.snow?'#dfe4e6':SE.g[1],fade=(x0,y0,x1,y1)=>{const gr=g.createLinearGradient(x0,y0,x1,y1);gr.addColorStop(0,base);gr.addColorStop(1,'rgba(0,0,0,0)');return gr};
+  const E=c.width*.08;[[0,0,E,0],[c.width,0,c.width-E,0],[0,0,0,E],[0,c.height,0,c.height-E]].forEach(([x0,y0,x1,y1])=>{g.fillStyle=fade(x0,y0,x1,y1);g.fillRect(0,0,c.width,c.height)});
+  return c;
+}
+// дрібна зернистість трави, що повторюється — земля чітка навіть зблизька
+function grassDetail(SE){const c=document.createElement('canvas');c.width=c.height=256;const g=c.getContext('2d'),R=mulberry(5);g.fillStyle='#808080';g.fillRect(0,0,256,256);
+  for(let i=0;i<5200;i++){const x=R()*256,y=R()*256,l=SE.snow?2:3+R()*7,v=Math.floor(90+R()*90);g.strokeStyle=`rgb(${v},${v},${v})`;g.globalAlpha=.55;g.lineWidth=1;g.beginPath();g.moveTo(x,y);g.lineTo(x+(R()-.5)*3,y-l);g.stroke()}
+  g.globalAlpha=1;const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;return t}
+function addDetail(mat,tex,rep){mat.onBeforeCompile=sh=>{sh.uniforms.dMap={value:tex};sh.uniforms.dRep={value:new THREE.Vector2(rep[0],rep[1])};
+  sh.fragmentShader='uniform sampler2D dMap;uniform vec2 dRep;\n'+sh.fragmentShader.replace('#include <map_fragment>','#include <map_fragment>\n  diffuseColor.rgb*=mix(vec3(1.0),texture2D(dMap,vUv*dRep).rgb*2.0,0.55);')}}
+// пучки трави: дві схрещені площинки, усі одним інстансованим мешем
+function grassTufts(SE,count){
+  const c=document.createElement('canvas');c.width=64;c.height=32;const g=c.getContext('2d'),R=mulberry(9),cols=SE.snow?['#8a8a70','#a8a890']:SE.n==='Осінь'?['#8a7a3a','#a08848','#6e6a30']:[SE.g[0],SE.g[1],'#7a9a48','#3e5a26'];
+  for(let i=0;i<70;i++){const x=4+R()*56,hgt=12+R()*19;g.strokeStyle=cols[Math.floor(R()*cols.length)];g.lineWidth=1.8;g.beginPath();g.moveTo(x,32);g.quadraticCurveTo(x+(R()-.5)*6,32-hgt*.6,x+(R()-.5)*12,32-hgt);g.stroke()}
+  const tx=new THREE.CanvasTexture(c),geo=new THREE.BufferGeometry(),P=[],U=[],N=[],I=[];
+  for(const a of[0,Math.PI/2,Math.PI/4])for(const sd of[1,-1]){const dx=Math.cos(a)*.5,dz=Math.sin(a)*.5,b=P.length/3;P.push(-dx,0,-dz,dx,0,dz,dx,1,dz,-dx,1,-dz);U.push(0,0,1,0,1,1,0,1);N.push(0,1,0,0,1,0,0,1,0,0,1,0);sd>0?I.push(b,b+1,b+2,b,b+2,b+3):I.push(b,b+2,b+1,b,b+3,b+2)}
+  geo.setAttribute('position',new THREE.Float32BufferAttribute(P,3));geo.setAttribute('uv',new THREE.Float32BufferAttribute(U,2));geo.setAttribute('normal',new THREE.Float32BufferAttribute(N,3));geo.setIndex(I);
+  const m=new THREE.InstancedMesh(geo,new THREE.MeshLambertMaterial({map:tx,alphaTest:.45}),count),M=new THREE.Matrix4(),Q=new THREE.Quaternion(),E=new THREE.Euler(),Sv=new THREE.Vector3(),Pv=new THREE.Vector3(),RR=mulberry(B.uid+31);
+  let k=0;for(let i=0;i<count*2&&k<count;i++){const x=-250+RR()*(BW+500),y=-250+RR()*(BH+500);if(B.wall&&x>WALLX-20)continue;if(battleHeight(x,y)<GL.bh.WL+.6)continue;const sz=7+RR()*8;
+    E.set(0,RR()*3,0);Q.setFromEuler(E);M.compose(Pv.set(x,battleHeight(x,y)-.5,y),Q,Sv.set(sz*1.5,sz,sz*1.5));m.setMatrixAt(k++,M)}
+  m.count=k;m.receiveShadow=true;return m;
+}
+// дерева з мапи навколо місця бою; поле лишаємо вільним
+function battleTrees(){
+  const R=mulberry(B.uid+77),out=[],x0=-BEX,y0=-BEZ,x1=BW+BEX,y1=BH+BEZ,T=GL.bh,isWet=(x,y)=>{const i=Math.round((x+BEX)/BHS),j=Math.round((y+BEZ)/BHS);return T.wet[clamp(j,0,T.nz-1)*T.nx+clamp(i,0,T.nx-1)]};
+  const town=(x,y)=>B.wall&&x>WALLX-40&&x<BW+700&&y>-140&&y<BH+140,ok=(x,y)=>x>x0&&x<x1&&y>y0&&y<y1&&bOut(x,y)>70&&!isWet(x,y)&&!town(x,y);
+  for(const t of TREES){const bx=(t.x-B.site.x)/BK+BW/2,by=(t.y-B.site.y)/BK+BH/2;if(bx<x0-80||bx>x1+80||by<y0-80||by>y1+80)continue;
+    for(let k=0;k<3;k++){const x=bx+(R()-.5)*90,y=by+(R()-.5)*90;if(ok(x,y))out.push({x,y,s:t.s*1.2+R()*5,v:t.v})}}
+  // поодинокі дерева й гайки на відкритих місцях
+  for(let i=0;i<70;i++){const cx=x0+R()*(x1-x0),cy=y0+R()*(y1-y0),n=1+Math.floor(R()*6);for(let k=0;k<n;k++){const x=cx+(R()-.5)*160,y=cy+(R()-.5)*160;if(ok(x,y))out.push({x,y,s:11+R()*12,v:Math.floor(R()*4)})}}
+  return out.slice(0,2200);
+}
 function build3DBattle(){
   if(!GL.ok)return;const SE=SEASONS[G.season||0],{sc,sun}=makeScene(SE);GL.bn=makeNoise(mulberry((G.seed||1)+B.uid+ri(9999)),6);
-  const outer=new THREE.Mesh(new THREE.PlaneGeometry(BW+3000,BH+3000).rotateX(-Math.PI/2),new THREE.MeshLambertMaterial({color:B.siege?'#6c665a':(SE.snow?'#dfe4e6':SE.g[1])}));outer.position.set(BW/2,-6,BH/2);outer.receiveShadow=true;sc.add(outer);
-  const gm=terrainMesh(BW,BH,90,57,battleHeight,B.ground);sc.add(gm);
-  const R=mulberry(B.uid+77),trees=[];for(let i=0;i<220;i++){const a=R()*6.28,d=1+R()*.6,x=BW/2+Math.cos(a)*BW*.62*d,y=BH/2+Math.sin(a)*BH*.75*d;trees.push({x,y,s:12+R()*12,v:ri(4)})}
-  sc.add(forestMesh(trees,SE,()=>-4,1.6));
+  const c=B.c,st=c&&(c.party||c.town);B.site={x:st?st.x:G.x,y:st?st.y:G.y};buildBattleTerrain();
+  const EW=BW+2*BEX,EH=BH+2*BEZ,T=GL.bh;
+  const gm=terrainMesh(EW,EH,T.nx-1,T.nz-1,battleHeight,battleGroundTex(SE),-BEX,-BEZ);addDetail(gm.material,grassDetail(SE),[EW/70,EH/70]);sc.add(gm);
+  // земля за краєм ділянки й вода — як на мапі
+  const outer=new THREE.Mesh(new THREE.PlaneGeometry(EW+9000,EH+9000).rotateX(-Math.PI/2),new THREE.MeshLambertMaterial({color:SE.snow?'#dfe4e6':SE.g[1]}));
+  const edgeH=(battleHeight(-BEX,BH/2)+battleHeight(BW+BEX,BH/2)+battleHeight(BW/2,-BEZ)+battleHeight(BW/2,BH+BEZ))/4;outer.position.set(BW/2,Math.min(edgeH,T.WL+1)-3,BH/2);outer.receiveShadow=true;sc.add(outer);
+  if(T.wet.some(v=>v)){const water=new THREE.Mesh(new THREE.PlaneGeometry(EW,EH).rotateX(-Math.PI/2),new THREE.MeshLambertMaterial({color:SE.water,transparent:true,opacity:.86}));water.position.set(BW/2,T.WL,BH/2);water.receiveShadow=true;sc.add(water)}
+  sc.add(forestMesh(battleTrees(),SE,battleHeight,1.6));
+  if(!SE.snow)sc.add(grassTufts(SE,GL.small?1600:3200));
   let gate=null,ram=null;
   if(B.wall){const K=makeKit(400);sc.add(K.group);const gapAt=z=>B.breach.find(b=>b.kind==='gate'&&Math.abs(z-b.y)<b.w);
     // мур із зубцями; ворота — проміжок, закритий стулками, поки таран їх не виламає
@@ -2794,8 +2892,10 @@ function build3DBattle(){
     for(const z of[0,B.gate.y-B.gate.w-14,B.gate.y+B.gate.w+14,BH]){K.add('cyl',WALLX,0,z,24,78,24,0,'#6a6358');K.add('cone',WALLX,78,z,28,28,28,0,'#7a3a2a')}
     // драбини, приставлені до муру
     for(const b of B.breach){if(b.kind!=='ladder')continue;for(const o of[-7,7])K.add('box',WALLX-22,24,b.y+o,3,58,3,0,'#7a5634');for(let h=6;h<54;h+=8)K.add('box',WALLX-22+(h-27)*.36,h,b.y,2.4,2,16,0,'#8a6a44')}
+    {const RH=mulberry(B.uid+5),roofs=SE.snow?['#e8ecee','#dfe4e6']:['#7a3a2a','#8a6a3a','#5a4a3a','#6a7a4a'];for(let i=0;i<60;i++){const x=BW+60+RH()*560,z=-60+RH()*(BH+120),w=48+RH()*36,d=36+RH()*22,hh=30+RH()*18,ry=(RH()-.5)*.5,y=battleHeight(x,z);
+      K.add('box',x,y,z,w,hh,d,ry,'#cbbd9c');K.add('roof',x,y+hh,z,w*1.05,24+RH()*12,d*1.15,ry,roofs[i%roofs.length])}
+     K.add('cyl',BW+340,battleHeight(BW+340,BH/2),BH/2,48,120,48,0,'#e6dcc6');K.add('dome',BW+340,battleHeight(BW+340,BH/2)+120,BH/2,42,50,42,0,SE.snow?'#e8ecee':'#c9a23a')}
     K.done();
-    for(const m of K.group.children){}
     gate=new THREE.Mesh(new THREE.BoxGeometry(12,44,B.gate.w*2),new THREE.MeshLambertMaterial({color:'#5a3c22'}));gate.position.set(WALLX,22,B.gate.y);gate.castShadow=true;sc.add(gate);
     if(B.ram){ram=new THREE.Group();const wood=new THREE.MeshLambertMaterial({color:'#5e4024'}),roof=new THREE.MeshLambertMaterial({color:'#4a5a3a'});
       const log=new THREE.Mesh(new THREE.CylinderGeometry(4,4,60,10),wood);log.rotation.z=Math.PI/2;log.position.y=16;ram.add(log);
@@ -2814,7 +2914,7 @@ function drawBattle3D(dt){
   if(v.hero){const want=Math.atan2(-Math.cos(h.face),-Math.sin(h.face));let d=want-v.cyaw;d=Math.atan2(Math.sin(d),Math.cos(d));v.cyaw+=d*Math.min(1,dt*2.6)}else v.cyaw=v.yaw;
   const vv=v.hero?{d:clamp(v.d*.26,140,520),pitch:Math.min(v.pitch,.42)}:v,ty=battleHeight(hx,hy)+(v.hero?34:10);
   placeCam(vv,v.cyaw,hx+(Math.random()-.5)*(B.shake||0),ty,hy+(Math.random()-.5)*(B.shake||0));
-  Bt.sc.fog.near=v.hero?700:vv.d*1.1;Bt.sc.fog.far=v.hero?3000:vv.d*3.6;fitSun(Bt.sun,hx,ty,hy,Math.max(500,vv.d*1.2));
+  Bt.sc.fog.near=v.hero?900:vv.d*1.05;Bt.sc.fog.far=v.hero?3400:vv.d*2.9;fitSun(Bt.sun,hx,ty,hy,Math.max(500,vv.d*1.2));
   const {rx,rz}=camVecs(v.cyaw),seen=new Set();
   if(Bt.gate)Bt.gate.visible=!B.gate.open;if(Bt.ram&&B.ram){Bt.ram.position.set(B.ram.x,battleHeight(B.ram.x,B.ram.y),B.ram.y);if(B.ram.at&&!B.gate.open)Bt.ram.position.x+=Math.sin(performance.now()/120)*4}
   if(sprReady()){
