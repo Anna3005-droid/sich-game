@@ -553,6 +553,8 @@ button,.hs{transition:transform .09s ease-out,filter .09s,box-shadow .12s}
 .chip.ch{border-color:color-mix(in srgb,var(--c) 60%,#000)}.chip.ch b{color:var(--c);font-size:18px}
 .tnote{font-size:11.5px;color:#8f887a;margin-left:auto}
 .chip.tax .ic{color:#e2b24a}.chip.tax b{color:#ecc77e}.chip.tax small{color:#b9b09c}
+.eboat{margin-left:10px;padding:1px 8px;border:1px solid #3a4a5e;border-radius:10px;font-family:var(--f-body);font-size:11.5px;color:#a9a18f}.eboat.y{color:#9fd0e4;border-color:#4a7a90}
+.chip.isle{border-color:#4a7a90}.chip.isle .ic{color:#9fd0e4}.chip.isle i{color:#cfe6ef}
 .ecmp .epc{margin-left:auto;font-family:var(--f-body);font-size:13px;color:#cfc6b2}.ecmp .epc b{font-family:var(--f-head);font-size:17px}
 @media (orientation:landscape) and (max-height:520px){.tstrip{padding-top:4px;padding-bottom:4px}.chip{padding:2px 8px}.chip b{font-size:14px}.chip.sol b,.chip.ch b{font-size:15px}.tnote{display:none}}
 
@@ -920,8 +922,8 @@ const UIART={
 /* ================= data ================= */
 // стара мапа 4800×3600 тепер лежить у правій нижній частині; на захід і північ додано нові землі
 // стара мапа 4800×3600 розтягнута на більший світ: міста стоять просторіше, на заході й півночі нові землі
-const W0=4800,H0=3600,W=21600,H=15360,HPS=.6,MOVE_K=5/HPS*1.45;   // світ ще в 1,3 раза більший; загони трохи швидші, щоб дорога не тягнулась   // мапа в 1,6 раза більша; загони трохи швидші, щоб дорога не тягнулась // годин за секунду; рух множимо, щоб загін ішов так само швидко
-const mx=f=>.1+f*.78,my=f=>.1+f*.8,umx=u=>(u-.1)/.78,umy=v=>(v-.1)/.8;
+const W0=4800,H0=3600,W=21600,H=21120,HK=15360/H,HPS=.6,MOVE_K=5/HPS*1.45;   // світ ще в 1,3 раза більший; загони трохи швидші, щоб дорога не тягнулась   // мапа в 1,6 раза більша; загони трохи швидші, щоб дорога не тягнулась // годин за секунду; рух множимо, щоб загін ішов так само швидко
+const mx=f=>.1+f*.78,my=f=>(.1+f*.8)*HK,umx=u=>(u-.1)/.78,umy=v=>(v/HK-.1)/.8;   // HK: південь мапи — нові землі за морем
 // w — зброя; mor — бойовий дух; blk — шанс закритися щитом; ap — пробиття броні
 const TYPES={
   militia:{n:'Ополченці',w:'spear',hp:40,atk:7,def:.05,spd:72,range:30,cd:1.0,cost:20,wage:1,r:12,mor:45,blk:.15,ap:0},
@@ -942,7 +944,9 @@ const FAC=[
   {name:'Київська Русь',color:'#c27a2c',short:'Київська Русь',about:'Княжі дружини в кольчугах і шишаках.',bonus:'+5% захисту героя'},
   {name:'Запорізька Січ',color:'#b03a6a',short:'Запорізька Січ',about:'Вільні козаки з шаблями. Швидкі й люті в бою.',bonus:'+3 до удару героя'},
   {name:'Розбійники',color:'#8a8577'},
+  {name:'Кримське ханство',color:'#3f9a5c',short:'Крим',about:'Степова кіннота й фортеці на узбережжі.',bonus:''},
 ];
+const AIF=[1,2,3,5];   // князівства й ханство, якими керує гра
 // міста за макетом; координати в частках мапи, art = картинка міста з макета
 const TOWNS=[
   {n:'Галич',type:'city',f:1,x:.17,y:.47,art:'halych'},
@@ -1049,10 +1053,36 @@ const TOWNS=[
   {n:'Келеберда',type:'village',f:3,x:0.808,y:0.776,art:'village'},
   {n:'Жовті Води',type:'village',f:3,x:0.664,y:0.712,art:'village'},
   {n:'Лохвиця',type:'village',f:3,x:0.92,y:0.072,art:'village'},
-  {n:'Березань',type:'village',f:3,x:.615,y:1.01,art:'village'},
-  {n:'Тендра',type:'village',f:3,x:.685,y:1.015,art:'village'},
+  {n:'Березань',type:'village',f:3,x:.615,y:1.01,art:'village',isle:1},
+  {n:'Тендра',type:'village',f:3,x:.685,y:1.015,art:'village',isle:1},
+  {n:'Монастирище',type:'castle',f:2,x:.7625,y:.48,art:'chernihiv',isle:2},   // замок на острові серед озера
+  // південні землі за морем: Молдова, Буджак, Крим
+  {n:'Сучава',type:'castle',f:1,x:-0.08,y:0.98,art:'lutsk'},
+  {n:'Сороки',type:'castle',f:1,x:0.14,y:0.93,art:'lutsk'},
+  {n:'Ясси',type:'city',f:1,x:-0.04,y:1.17,art:'halych'},
+  {n:'Галац',type:'village',f:1,x:0.06,y:1.42,art:'village'},
+  {n:'Бендери',type:'castle',f:5,x:0.27,y:1.03,art:'lutsk'},
+  {n:'Очаків',type:'castle',f:5,x:0.4,y:0.97,art:'lutsk'},
+  {n:'Аккерман',type:'city',f:5,x:0.385,y:1.12,art:'halych'},
+  {n:'Кілія',type:'village',f:5,x:0.24,y:1.33,art:'village'},
+  {n:'Ізмаїл',type:'castle',f:5,x:0.1,y:1.25,art:'lutsk'},
+  {n:'Кінбурн',type:'castle',f:5,x:0.925,y:0.98,art:'lutsk'},
+  {n:'Арабат',type:'castle',f:5,x:0.95,y:1.17,art:'lutsk'},
+  {n:'Азов',type:'city',f:5,x:1.09,y:1.02,art:'halych'},
+  {n:'Перекоп',type:'castle',f:5,x:0.82,y:1.21,art:'lutsk'},
+  {n:'Гезлев',type:'city',f:5,x:0.55,y:1.25,art:'halych'},
+  {n:'Ак-Мечеть',type:'village',f:5,x:0.68,y:1.31,art:'village'},
+  {n:'Бахчисарай',type:'city',f:5,x:0.63,y:1.47,art:'halych'},
+  {n:'Карасубазар',type:'village',f:5,x:0.76,y:1.45,art:'village'},
+  {n:'Кафа',type:'city',f:5,x:0.93,y:1.42,art:'halych'},
+  {n:'Судак',type:'castle',f:5,x:0.84,y:1.54,art:'lutsk'},
+  {n:'Мангуп',type:'castle',f:5,x:0.5,y:1.55,art:'lutsk'},
+  {n:'Балаклава',type:'village',f:5,x:0.39,y:1.48,art:'village'},
+  {n:'Керч',type:'village',f:5,x:1.07,y:1.36,art:'village'},
+  {n:'Тамань',type:'village',f:5,x:1.1,y:1.52,art:'village'},
+  {n:'Нижній Кодак',type:'village',f:3,x:1.08,y:0.86,art:'village'},
 ].map(t=>({...t,x:mx(t.x),y:my(t.y)}));
-const LORDS=[['Князь Роман','Воєвода Данило','Воєвода Лев'],['Князь Святослав','Воєвода Добриня','Князь Ігор'],['Кошовий Гнат','Отаман Остап','Отаман Байда']];
+const LORDS=[['Князь Роман','Воєвода Данило','Воєвода Лев'],['Князь Святослав','Воєвода Добриня','Князь Ігор'],['Кошовий Гнат','Отаман Остап','Отаман Байда'],[],['Хан Іслам Ґерай','Тугай-бей','Мурза Карач-бей']];
 // Ранги героя. Пізніше сюди підставимо малюнки для кожної фракції.
 // ранг не залежить від рівня: його купують за золото й обирають будь-який з куплених
 const RANKS=[{n:'Простий воїн',lvl:1,cost:0,hp:0,atk:0,lead:0},{n:'Досвідчений воїн',lvl:3,cost:400,hp:20,atk:2,lead:3},{n:'Отаман',lvl:6,cost:1200,hp:50,atk:5,lead:6},{n:'Елітний воїн',lvl:10,cost:2500,hp:90,atk:9,lead:10}];
@@ -1095,20 +1125,23 @@ function initGarrison0(type){
 function initRecruits(type){const r=zero();RECRUIT[type].forEach(t=>r[t]=t==='knight'?2:5);return r}
 function newGame(pf=1){
   const seed=(Math.random()*2147483647)|0,R=mulberry(seed);
-  const towns=TOWNS.map((t,i)=>({id:i+1,name:t.n,type:t.type,f:t.f,x:t.x*W,y:t.y*H,art:t.art,bld:initBld(t.type),garrison:initGarrison(t.type),recruits:initRecruits(t.type)}));
+  const towns=TOWNS.map((t,i)=>({id:i+1,name:t.n,type:t.type,f:t.f,x:t.x*W,y:t.y*H,art:t.art,isle:t.isle,bld:initBld(t.type),garrison:initGarrison(t.type),recruits:initRecruits(t.type)}));
   G={v:3,pf,seed,day:1,hour:8,gold:350,x:W*mx(.5),y:H*my(.55),target:null,waiting:false,zoom:VW<700?.8:1,
     hero:{lvl:1,xp:0,hp:150,maxHp:150,weapon:0,armor:0,helm:0,shield:0,boots:0},
     army:{militia:6,sword:2,axe:0,archer:3,musket:0,knight:0},
-    towns,parties:[],war:{1:false,2:false,3:false},respawn:[],nid:100,won:false,mapW:W,lastMo:0};
+    towns,parties:[],war:{1:false,2:false,3:false,5:false},respawn:[],nid:100,won:false,mapW:W,mapH:H*HK,lastMo:0};
   LORDS.forEach((ls,fi)=>ls.forEach(n=>spawnLord(fi+1,n)));
   for(let i=0;i<46;i++)spawnBandit();
   cam.follow=true;
 }
+// човни мають козаки Січі, по одному лорду в Галичині й Русі та річкові пірати
+const lordBoat=(f,name)=>f===3||(LORDS[f-1]&&LORDS[f-1][2]===name);
+function boatsInit(){(G.parties||[]).forEach(p=>{if(p.boat==null)p.boat=p.kind==='mine'||(p.kind==='lord'?lordBoat(p.f,p.name):p.name==='Річкові пірати')})}
 function spawnLord(f,name){
   const own=G.towns.filter(t=>t.f===f);if(!own.length)return false;
   const home=own.find(t=>t.type==='city')||own[0];
   const sp=cellC(nearestPassable(cellAt(home.x+ri(60)-30,home.y+40)));
-  G.parties.push({id:G.nid++,kind:'lord',name,f,x:sp.x,y:sp.y,tx:sp.x,ty:sp.y,
+  G.parties.push({id:G.nid++,kind:'lord',name,f,boat:lordBoat(f,name),x:sp.x,y:sp.y,tx:sp.x,ty:sp.y,
     army:fillArmy({militia:8+ri(6),sword:5+ri(5),axe:ri(4),archer:4+ri(4),musket:ri(3),knight:2+ri(3)}),goal:null,wait:ri(6),cool:0});
   return true;
 }
@@ -1119,7 +1152,8 @@ function spawnBandit(){
     if(Math.hypot(G.x-x,G.y-y)<450)continue;
     if(!passable(cellAt(x,y))||terAt(x,y)===T_FORD)continue;
     const lvl=Math.min(4,1+G.day/12);
-    G.parties.push({id:G.nid++,kind:'bandit',name:BANDIT_NAMES[ri(BANDIT_NAMES.length)],f:4,x,y,tx:x,ty:y,
+    if(ISLE[cellAt(x,y)])continue;const bn=BANDIT_NAMES[ri(BANDIT_NAMES.length)];
+    G.parties.push({id:G.nid++,kind:'bandit',name:bn,boat:bn==='Річкові пірати',f:4,x,y,tx:x,ty:y,
       army:fillArmy({militia:4+ri(5)+ri(3*lvl),sword:ri(2*lvl),axe:ri(lvl),archer:ri(2+lvl),knight:0}),goal:null,wait:0,cool:0,hx:x,hy:y});
     return;
   }
@@ -1148,17 +1182,18 @@ const RIVERS0=[
 const RIVERS=RIVERS0.map((r,i)=>{const pts=r.pts.map(([x,y])=>[mx(x),my(y)]);
   if(i===0)pts.unshift([mx(.40),-.02]);if(i===1)pts.unshift([-.02,my(.50)]);if(i===2)pts.unshift([1.02,my(-.15)]);if(i===3)pts.unshift([mx(.32),my(.24)]);
   return{w:r.w,pts}});
-const NEIGHBORS=[['УГОРЩИНА',mx(.1),my(.95)],['МОЛДОВА',mx(.41),my(.965)],['КРИМСЬКЕ ХАНСТВО',mx(.83),my(.975)],['ДИКЕ ПОЛЕ',.95,my(.57)],['ПОЛЬЩА',.06,.22],['ЛИТВА',.45,.04]];
+const NEIGHBORS=[['УГОРЩИНА',mx(-.08),my(.86)],['МОЛДОВА',mx(.0),my(1.08)],['КРИМСЬКЕ ХАНСТВО',mx(.72),my(1.39)],['ОСМАНСЬКА ІМПЕРІЯ',mx(.2),my(1.5)],['ЧОРНЕ МОРЕ',mx(.66),my(1.09)],['ДИКЕ ПОЛЕ',.95,my(.57)],['ПОЛЬЩА',.06,.22],['ЛИТВА',.45,.04]];
 function riverPath(g,pts){g.beginPath();const P=pts.map(([x,y])=>[x*W,y*H]);g.moveTo(P[0][0],P[0][1]);
   for(let i=1;i<P.length-1;i++){const mx=(P[i][0]+P[i+1][0])/2,my=(P[i][1]+P[i+1][1])/2;g.quadraticCurveTo(P[i][0],P[i][1],mx,my)}
   const L=P[P.length-1];g.lineTo(L[0],L[1])}
 /* ================= рельєф і прохідність ================= */
+const texS=()=>Math.min(.4,4096/Math.max(W,H),Math.sqrt(12.5e6/(W*H)));
 // мапа поділена на клітинки 40×40: від типу клітинки залежить швидкість загону
 const GS=40,GW=Math.ceil(W/GS),GH=Math.ceil(H/GS);
 const T_PLAIN=0,T_FOREST=1,T_MOUNT=2,T_WATER=3,T_ROAD=4,T_BRIDGE=5,T_FORD=6,T_SWAMP=7;
 const TER_SPD=[1,.55,0,0,1.3,1.1,.6,.42];
 const TER_N=['Поле','Ліс · повільно','Гори','Річка','Дорога · швидко','Міст','Брід · повільно','Болото · повільно'];
-let TER=new Uint8Array(GW*GH),TREES=[],PEAKS=[],fogLayer=null;
+let TER=new Uint8Array(GW*GH),OPEN=new Uint8Array(GW*GH),ISLE=new Uint8Array(GW*GH),TREES=[],PEAKS=[],fogLayer=null;
 const cellAt=(x,y)=>clamp(Math.floor(y/GS),0,GH-1)*GW+clamp(Math.floor(x/GS),0,GW-1);
 const terAt=(x,y)=>TER[cellAt(x,y)];
 const passable=c=>TER_SPD[TER[c]]>0;
@@ -1224,18 +1259,25 @@ const HC=40,HMW=W/HC+1,HMH=H/HC+1;let HM=new Float32Array(HMW*HMH),WATERS={sea:[
 function heightAt(x,y){const fx=clamp(x/HC,0,HMW-1.001),fy=clamp(y/HC,0,HMH-1.001),i=Math.floor(fx),j=Math.floor(fy),u=fx-i,v=fy-j,k=j*HMW+i;
   return HM[k]*(1-u)*(1-v)+HM[k+1]*u*(1-v)+HM[k+HMW]*(1-u)*v+HM[k+HMW+1]*u*v}
 function buildTerrain(){
-  const R=mulberry(G.seed+7),S=Math.min(.4,4096/W);G.season=seasonOf(G.day);const SE=SEASONS[G.season];TREE_IMG=makeTreeImgs(SE,true);
-  TER=new Uint8Array(GW*GH);TREES=[];PEAKS=[];
+  const R=mulberry(G.seed+7),S=texS();G.season=seasonOf(G.day);const SE=SEASONS[G.season];TREE_IMG=makeTreeImgs(SE,true);
+  TER=new Uint8Array(GW*GH);OPEN=new Uint8Array(GW*GH);ISLE=new Uint8Array(GW*GH);TREES=[];PEAKS=[];
   const nearTown=(x,y,d)=>G.towns.some(t=>Math.hypot(t.x-x,t.y-y)<d);
   // --- море на півдні з хвилястим берегом ---
   const cn=makeNoise(mulberry(G.seed+31),13);
   const coastV=u=>u<.43||u>.9?9:.915+(cn(u,.5)-.5)*.06+Math.max(0,.5-u)*1.4+Math.max(0,u-.83)*2.4;
-  const ISL=[{x:mx(.65)*W,y:my(1.0125)*H,rx:1050,ry:420,a:-.06}];   // острів у морі з двома селами
+  // ширина моря: на кінцях сходиться, південний берег — Крим
+  const seaW=u=>u<.43||u>.9?0:Math.max(0,.32*Math.pow(Math.sin(Math.PI*clamp((u-.41)/.51,0,1)),.6)+(cn(u,.85)-.5)*.05);
+  const LT=TOWNS.find(t=>t.isle===2),BL={x:LT.x*W,y:LT.y*H,r:820,a:0};   // велике озеро з островом посередині
+  const ISL=[{x:mx(.65)*W,y:my(1.0125)*H,rx:1050,ry:420,a:-.06},{x:BL.x,y:BL.y,rx:330,ry:250,a:0,lake:1}];   // острів у морі з двома селами й острів серед озера
   const islK=(x,y)=>{let b=0;for(const i of ISL){const dx=x-i.x,dy=y-i.y,c=Math.cos(i.a),s=Math.sin(i.a),u=(dx*c+dy*s)/i.rx,v=(-dx*s+dy*c)/i.ry;b=Math.max(b,1-(u*u+v*v))}return b};
-  const isSea=(x,y)=>umy(y/H)>coastV(umx(x/W))&&islK(x,y)<=0;
-  for(let j=0;j<GH;j++)for(let i=0;i<GW;i++){const x=i*GS+GS/2,y=j*GS+GS/2;if(isSea(x,y))TER[j*GW+i]=T_WATER}
+  const isSea=(x,y)=>{const u=umx(x/W),v=umy(y/H),a=coastV(u);return v>a&&v<a+seaW(u)&&islK(x,y)<=0};
+  // озеро й острови мітимо точно за еліпсом, як їх намальовано
+  const inEll=(x,y,cx,cy,rx,ry,a)=>{const dx=x-cx,dy=y-cy,c=Math.cos(a),s=Math.sin(a),u=(dx*c+dy*s)/rx,v=(-dx*s+dy*c)/ry;return u*u+v*v<1};
+  const markEll=(cx,cy,rx,ry,a,v,open)=>{const R0=Math.max(rx,ry);for(let j=Math.max(0,Math.floor((cy-R0)/GS));j<=Math.min(GH-1,Math.ceil((cy+R0)/GS));j++)for(let i=Math.max(0,Math.floor((cx-R0)/GS));i<=Math.min(GW-1,Math.ceil((cx+R0)/GS));i++){const x=i*GS+GS/2,y=j*GS+GS/2;if(inEll(x,y,cx,cy,rx,ry,a)){const k=j*GW+i;TER[k]=v;OPEN[k]=open?1:0}}};
+  for(let j=0;j<GH;j++)for(let i=0;i<GW;i++){const x=i*GS+GS/2,y=j*GS+GS/2;if(isSea(x,y)){TER[j*GW+i]=T_WATER;OPEN[j*GW+i]=1}else if(islK(x,y)>0)ISLE[j*GW+i]=1}
   // --- озера ---
-  const lakes=[];for(let k=0;k<200&&lakes.length<60;k++){const big=lakes.length<34,x=W*(.04+R()*.8),y=H*(.06+R()*.6),r=big?60+R()*60:28+R()*26;if(nearTown(x,y,r+280))continue;lakes.push({x,y,r,a:R()*3});markDisc(x,y,r,T_WATER)}
+  const lakes=[BL];markEll(BL.x,BL.y,BL.r,BL.r*.75,0,T_WATER,1);for(let k=0;k<200&&lakes.length<61;k++){const big=lakes.length<35,x=W*(.04+R()*.8),y=H*(.06+R()*.6),r=big?60+R()*60:28+R()*26;if(nearTown(x,y,r+280)||Math.hypot(x-BL.x,y-BL.y)<BL.r+r+200)continue;const a=R()*3;lakes.push({x,y,r,a});markEll(x,y,r,r*.75,a,T_WATER,1)}
+  ISL.filter(i=>i.lake).forEach(i=>markEll(i.x,i.y,i.rx,i.ry,i.a,T_PLAIN,0));
   // --- річки: звивисті, різної ширини ---
   const wn=makeNoise(mulberry(G.seed+21),29),wd=makeNoise(mulberry(G.seed+22),17);
   const rivers=RIVERS.map(r=>{const p0=curvePts(r.pts);const p=p0.map(([x,y],i,a)=>{const j=Math.min(a.length-1,i+1),k=Math.max(0,i-1),dx=a[j][0]-a[k][0],dy=a[j][1]-a[k][1],l=Math.hypot(dx,dy)||1,o=(wn(x/W,y/H)-.5)*130;return[x-dy/l*o,y+dx/l*o]});
@@ -1258,6 +1300,7 @@ function buildTerrain(){
     }});   // бродів теж немає
   // --- гори ---
   for(let i=0;i<620;i++)PEAKS.push({x:R()*mx(.24)*W,y:H*(my(.6)+R()*(my(.93)-my(.6))),s:55+R()*55});
+  for(let i=0;i<150;i++)PEAKS.push({x:W*mx(.5+R()*.42),y:H*my(1.5+R()*.08),s:35+R()*40});   // Кримські гори
   for(let i=0;i<130;i++)PEAKS.push({x:W*(mx(.76)+R()*(1-mx(.76))),y:H*R()*.06,s:40+R()*40});
   // перевали через Карпати: смуги без вершин
   const PASS=[.70,.84].map(v=>my(v)*H);
@@ -1290,6 +1333,9 @@ function buildTerrain(){
   rivers.forEach(r=>{for(let i=1;i<r.p.length;i++){const[a,b]=[r.p[i-1],r.p[i]],n=Math.max(1,Math.ceil(Math.hypot(b[0]-a[0],b[1]-a[1])/(HC*.5)));
     for(let s2=0;s2<n;s2++){const t=s2/n;carve(a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,r.wd[i]/2+3,46,10+r.w*.25)}}});
   lakes.forEach(l=>{for(let a=0;a<6.283;a+=.08)for(let q=0;q<=1;q+=.2){const rr=l.r*q,ca=Math.cos(l.a),sa=Math.sin(l.a),ex=Math.cos(a)*rr,ey=Math.sin(a)*rr*.75;carve(l.x+ex*ca-ey*sa,l.y+ex*sa+ey*ca,l.r*(1-q)*.75+8,50,18)}});
+  // острів серед озера знову піднімаємо з води
+  ISL.filter(i=>i.lake).forEach(il=>{const R0=Math.max(il.rx,il.ry)+60;for(let j=Math.max(0,Math.floor((il.y-R0)/HC));j<=Math.min(HMH-1,Math.ceil((il.y+R0)/HC));j++)for(let i=Math.max(0,Math.floor((il.x-R0)/HC));i<=Math.min(HMW-1,Math.ceil((il.x+R0)/HC));i++){
+    const x=i*HC,y=j*HC,dx=(x-il.x)/il.rx,dy=(y-il.y)/il.ry,k=1-(dx*dx+dy*dy);if(k<=0)continue;const q=Math.min(1,k/.35),sm=q*q*(3-2*q),id=j*HMW+i;hm[id]=Math.max(hm[id],-20*(1-sm)+(7+n2(x/W,y/H)*10)*sm);if(sm>.5)wet[id]=0}});
   // згладжуємо, щоб береги й підніжжя гір були м'якими
   for(let pass=0;pass<2;pass++){const c2=hm.slice();for(let j=1;j<HMH-1;j++)for(let i=1;i<HMW-1;i++){const k=j*HMW+i;hm[k]=(c2[k]*4+c2[k-1]+c2[k+1]+c2[k-HMW]+c2[k+HMW])/8}}
   for(let j=0;j<HMH;j++)for(let i=0;i<HMW;i++){const tt=TER[cellAt(Math.min(i*HC,W-1),Math.min(j*HC,H-1))];if(tt===T_SWAMP){const k=j*HMW+i;hm[k]=Math.min(hm[k],3+(hm[k]-3)*.25)}}
@@ -1332,7 +1378,8 @@ function buildTerrain(){
   const waterShape=(t,grow)=>{t.lineCap='round';t.lineJoin='round';
     rivers.forEach(r=>{for(let i=1;i<r.p.length;i++){t.lineWidth=r.wd[i]+grow;t.beginPath();t.moveTo(r.p[i-1][0],r.p[i-1][1]);t.lineTo(r.p[i][0],r.p[i][1]);t.stroke()}});
     lakes.forEach(l=>{t.beginPath();t.ellipse(l.x,l.y,l.r+grow/2,l.r*.75+grow/2,l.a,0,7);t.fill()});
-    t.beginPath();t.moveTo(W*mx(.4),H+50);for(let u=.4;u<=.92;u+=.004)t.lineTo(W*mx(u),Math.min(H+50,H*my(coastV(u))-grow/2));t.lineTo(W*mx(.92),H+50);t.closePath();t.fill()};
+    {const top=[],bot=[];for(let u=.43;u<=.9;u+=.003){const a=coastV(u),w=seaW(u);if(w<=0)continue;top.push([W*mx(u),H*my(a)-grow/2]);bot.push([W*mx(u),H*my(a+w)+grow/2])}
+     if(top.length){t.beginPath();t.moveTo(top[0][0]-grow/2,(top[0][1]+bot[0][1])/2);top.forEach(p=>t.lineTo(p[0],p[1]));const l=top.length-1;t.lineTo(top[l][0]+grow/2,(top[l][1]+bot[l][1])/2);for(let i=l;i>=0;i--)t.lineTo(bot[i][0],bot[i][1]);t.closePath();t.fill()}}};
   [[56,SE.snow?'#c8c4b4':'#a59c6c',.22],[34,SE.snow?'#d4d2c8':'#b5aa78',.35],[16,SE.snow?'#a8a89c':'#6e7448',.5],[6,'#486f78',.75],[0,SE.water,1],[-14,SE.snow?'#8aa6b6':'#245470',.7]].forEach(([grow,col,al])=>layer(al,t=>{t.strokeStyle=col;t.fillStyle=col;waterShape(t,grow)}));
   layer(.22,t=>{t.strokeStyle=t.fillStyle='#9fd0e4';waterShape(t,-30)});
   WATERS.mask=waterMask(W,H,g2=>{waterShape(g2,0);g2.fillStyle='#000';ISL.forEach(i=>{g2.beginPath();g2.ellipse(i.x,i.y,i.rx-40,i.ry-40,i.a,0,7);g2.fill()});g2.fillStyle='#fff'});WATERS.flow=flowMap(rivers);
@@ -1362,6 +1409,7 @@ function buildTerrain(){
     const r=50+R()*110,gr=fg.createRadialGradient(x,y,0,x,y,r);gr.addColorStop(0,'rgba(240,238,232,.55)');gr.addColorStop(1,'rgba(240,238,232,0)');fg.fillStyle=gr;fg.beginPath();fg.arc(x,y,r,0,7);fg.fill()}
   fogLayer=f;
   const snap=o=>{const c=cellAt(o.x,o.y);if(!passable(c)){const p=cellC(nearestPassable(c));o.x=p.x;o.y=p.y}};
+  if(G.parties){crimeaLords();boatsInit();G.parties.forEach(p=>{if(!p.boat&&ISLE[cellAt(p.x,p.y)])p.boat=true})}
   snap(G);G.parties.forEach(snap);G.path=null;G.parties.forEach(p=>p.path=null);
   if(typeof build3DMap==='function')build3DMap();
 }
@@ -1378,9 +1426,10 @@ function nearestPassable(c){
 // човни є в усіх; swim — швидкість на воді (0 — човни на березі)
 const BOAT_LV=[{n:'Довбанка',spd:.6},{n:'Байдак',spd:.85,cost:250},{n:'Козацька чайка',spd:1.1,cost:600},{n:'Морська чайка',spd:1.4,cost:1200}];
 const boatSpd=()=>G.sail===false?0:BOAT_LV[G.boatLv||0].spd;
-const cellSpd=(c,swim)=>TER[c]===T_WATER?(swim?(swim===true?.6:swim):0):TER_SPD[TER[c]];
-function findPath(x0,y0,x1,y1,swim){
-  const pass=c=>cellSpd(c,swim)>0,near=c=>swim&&pass(c)?c:nearestPassable(c);
+// річки перетинають усі; на озера й море виходять лише ті, хто має човни
+const cellSpd=(c,swim,open)=>TER[c]===T_WATER?(!swim||(open===false&&OPEN[c])?0:(swim===true?.6:swim)):TER_SPD[TER[c]];
+function findPath(x0,y0,x1,y1,swim,open){
+  const pass=c=>cellSpd(c,swim,open)>0,near=c=>swim&&pass(c)?c:nearestPassable(c);
   const s=near(cellAt(x0,y0)),t=near(cellAt(x1,y1)),N=GW*GH;
   const gS=new Float32Array(N).fill(1e9),came=new Int32Array(N).fill(-1),closed=new Uint8Array(N),hp=[],hk=[];
   const push=(n,k)=>{hp.push(n);hk.push(k);let i=hp.length-1;while(i>0){const p=(i-1)>>1;if(hk[p]<=hk[i])break;[hp[p],hp[i]]=[hp[i],hp[p]];[hk[p],hk[i]]=[hk[i],hk[p]];i=p}};
@@ -1390,13 +1439,13 @@ function findPath(x0,y0,x1,y1,swim){
   while(hp.length){const c=pop();if(c===t)break;if(closed[c])continue;closed[c]=1;const ci=c%GW,cj=Math.floor(c/GW);if(heur(c)<bestH){bestH=heur(c);best=c}
     for(let dj=-1;dj<=1;dj++)for(let di=-1;di<=1;di++){if(!di&&!dj)continue;const ni=ci+di,nj=cj+dj;if(ni<0||nj<0||ni>=GW||nj>=GH)continue;const n=nj*GW+ni;
       if(!pass(n))continue;if(di&&dj&&(!pass(cj*GW+ni)||!pass(nj*GW+ci)))continue;
-      const ng=gS[c]+(di&&dj?1.414:1)/cellSpd(n,swim);if(ng<gS[n]){gS[n]=ng;came[n]=c;push(n,ng+heur(n))}}}
+      const ng=gS[c]+(di&&dj?1.414:1)/cellSpd(n,swim,open);if(ng<gS[n]){gS[n]=ng;came[n]=c;push(n,ng+heur(n))}}}
   // недосяжна ціль: ідемо до найближчої точки, куди можна дійти
   let goal=t,exact=true;if(s!==t&&came[t]<0){if(best===s)return null;goal=best;exact=false}
   const cells=[goal];while(cells[0]!==s)cells.unshift(came[cells[0]]);
   // спрямовуємо шлях: прямі відрізки там, де місцевість не гірша
-  const pts=cells.map(cellC),spd=cells.map(c=>cellSpd(c,swim)),out=[];let i=0;
-  const los=(a,b,minS)=>{const d=Math.hypot(b.x-a.x,b.y-a.y),n=Math.ceil(d/12);for(let k=1;k<n;k++){const x=a.x+(b.x-a.x)*k/n,y=a.y+(b.y-a.y)*k/n;if(cellSpd(cellAt(x,y),swim)<minS-1e-6)return false}return true};
+  const pts=cells.map(cellC),spd=cells.map(c=>cellSpd(c,swim,open)),out=[];let i=0;
+  const los=(a,b,minS)=>{const d=Math.hypot(b.x-a.x,b.y-a.y),n=Math.ceil(d/12);for(let k=1;k<n;k++){const x=a.x+(b.x-a.x)*k/n,y=a.y+(b.y-a.y)*k/n;if(cellSpd(cellAt(x,y),swim,open)<minS-1e-6)return false}return true};
   const from={x:x0,y:y0};let cur=from;
   while(i<pts.length-1){let j=pts.length-1,minS=Math.min(...spd.slice(i,j+1));while(j>i+1&&!los(cur,pts[j],minS)){j--;minS=Math.min(...spd.slice(i,j+1))}out.push(pts[j]);cur=pts[j];i=j}
   const end=exact&&pass(cellAt(x1,y1))?{x:x1,y:y1}:pts[pts.length-1];
@@ -1477,7 +1526,7 @@ function townStrip(t){
   const own=t.f===0,g=total(t.garrison);let ch='';
   if(!own){const p=winChance(t.garrison,townDefBonus(t));ch=`<span class="chip ch" style="--c:${chanceCol(p)}"><i>Шанс на перемогу</i><b>${p}%</b><small>${chanceTxt(p)}</small></span>`}
   return `<div class="tstrip"><button class="chip sol" data-a="tab" data-v="garrison"><svg class="ic"><use href="#i-swords"/></svg><i>${own?'Ваш гарнізон':'Солдати'}</i><b>${g}</b></button>
-    <span class="chip civ"><svg class="ic"><use href="#i-people"/></svg><i>Мирні жителі</i><b>${popOf(t).toLocaleString('uk-UA')}</b></span>${ch}${own?(()=>{const r=tributeOf(t);return `<span class="chip tax"><svg class="ic"><use href="#i-coin"/></svg><i>Данина на місяць</i><b>${r.tax}</b><small>гарнізону ${Math.min(r.gar,r.tax)} · вам ${r.net>=0?'+'+r.net:r.net}</small></span>`})():''}
+    ${t.isle?'<span class="chip isle"><svg class="ic"><use href="#i-boat"/></svg><i>Острів — лише човнами</i></span>':''}<span class="chip civ"><svg class="ic"><use href="#i-people"/></svg><i>Мирні жителі</i><b>${popOf(t).toLocaleString('uk-UA')}</b></span>${ch}${own?(()=>{const r=tributeOf(t);return `<span class="chip tax"><svg class="ic"><use href="#i-coin"/></svg><i>Данина на місяць</i><b>${r.tax}</b><small>гарнізону ${Math.min(r.gar,r.tax)} · вам ${r.net>=0?'+'+r.net:r.net}</small></span>`})():''}
     <span class="tnote">${own?(g?'Жителі платять за свою безпеку: з данини утримують гарнізон.':'Місто без захисту — залиште воїнів у гарнізоні.'):'Б’ються лише солдати, мирні жителі у війні не беруть участі.'}</span></div>`;
 }
 
@@ -1486,7 +1535,7 @@ function renderLegend(){
   const el=$('#legend');if(!el)return;const on=GL.overview&&scene==='map'&&!!G;el.hidden=!on;if(!on)return;
   const n=f=>G.towns.filter(t=>t.f===f).length;
   const row=(f,me)=>`<div class="lgr${me?' me':''}"><i style="background:${FAC[f].color}"></i><span><b>${esc(FAC[f].name)}</b><small>${me?'це ви · ':''}${f===4?'грабують дороги':n(f)+' '+((x=>x%10>=1&&x%10<=4&&!(x%100>=11&&x%100<=14))(n(f))?'володіння':'володінь')}</small></span>${me?'<button class="lged" id="lgEd" aria-label="Назвати свою державу">✎</button>':''}</div>`;
-  $('#lgRows').innerHTML=row(0,true)+[1,2,3].map(f=>row(f)).join('')+row(4);
+  $('#lgRows').innerHTML=row(0,true)+AIF.map(f=>row(f)).join('')+row(4);
   $('#lgEd').onclick=realmPanel;
 }
 function realmPanel(){
@@ -1943,7 +1992,7 @@ function worldStep(dh){
       if(p.goal){const t=G.towns.find(t=>t.id===p.goal);if(t){if(t.f===0&&p.kind==='lord'&&isHostile(p)&&dist(p,t)<700)alarm('attack',t,'Напад!',`${p.name} (${total(p.army)}) іде на ваше ${TYPE_N[t.type].toLowerCase()} ${t.name}. У гарнізоні ${total(t.garrison)}.`);if(p.tx!==t.x||p.ty!==t.y){p.tx=t.x;p.ty=t.y;p.path=null}if(dist(p,t)<22){arriveTown(p,t);continue}}else p.goal=null}
       if(p.path&&!p.path.length){p.path=null;think(p)}
     }
-    if(!p.path)p.path=findPath(p.x,p.y,p.tx,p.ty,true)||[];
+    if(!p.path)p.path=findPath(p.x,p.y,p.tx,p.ty,true,!!p.boat)||[];
     moveAlong(p,p.path,partySpeed(p)*MOVE_K,dh);
   }
   // party vs party
@@ -1966,9 +2015,9 @@ function think(p){
   p.path=null;
   if(p.kind==='bandit'){const a=Math.random()*6.28,r=100+Math.random()*300;p.tx=clamp(p.hx+Math.cos(a)*r,80,W-80);p.ty=clamp(p.hy+Math.sin(a)*r,80,H-80);p.wait=Math.random()*4;return}
   const pow=armyPower(p.army);
-  const cands=G.towns.filter(t=>t.f!==p.f&&(t.f!==0||G.war[p.f])&&pow>armyPower(t.garrison)*1.5);
+  const cands=G.towns.filter(t=>t.f!==p.f&&(t.f!==0||G.war[p.f])&&(p.boat||!t.isle)&&pow>armyPower(t.garrison)*1.5);
   if(cands.length&&Math.random()<.55){cands.sort((x,y)=>dist(p,x)-dist(p,y));p.goal=cands[ri(Math.min(2,cands.length))].id;return}
-  const own=G.towns.filter(t=>t.f===p.f);
+  const own=G.towns.filter(t=>t.f===p.f&&(p.boat||!t.isle));
   if(own.length){p.goal=own[ri(own.length)].id;return}
   p.tx=clamp(p.x+(Math.random()-.5)*600,80,W-80);p.ty=clamp(p.y+(Math.random()-.5)*600,80,H-80);
 }
@@ -2201,10 +2250,10 @@ function openEncounter(p){
     :`<div class="eacts two"><button class="btn red" data-a="declare">Напасти</button><button class="btn ghost" data-a="pass">Пройти повз</button></div>`;
   show(`<div class="encw"><button class="xbtn" data-a="${hostile?'flee':'pass'}" aria-label="Закрити">✕</button><div class="enc"><div class="enl">
     <div class="ehead">${ban}<div>${bandit?'<span class="eyebrow" style="color:var(--ag)">Розбійники</span>':fbadge(p.f)}<h2>${esc(p.name)}</h2><p>${hostile?(bandit?'Розбійники перекрили дорогу.':'Ворожий загін іде на вас.'):'Вони не ворожі до вас. Напад означає війну з усім королівством.'}</p></div></div>
-    ${G.camp&&hostile?'<p class="campnote">Ви в таборі за частоколом: вороги слабші на 15%.</p>':''}<div class="esub"><svg class="ic"><use href="#i-people"/></svg>Їхній загін · ${total(p.army)}</div><div class="eus${ORDER.filter(t=>p.army[t]>0).length>2?' many':''}">${encUnits(p.army)}</div></div>${art}</div>
+    ${G.camp&&hostile?'<p class="campnote">Ви в таборі за частоколом: вороги слабші на 15%.</p>':''}<div class="esub"><svg class="ic"><use href="#i-people"/></svg>Їхній загін · ${total(p.army)}<span class="eboat ${p.boat?'y':''}">${p.boat?'з човнами':'без човнів'}</span></div><div class="eus${ORDER.filter(t=>p.army[t]>0).length>2?' many':''}">${encUnits(p.army)}</div></div>${art}</div>
     <div class="ecmp" style="--c:${col}">${SKULL}${txt}<span class="epc">шанс на перемогу <b style="color:${chanceCol(pcE)}">${pcE}%</b></span></div>${acts}</div>`,'wide');
 }
-function declareWar(f){if(f>=1&&f<=3&&!G.war[f]){initDiplo();G.war[f]=true;addRel(f,-40);if(G.ally[f]){delete G.ally[f]}if(G.liege===f){G.liege=0;addFame(-20)}toast(`Війна з ${FAC[f].name}!`,true)}}
+function declareWar(f){if(AIF.includes(f)&&!G.war[f]){initDiplo();G.war[f]=true;addRel(f,-40);if(G.ally[f]){delete G.ally[f]}if(G.liege===f){G.liege=0;addFame(-20)}toast(`Війна з ${FAC[f].name}!`,true)}}
 function enemyArmyOf(c){return c.party?c.party.army:c.town.garrison}
 function allyHelp(){const A=zero(),names=[];for(const p of G.parties){if(p.kind!=='lord'||!isFriend(p.f)||dist(p,G)>600)continue;names.push(p.name);for(const k of ORDER){const n=Math.floor((p.army[k]||0)/2);A[k]+=n}}return{A,names}}
 function splitAlly(aSurv,A){const out=zero();for(const k of ORDER){const mine=G.army[k]||0,all=mine+(A[k]||0);out[k]=all?Math.round((aSurv[k]||0)*mine/all):0}return out}
@@ -2227,7 +2276,7 @@ function applyResult(c,r){
   if(r.win){
     head='Перемога';G.gold+=loot;G.spirit=Math.min(100,G.spirit+8);G.drill=Math.min(100,G.drill+2);
     {const ef=c.party?c.party.f:c.town?c.town.f:4;addFame(Math.round(kTot/3)+(c.party&&c.party.kind==='lord'?10:0)+(c.town?25:0),c.town?'місто взято':'перемога');
-      if(ef>=1&&ef<=3){addRel(ef,-8);[1,2,3].forEach(o=>{if(o!==ef)addRel(o,3)})}else[1,2,3].forEach(o=>addRel(o,1))}
+      if(AIF.includes(ef)){addRel(ef,-8);AIF.forEach(o=>{if(o!==ef)addRel(o,3)})}else AIF.forEach(o=>addRel(o,1))}
     if(c.town)G.siege=null;
     if(c.party){removeParty(c.party);if(c.party.kind==='bandit')G.gold+=40}
     if(c.town){const t=c.town;t.f=0;t.garrison=zero();note=`<p class="cmp" style="--c:var(--gold)">${TYPE_N[t.type]} ${esc(t.name)} тепер ваше. Залиште воїнів у гарнізоні, інакше його відіб’ють.</p>`;
@@ -2334,7 +2383,7 @@ const ACT={
   alliance:v=>{const f=+v;initDiplo();if(G.rel[f]<40||G.fame<60)return;G.ally[f]=true;G.war[f]=false;addFame(10,'союз');toast(`Союз із ${FAC[f].name}! Їхні лорди допомагатимуть у боях поруч.`);diplomacyPanel()},
   breakAlly:v=>{const f=+v;delete G.ally[f];addRel(f,-25);toast(`Союз із ${FAC[f].name} розірвано.`,true);diplomacyPanel()},
   serve:v=>{const f=+v;initDiplo();if(G.rel[f]<15||G.fame<25||G.liege||G.kingdom)return;G.liege=f;G.war[f]=false;addRel(f,10);
-    [1,2,3].forEach(o=>{if(o!==f&&!G.ally[o]){G.war[o]=true}});toast(`Ви на службі в ${FAC[f].name}: платня ${liegePay()} щодня. Їхні вороги — ваші вороги.`);diplomacyPanel()},
+    AIF.forEach(o=>{if(o!==f&&!G.ally[o]){G.war[o]=true}});toast(`Ви на службі в ${FAC[f].name}: платня ${liegePay()} щодня. Їхні вороги — ваші вороги.`);diplomacyPanel()},
   leave:v=>{const f=+v;G.liege=0;addRel(f,-20);toast(`Ви покинули службу в ${FAC[f].name}.`);diplomacyPanel()},
   warOn:v=>{const f=+v;declareWar(f);diplomacyPanel()},
   kingdom:()=>{if(canKingdom())kingdomPanel()},
@@ -2415,7 +2464,7 @@ function helpPanel(){
   <p><b>Полонені й вишкіл.</b> Після перемоги частина переможених здається в полон, найчастіше слабкі ополченці й лучники. Полонених можна безкоштовно взяти на службу (вікно «Армія» чи результат бою) або залишити в гарнізоні свого міста. У своїх містах на вкладці «Вишкіл» воїнів за золото переводять у сильніші: ополченців — у шаблюки, сокирники чи лучники, лучників — у пищальники (потрібна кузня), шаблюк і сокирників — у кінноту (потрібна стайня).</p>
   <p><b>Риболовля.</b> На ринку будь-якого міста купіть вудку (80 золотих), а згодом — кращу. Біля річки чи озера, а також на воді з човна, з'являється кнопка «Рибалити»; якщо торкнутися води й допливти туди, вікно риболовлі відкриється само: закиньте вудку, а коли поплавок пірне — швидко підсікайте. Клює лише з 07:00 до 12:00 та з 18:00 до 22:00 (за годинником гри), решту часу — штиль; найкраще посередині клювання. У кожній водоймі риби обмаль: виловили — шукайте іншу водойму або приходьте наступного дня. Риба йде в рюкзак (однакова риба — в одну стопку), а продати її можна на ринку будь-якого міста, у блоці «Речі з рюкзака».</p>
   <p><b>Походи.</b> У вікні «Армія» → «Новий похід» оберіть воїнів, отамана й ворожу ціль. Загін іде сам, штурмує, а взявши поселення, лишає там гарнізон і вертається до вас. Стан походу видно на мапі й у «Армії»; там же — нові накази.</p>
-  <p><b>Мапа.</b> Світ величезний: понад сто міст, замків і сіл 1648 року, Полісся з болотами (там повільно), Карпати з двома перевалами, ліси, степи, озера й ставки. Широкі річки й море — лише човнами; на острові Березань у морі два села.</p>
+  <p><b>Мапа.</b> Світ величезний: понад сто міст, замків і сіл 1648 року, Полісся з болотами (там повільно), Карпати з двома перевалами, ліси, степи, озера й ставки. Світ тягнеться на південь за Чорне море: на його берегах Очаків, Кінбурн, Аккерман, а за морем — Крим (Кримське ханство): Перекоп, Гезлев, Бахчисарай, Кафа, Судак, Кримські гори. Річки перетинають усі загони, а на озера й море виходять лише ті, хто має човни. Острови — Березань у морі (два села) і замок Монастирище посеред великого озера — можна взяти тільки з човнами; вороги без човнів (у вікні зустрічі видно «без човнів») туди не дістануться.</p>
   <p><b>Власні поселення.</b> Отаман може засновувати села, елітний воїн — ще й замки й міста (вікно «Армія» → «Заснувати поселення»). Станьте на вільну суху землю, щонайменше за 9 верст від інших поселень, оберіть тип і назву, сплатіть золото. Нове поселення ваше: будуйте житло, кузню, ринок, стайню, казарми й укріплення.</p>
   <p><b>Торгівля.</b> На ринку міста купуйте товари там, де їх виробляють, і везіть туди, де їх потребують. Обоз більший, коли більше війська.</p>
   <p><b>Військо.</b> Ополченці зі списами б'ють далеко й вузько, шаблюки — широким махом і можуть зачепити двох, сокирники пробивають броню, лучники стріляють дугою, пищальники — рідко, але влучно й боляче, кіннота таранить з розгону. Щитоносці самі закриваються від ударів. У кожного воїна є <b>бойовий дух</b>: він падає від ран і смертей товаришів і росте поруч із героєм. Зламаний дух — воїн тікає з поля з білим прапорцем. Перемагає той, хто знищив або розігнав усе вороже військо.</p>
@@ -2533,28 +2582,30 @@ function lootPanel(){
 
 /* ================= слава й дипломатія ================= */
 // слава росте від перемог і завоювань; стосунки з кожною фракцією від −100 до 100
-function addMissingTowns(){TOWNS.forEach((T,i)=>{if(!G.towns.some(t=>t.id===i+1))G.towns.push({id:i+1,name:T.n,type:T.type,f:T.f,x:T.x*W,y:T.y*H,art:T.art,bld:initBld(T.type),garrison:initGarrison(T.type),recruits:initRecruits(T.type)})})}
+function addMissingTowns(){if(!G.parties.some(p=>p.f===5&&p.kind==='lord')&&!(G.respawn||[]).some(r=>r.f===5)){G._needCrimea=true}G.towns.forEach(t=>{const T=TOWNS[t.id-1];if(T&&T.isle)t.isle=T.isle});boatsInit();TOWNS.forEach((T,i)=>{if(!G.towns.some(t=>t.id===i+1))G.towns.push({id:i+1,name:T.n,type:T.type,f:T.f,x:T.x*W,y:T.y*H,art:T.art,isle:T.isle,bld:initBld(T.type),garrison:initGarrison(T.type),recruits:initRecruits(T.type)})})}
 // старе збереження на меншій мапі: розсуваємо все пропорційно й додаємо нові поселення
 function growSave(){
-  addMissingTowns();if(G.mapW===W)return;const fx=W/(G.mapW||10400),fy=H/(G.mapH||7400),sc=o=>{if(o&&o.x!=null){o.x*=fx;o.y*=fy}};
+  addMissingTowns();if(G.mapW===W)return;const fx=W/(G.mapW||10400),fy=(H*HK)/(G.mapH||7400),sc=o=>{if(o&&o.x!=null){o.x*=fx;o.y*=fy}};
   G.towns.forEach(sc);G.parties.forEach(p=>{sc(p);if(p.tx!=null){p.tx*=fx;p.ty*=fy}if(p.hx!=null){p.hx*=fx;p.hy*=fy}p.path=null});
   G.x*=fx;G.y*=fy;sc(G.camp);G.target=null;G.path=null;
-  G.mapW=W;G.mapH=H;
+  G.mapW=W;G.mapH=H*HK;
 }
+// після побудови світу: якщо в старій грі ще немає лордів ханства — з'являються
+function crimeaLords(){if(!G._needCrimea)return;delete G._needCrimea;LORDS[4].forEach(n=>spawnLord(5,n))}
 function initCamp(){const h=G.hero;if(h.rank==null){h.rank=RANKS.reduce((i,r,k)=>h.lvl>=r.lvl?k:i,0);h.maxHp+=RANKS[h.rank].hp;h.hp=Math.min(h.hp,h.maxHp)}
   if(!h.ranks){h.ranks=[];for(let k=0;k<=h.rank;k++)h.ranks.push(k)}if(G.spirit==null)G.spirit=80;if(G.drill==null)G.drill=0;G.wounded=fillArmy(G.wounded||zero());G.healAcc=G.healAcc||{}}
 function setRank(k){const h=G.hero,d=RANKS[k].hp-RANKS[heroRank()].hp;h.maxHp+=d;h.hp=clamp(h.hp+Math.max(0,d),1,h.maxHp);h.rank=k}
-function initDiplo(){G.fame=G.fame||0;G.rel=G.rel||{1:0,2:0,3:0};G.ally=G.ally||{};if(G.liege===undefined)G.liege=0}
+function initDiplo(){G.fame=G.fame||0;G.rel=G.rel||{1:0,2:0,3:0};if(G.rel[5]==null)G.rel[5]=0;if(G.war&&G.war[5]==null)G.war[5]=false;G.ally=G.ally||{};if(G.liege===undefined)G.liege=0}
 const relName=r=>r<=-50?'ворожі':r<-10?'холодні':r<20?'нейтральні':r<50?'дружні':'братні';
 const relCol=r=>r<-10?'var(--blood)':r<20?'var(--ash)':'var(--good)';
 function addFame(n,why){initDiplo();G.fame=Math.max(0,G.fame+n);if(n>=5&&why)toast(`Слава +${n}: ${why}`)}
-function addRel(f,n){initDiplo();if(f<1||f>3)return;G.rel[f]=clamp(G.rel[f]+n,-100,100)}
-const isFriend=f=>f>=1&&f<=3&&(G.ally&&G.ally[f]||G.liege===f);
+function addRel(f,n){initDiplo();if(!AIF.includes(f))return;G.rel[f]=clamp(G.rel[f]+n,-100,100)}
+const isFriend=f=>AIF.includes(f)&&(G.ally&&G.ally[f]||G.liege===f);
 const fameTitle=()=>{const f=G.fame||0;return f>=400?'Гетьман':f>=200?'Полковник':f>=100?'Сотник':f>=40?'Курінний':'Козак'};
 function canKingdom(){const own=G.towns.filter(t=>t.f===0);return !G.kingdom&&(G.fame||0)>=200&&own.length>=3&&own.some(t=>t.type!=='village')}
 function diplomacyPanel(){
   initDiplo();
-  const rows=[1,2,3].map(f=>{const n=G.towns.filter(t=>t.f===f).length,r=G.rel[f],war=G.war[f],ally=G.ally[f],liege=G.liege===f;
+  const rows=AIF.map(f=>{const n=G.towns.filter(t=>t.f===f).length,r=G.rel[f],war=G.war[f],ally=G.ally[f],liege=G.liege===f;
     const st=war?'війна':liege?'служите їм':ally?'союз':'мир',stc=war?'var(--blood)':ally||liege?'var(--gold)':'var(--good)';
     let acts='';
     if(war)acts=`<button class="btn sm" data-a="peace" data-v="${f}" ${G.gold>=peaceCost()?'':'disabled'}>Мир · ${peaceCost()}</button>`;
@@ -3439,6 +3490,7 @@ function buildTownModels(K,SE,hf){
       if(city)for(let i=0;i<14;i++){const a=R()*6.28,rr=r+14+R()*14;house(t.x+Math.cos(a)*rr,t.y+Math.sin(a)*rr,13)}
       if(rus&&city){K.add('box',t.x,th,t.y,34,44,34,0,white);K.add('cyl',t.x,th+44,t.y,10,13,10,0,white);K.add('dome',t.x,th+57,t.y,13,18,13,0,'#e2aa3c');
         [[-19,-19],[19,-19],[-19,19],[19,19]].forEach(([dx,dz])=>{K.add('cyl',t.x+dx,th+36,t.y+dz,6,10,6,0,white);K.add('dome',t.x+dx,th+46,t.y+dz,6.5,10,6.5,0,'#e2aa3c')})}
+      else if(t.f===5){K.add('box',t.x,th,t.y,28,26,28,0,white);K.add('dome',t.x,th+26,t.y,14,15,14,0,'#4e8a6a');K.add('cyl',t.x+22,th,t.y-6,3.5,64,3.5,0,white);K.add('cone',t.x+22,th+64,t.y-6,4.5,13,4.5,0,'#4e8a6a')}
       else if(sich){K.add('box',t.x,th,t.y,24,28,24,0,wood);K.add('cyl',t.x,th+28,t.y,8,10,8,0,wood);K.add('dome',t.x,th+38,t.y,9,13,9,0,'#3d6a4a')}
       else{K.add('box',t.x,th,t.y,30,52,30,0,stone);K.add('roof',t.x,th+52,t.y,36,22,36,0,snowy('#6a3428'))}}
     // прапор власника
@@ -3633,7 +3685,7 @@ function buildBattleTerrain(){
   const n=GL.bn,nx=Math.ceil((BW+2*BEX)/BHS)+1,nz=Math.ceil((BH+2*BEZ)/BHS)+1,h=new Float32Array(nx*nz),wet=new Uint8Array(nx*nz);
   const h0=heightAt(B.site.x,B.site.y),VK=1.9,WL=-Math.max(0,h0)*VK-3,amp=B.siege?14:40;
   // вода — там, де вона намальована на мапі (синій колір), щоб річки й озера збігалися з малюнком
-  const SM=Math.min(.4,4096/W),a0=toMap(-BEX,-BEZ),px0=Math.floor(a0.x*SM),py0=Math.floor(a0.y*SM),pw=Math.ceil((BW+2*BEX)*BK*SM)+2,ph=Math.ceil((BH+2*BEZ)*BK*SM)+2;
+  const SM=texS(),a0=toMap(-BEX,-BEZ),px0=Math.floor(a0.x*SM),py0=Math.floor(a0.y*SM),pw=Math.ceil((BW+2*BEX)*BK*SM)+2,ph=Math.ceil((BH+2*BEZ)*BK*SM)+2;
   let pd=null;try{pd=terrain.getContext('2d').getImageData(px0,py0,pw,ph).data}catch(e){}
   const waterAt=(mx,my)=>{const x=Math.floor(mx*SM)-px0,y=Math.floor(my*SM)-py0;if(!pd||x<0||y<0||x>=pw||y>=ph||mx<0||my<0||mx>=W||my>=H)return heightAt(clamp(mx,0,W),clamp(my,0,H))<0;
     const q=(y*pw+x)*4,r=pd[q],g=pd[q+1],b=pd[q+2];return b-r>18&&b>=g-6};
@@ -3657,7 +3709,7 @@ function buildBattleTerrain(){
 function battleGroundTex(SE){
   const PX=.4,EW=BW+2*BEX,EH=BH+2*BEZ,c=document.createElement('canvas');c.width=Math.round(EW*PX);c.height=Math.round(EH*PX);const g=c.getContext('2d');
   g.fillStyle=SE.snow?'#dfe4e6':SE.g[1];g.fillRect(0,0,c.width,c.height);
-  const S=Math.min(.4,4096/W),a=toMap(-BEX,-BEZ);
+  const S=texS(),a=toMap(-BEX,-BEZ);
   if(terrain){g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';g.drawImage(terrain,a.x*S,a.y*S,EW*BK*S,EH*BK*S,0,0,c.width,c.height)}
   g.setTransform(PX,0,0,PX,BEX*PX,BEZ*PX);
   const R=mulberry((G.seed||1)+B.uid*7+3),T=GL.bh;
