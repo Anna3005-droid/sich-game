@@ -2831,11 +2831,11 @@ function setFig(F,fr,x,y,h,Hw,left,sx){
 }
 /* ---------- земля за межами мапи (видно, але туди не пройти) ---------- */
 function skirtFn(SE){
-  const n=makeNoise(mulberry(G.seed+91),31),n2=makeNoise(mulberry(G.seed+92),11),E=5200;
+  const n=makeNoise(mulberry(G.seed+91),31),n2=makeNoise(mulberry(G.seed+92),11),E=8000;
   return(x,y)=>{const cx=clamp(x,0,W),cy=clamp(y,0,H),dd=Math.hypot(x-cx,y-cy);if(!dd)return heightAt(x,y)-6;
     const u=(x+E)/(W+2*E),v=(y+E)/(H+2*E),sea=y>H-40&&WATERS.isSea&&WATERS.isSea(cx,H-30);
     let t=sea?-40:8+n(u,v)*70+n2(u,v)*60+(x<0&&y>H*.55?Math.max(0,n(u*2%1,v*2%1)-.35)*420:0);
-    const k=clamp(dd/700,0,1);return heightAt(cx,cy)*(1-k*k*(3-2*k))+t*(k*k*(3-2*k))-2}
+    const k=clamp(dd/700,0,1),out=Math.max(-x,x-W,-y,y-H),ef=clamp((E-out)/1800,0,1),es=ef*ef*(3-2*ef);return (heightAt(cx,cy)*(1-k*k*(3-2*k))+t*(k*k*(3-2*k))-2)*es-8*(1-es)}
 }
 function skirtMesh(E,sk,SE){
   const geo=new THREE.PlaneGeometry(W+2*E,H+2*E,150,120);geo.rotateX(-Math.PI/2);const pos=geo.attributes.position,col=new Float32Array(pos.count*3);
@@ -2855,10 +2855,13 @@ function groundTex(E,SE){
   g.fillStyle=bg;g.fillRect(-E,-E,TW,TH);
   for(let i=0;i<16000;i++){const x=-E+R()*TW,y=-E+R()*TH,r=20+R()*120,steppe=x/W+y/H>1.25;g.fillStyle=steppe?SE.st[R()<.5?0:1]:SE.pa[R()<.5?0:1];g.beginPath();g.arc(x,y,r,0,7);g.fill()}
   for(let i=0;i<900;i++){const x=-E+R()*TW,y=-E+R()*TH,r=200+R()*500;g.fillStyle=R()<.5?SE.pa[0]:SE.pa[1];g.beginPath();g.arc(x,y,r,0,7);g.fill()}
+  // зовнішній край зливається з рівниною за ним
+  g.setTransform(1,0,0,1,0,0);{const base=SE.snow?'#dfe4e6':SE.g[1],e=cw*.12,fd=(x0,y0,x1,y1)=>{const gr=g.createLinearGradient(x0,y0,x1,y1);gr.addColorStop(0,base);gr.addColorStop(1,'rgba(0,0,0,0)');return gr};
+   [[0,0,e,0],[cw,0,cw-e,0],[0,0,0,e],[0,ch,0,ch-e]].forEach(([x0,y0,x1,y1])=>{g.fillStyle=fd(x0,y0,x1,y1);g.fillRect(0,0,cw,ch)})}
   const t=new THREE.CanvasTexture(c);t.anisotropy=Math.min(8,GL.r.capabilities.getMaxAnisotropy());return t;
 }
 function skirtTrees(E,sk){const R=mulberry(G.seed+93),out=[];
-  for(let i=0;i<120;i++){const cx=-E*.5+R()*(W+E),cy=-E*.5+R()*(H+E);if(cx>-60&&cx<W+60&&cy>-60&&cy<H+60)continue;
+  for(let i=0;i<200;i++){const cx=-E*.5+R()*(W+E),cy=-E*.5+R()*(H+E);if(cx>-60&&cx<W+60&&cy>-60&&cy<H+60)continue;
     for(let j=0;j<30;j++){const a=R()*6.28,r=Math.sqrt(R())*260,x=cx+Math.cos(a)*r,y=cy+Math.sin(a)*r;if(x>-40&&x<W+40&&y>-40&&y<H+40)continue;if(sk(x,y)<2||sk(x,y)>160)continue;out.push({x,y,s:10+R()*10,v:ri(4)})}}
   return out}
 // козацька чайка: довгий вузький корпус з піднятими носом і кормою, в'язки очерету вздовж бортів, щогла з вітрилом, весла з обох боків і стерна на обох кінцях
@@ -2916,7 +2919,10 @@ function build3DMap(){
   if(GL.map){GL.map.sc.traverse(o=>{if(o.geometry)o.geometry.dispose()})}
   const SE=SEASONS[G.season||0],{sc,sun}=makeScene(SE);
   const tm=terrainMesh(W,H,HMW-1,HMH-1,heightAt,terrain);addDetail(tm.material,grassDetail(SE),[W/110,H/110]);sc.add(tm);
-  const E=5200,sk=skirtFn(SE);sc.add(skirtMesh(E,sk,SE));sc.add(forestMesh(skirtTrees(E,sk),SE,(x,y)=>sk(x,y),.95));
+  {const haze=new THREE.Color(SE.snow?'#dfe4e6':SE.g[1]).lerp(new THREE.Color(SE.sky),.35);sc.fog.color.copy(haze);sc.background=haze;
+   // нескінченна рівнина за краєм світу, щоб у кадрі ніде не було порожнечі
+   const far=new THREE.Mesh(new THREE.PlaneGeometry(260000,260000).rotateX(-Math.PI/2),new THREE.MeshLambertMaterial({color:SE.snow?'#dfe4e6':SE.g[1]}));far.position.set(W/2,-10,H/2);sc.add(far)}
+  const E=8000,sk=skirtFn(SE);sc.add(skirtMesh(E,sk,SE));sc.add(forestMesh(skirtTrees(E,sk),SE,(x,y)=>sk(x,y),.95));
   const water=new THREE.Mesh(new THREE.PlaneGeometry(W+E*2,H+E*2).rotateX(-Math.PI/2),new THREE.MeshPhongMaterial({color:SE.water,transparent:true,opacity:.88,shininess:28,specular:'#2e4650'}));
   water.position.set(W/2,-4,H/2);water.receiveShadow=true;sc.add(water);
   sc.add(forestMesh(TREES,SE,heightAt,.95));
@@ -2926,8 +2932,10 @@ function build3DMap(){
 function drawMap3D(dt){
   const M=GL.map;if(!M)return;
   const v=VIEW.map;if(cam.follow){cam.x=G.x;cam.y=G.y}cam.x=clamp(cam.x,0,W);cam.y=clamp(cam.y,0,H);
+  v.pitch=Math.max(v.pitch,mapPitchMin(v.d));
   const ty=Math.max(0,heightAt(cam.x,cam.y));placeCam(v,v.yaw,cam.x,ty,cam.y);
-  M.sc.fog.near=v.d*(v.d>3500?1.5:.95);M.sc.fog.far=v.d*(v.d>3500?4.5:3.4);fitSun(M.sun,cam.x,ty,cam.y,Math.min(3200,v.d*1.15));
+  {const c=GL.cam,nr=Math.max(4,v.d*.04),fr=Math.max(16000,v.d*6);if(c.near!==nr||c.far!==fr){c.near=nr;c.far=fr;c.updateProjectionMatrix()}}
+  M.sc.fog.near=v.d*(v.d>3500?1.5:1.1);M.sc.fog.far=v.d*(v.d>3500?3.6:3.2);fitSun(M.sun,cam.x,ty,cam.y,Math.min(3200,v.d*1.15));
   M.flags.forEach(f=>{const fc=FAC[f.t.f].color;if(f.c!==fc){f.c=fc;f.flag.material.color.set(fc)}f.flag.rotation.y=Math.sin(performance.now()/500+f.t.id)*.25});
   const {rx,rz}=camVecs(v.yaw),seen=new Set(),now=performance.now();
   const put=(key,x,y,i,kind,moving,dirx,diry,Hw)=>{let F=M.figs.get(key);if(!F){F=figSprite(M.sc);M.figs.set(key,F)}seen.add(key);
@@ -3113,6 +3121,7 @@ function poolFig(Bt){const F=(Bt.pool&&Bt.pool.pop())||(()=>{const f=figSprite(B
   F.s.visible=F.sh.visible=F.ring.visible=true;return F}
 function drawBattle3D(dt){
   const Bt=GL.bat;if(!Bt)return drawBattle();
+  if(GL.cam.near!==4||GL.cam.far!==16000){GL.cam.near=4;GL.cam.far=16000;GL.cam.updateProjectionMatrix()}
   if(GL.campFire){const t=performance.now();GL.campFire.scale.set(1+Math.sin(t/70)*.08,1+Math.sin(t/90)*.2+Math.random()*.08,1)}
   const h=B.hero,v=VIEW.battle,hx=h.hp>0?h.x:(B.camx??BW/2),hy=h.hp>0?h.y:(B.camy??BH/2);B.camx=hx;B.camy=hy;
   // режим «від героя»: камера за спиною, повертається слідом за героєм
@@ -3174,7 +3183,9 @@ function drawBattle3D(dt){
 }
 // керування камерою: нахил, поворот, наближення — однаково для мапи й бою
 function camView(){return scene==='battle'?VIEW.battle:VIEW.map}
-function camTilt(d){const v=camView();v.pitch=clamp(v.pitch+d,.2,1.4)}
+function camTilt(d){const v=camView();v.pitch=clamp(v.pitch+d,scene==='battle'?.2:mapPitchMin(v.d),1.4)}
+// верхній край кадру завжди дивиться в землю (кут огляду 40°), а здалеку камера ще більше нахиляється вниз
+const mapPitchMin=d=>.56+clamp((d-2500)/9000,0,1)*.32;
 function camRot(d){const v=camView();v.yaw+=d;if(scene==='battle')v.cyaw=v.yaw}
 function camZoom(f){const v=camView();v.d=clamp(v.d*f,scene==='battle'?380:650,scene==='battle'?3200:13500)}
 
