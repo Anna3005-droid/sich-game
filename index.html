@@ -1033,7 +1033,6 @@ body.qlow .avv>video{display:none}
 <nav class="sidebar" id="side" hidden>
   <button id="dipBtn" aria-label="Дипломатія"><img class="sbi" data-ic="dip" alt=""><span>Дипломатія</span></button>
   <button id="bagBtn" aria-label="Рюкзак"><img class="sbi" data-ic="bag" alt=""><span>Рюкзак</span><em id="bagN"></em></button>
-  <button id="eqBtn" aria-label="Спорядження"><img class="sbi" data-ic="eq" alt=""><span>Герой</span></button>
   <button id="armyBtn" aria-label="Армія"><img class="sbi" data-ic="army" alt=""><span>Армія</span><em class="ptsdot" id="ptsDot" hidden></em></button>
   <button id="waitBtn" aria-label="Табір"><img class="sbi" data-ic="camp" alt=""><span>Табір</span></button>
   <button id="boatBtn" aria-label="Човни"><img class="sbi" data-ic="boat" alt=""><span>Човни</span></button>
@@ -1099,7 +1098,7 @@ body.qlow .avv>video{display:none}
     <button class="hs round" data-t="lang" style="left:86.1%;top:2.6%;width:3.4%;height:6%" aria-label="Мова"></button>
     <button class="hs round" data-t="sound" style="left:90.6%;top:2.6%;width:3.4%;height:6%" aria-label="Звук"></button>
     <button class="hs round" data-t="music" style="left:95.1%;top:2.6%;width:3.4%;height:6%" aria-label="Музика"></button>
-    <div class="tver">Версія 21.10.13</div>
+    <div class="tver">Версія 21.10.14</div>
     <div class="tload" id="tload"><span id="tloadTxt">Завантаження…</span><i><b id="tbar"></b></i></div>
   </div>
 </div>
@@ -4741,7 +4740,6 @@ $('#advDlg').onclick=e=>{const b=e.target.closest('[data-q]');if(!b)return;if(b.
 $('#advOk').onclick=$('#advX').onclick=()=>{SFX.play('advOk');voxStop();advHide()};
 $('#waitBtn').onclick=toggleCamp;$('#fishBtn').onclick=()=>{SFX.init();fishPanel()};$('#campOff').onclick=toggleCamp;
 $('#heroBtn').onclick=()=>{if(!uiOpen)equipPanel()};
-$('#eqBtn').onclick=()=>equipPanel();
 $('#bagBtn').onclick=()=>{CUR={};bagPanel()};
 $('#dipBtn').onclick=()=>{CUR={};diplomacyPanel()};
 $('#armyBtn').onclick=()=>armyPanel();
