@@ -519,6 +519,26 @@ button,.hs{transition:transform .09s ease-out,filter .09s,box-shadow .12s}
   .inband{grid-template-columns:72px minmax(0,1fr) auto}.inband .bi{min-height:60px}.inband b{font-size:13px}.inband .tx{font-size:11.5px}
   .inband .st{padding:4px 8px}.inband .st strong{font-size:15px}.inacts .eact{height:42px}
 }
+
+/* ===== похідний табір ===== */
+.campcard{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 12px);z-index:12;display:flex;align-items:center;gap:10px;padding:6px 8px 6px 6px;
+  background:var(--grain),linear-gradient(#13233a,#0b1622);border:1px solid var(--ag2);border-radius:6px;box-shadow:0 0 0 1px #000,0 8px 20px rgba(0,0,0,.5)}
+.campcard .ccic{width:40px;height:40px}
+.campcard b{font-family:var(--f-head);font-size:14px;color:var(--agl);letter-spacing:.05em;text-transform:uppercase}
+.ccr{display:grid;grid-template-columns:repeat(4,auto);gap:2px 12px;margin-top:2px}
+.ccr span{display:flex;flex-direction:column;gap:3px;min-width:58px}
+.ccr i{font-style:normal;font-size:10.5px;color:#b9b09c}
+.ccr em{display:block;height:5px;border-radius:3px;background:#0a0f16;border:1px solid #2a3a4e;overflow:hidden}
+.ccr em s{display:block;height:100%;background:linear-gradient(90deg,#b8853a,#ecc77e);transition:width .3s}
+.ccr em.n{height:auto;border:0;background:none;font-style:normal;font-family:var(--f-head);font-size:13px;color:#f1e8d4;line-height:1}
+@media (orientation:landscape) and (max-height:520px){.campcard{bottom:calc(env(safe-area-inset-bottom,0px) + 6px);padding:4px 6px 4px 4px;gap:8px}.campcard .ccic{width:30px;height:30px}.ccr span{min-width:48px}}
+.rank .btn{margin-top:4px;padding:5px 6px;font-size:12px;width:100%}
+.rank img{aspect-ratio:auto;height:clamp(84px,24vh,170px);object-fit:cover;object-position:50% 12%}
+.rank small{line-height:1.25}
+.rank .rk-on{margin-top:4px;font-size:11px;font-family:var(--f-head);color:var(--agl);text-transform:uppercase;letter-spacing:.05em}
+.trainrow{display:flex;align-items:center;gap:10px;justify-content:space-between;margin-top:10px;padding:8px 10px;border:1px solid var(--ag2);border-radius:4px;background:linear-gradient(90deg,#14243a,#0c1622)}
+.trainrow span{font-size:13px;color:#d7cdb6}.trainrow b{color:var(--agl);font-family:var(--f-head)}
+.campnote{margin:8px 0 0;padding:6px 10px;border-left:3px solid var(--ag);background:rgba(201,154,75,.1);font-size:13px;color:#e8dcc0}
 </style>
 
 <canvas id="gl"></canvas>
@@ -602,11 +622,14 @@ button,.hs{transition:transform .09s ease-out,filter .09s,box-shadow .12s}
   <button id="bagBtn" aria-label="Рюкзак"><img class="sbi" data-ic="bag" alt=""><span>Рюкзак</span><em id="bagN"></em></button>
   <button id="eqBtn" aria-label="Спорядження"><img class="sbi" data-ic="eq" alt=""><span>Герой</span></button>
   <button id="armyBtn" aria-label="Армія"><img class="sbi" data-ic="army" alt=""><span>Армія</span></button>
-  <button id="waitBtn" aria-label="Чекати"><img class="sbi" data-ic="wait" alt=""><span>Чекати</span></button>
+  <button id="waitBtn" aria-label="Табір"><img class="sbi" data-ic="camp" alt=""><span>Табір</span></button>
   <button id="boatBtn" aria-label="Човни"><img class="sbi" data-ic="boat" alt=""><span>Човни</span></button>
   <button id="ovBtn" aria-label="Загальна карта"><img class="sbi" data-ic="map" alt=""><span>Карта</span></button>
   <button id="menuBtn" aria-label="Меню"><img class="sbi" data-ic="menu" alt=""><span>Меню</span></button>
 </nav>
+<div class="campcard" id="campCard" hidden><img class="ccic" id="ccIc" alt=""><div class="ccb"><b>Табір</b><div class="ccr">
+  <span><i>Здоров’я</i><em><s id="ccHp"></s></em></span><span><i>Поранені</i><em class="n" id="ccW">0</em></span><span><i>Дух</i><em><s id="ccSp"></s></em></span><span><i>Вишкіл</i><em><s id="ccDr"></s></em></span></div></div>
+  <button class="btn sm gold" id="campOff">Рушати</button></div>
 <div class="corner" id="corner" hidden>
   <div class="camctl">
     <button class="zb" id="tUp" aria-label="Підняти камеру">⤒</button>
@@ -790,7 +813,8 @@ const TOWNS=[
 ].map(t=>({...t,x:mx(t.x),y:my(t.y)}));
 const LORDS=[['Князь Роман','Воєвода Данило','Воєвода Лев'],['Князь Святослав','Воєвода Добриня','Князь Ігор'],['Кошовий Гнат','Отаман Остап','Отаман Байда']];
 // Ранги героя. Пізніше сюди підставимо малюнки для кожної фракції.
-const RANKS=[{n:'Простий воїн',lvl:1},{n:'Досвідчений воїн',lvl:3},{n:'Отаман',lvl:6},{n:'Елітний воїн',lvl:10}];
+// ранг не залежить від рівня: його купують за золото й обирають будь-який з куплених
+const RANKS=[{n:'Простий воїн',lvl:1,cost:0,hp:0,atk:0,lead:0},{n:'Досвідчений воїн',lvl:3,cost:400,hp:20,atk:2,lead:3},{n:'Отаман',lvl:6,cost:1200,hp:50,atk:5,lead:6},{n:'Елітний воїн',lvl:10,cost:2500,hp:90,atk:9,lead:10}];
 const BANDIT_NAMES=['Лісові розбійники','Степові грабіжники','Дезертири','Річкові пірати','Зграя Чорного Яна'];
 const TYPE_N={city:'Місто',castle:'Замок',village:'Село'};
 const INCOME={city:120,castle:60,village:40};
@@ -1127,14 +1151,17 @@ function moveAlong(o,path,spd,dh){
 }
 
 /* ================= stats ================= */
-const heroAtk=()=>12+2*(G.hero.lvl-1)+WEAPONS[G.hero.weapon].atk+(G.pf===3?3:0);
+const heroAtk=()=>12+2*(G.hero.lvl-1)+RANKS[heroRank()].atk+WEAPONS[G.hero.weapon].atk+(G.pf===3?3:0);
 const heroDef=()=>Math.min(.75,ARMORS[G.hero.armor].def+GEAR.helm.items[G.hero.helm||0].def+GEAR.shield.items[G.hero.shield||0].def+(G.pf===2?.05:0));
-const armyLimit=()=>15+5*G.hero.lvl+(G.pf===1?5:0)+(G.kingdom?10:0)+Math.floor((G.fame||0)/50);
-const heroRank=(lvl=G.hero.lvl)=>RANKS.reduce((i,r,k)=>lvl>=r.lvl?k:i,0);
+const armyLimit=()=>15+5*G.hero.lvl+RANKS[heroRank()].lead+(G.pf===1?5:0)+(G.kingdom?10:0)+Math.floor((G.fame||0)/50);
+const heroRank=()=>G&&G.hero&&G.hero.rank!=null?G.hero.rank:RANKS.reduce((i,r,k)=>G.hero.lvl>=r.lvl?k:i,0);
+const trainCost=()=>120*G.hero.lvl;
+// вишкіл і бойовий дух загону: дають силу в бою
+const pBonus=()=>(G.drill||0)*.003+((G.spirit??80)-60)*.002,drillHp=()=>1+(G.drill||0)*.0015,spiritK=()=>.7+.5*((G.spirit??80)/100);
 const xpNeed=()=>100*G.hero.lvl;
 function armyPower(a){return ORDER.reduce((s,t)=>{const T=TYPES[t];return s+(a[t]||0)*T.hp*(T.atk/T.cd)/(1-T.def)},0)}
 function heroPower(){return Math.max(1,G.hero.hp)*heroAtk()*2/(1-heroDef())}
-const playerPower=()=>armyPower(G.army)+heroPower();
+const playerPower=()=>armyPower(G.army)*(1+pBonus())*(G.camp?1.15:1)+heroPower();
 function isHostile(p){return p.kind==='bandit'||!!G.war[p.f]}
 function cmpText(r){
   if(r<.45)return['Ворог набагато слабший','var(--good)'];
@@ -1150,7 +1177,7 @@ function partySpeed(p){return Math.max(28,(p.kind==='bandit'?58:54)-total(p.army
 function mkUnits(army,bonus){const a=[];for(const t of ORDER)for(let i=0;i<(army[t]||0);i++){const T=TYPES[t];a.push({t,hp:T.hp*(1+bonus),atk:T.atk/T.cd,def:T.def})}return a}
 function simulate(A,Bk,o={}){
   fillArmy(A);fillArmy(Bk);
-  let a=mkUnits(A,0),b=mkUnits(Bk,o.bonusB||0),hero=null;
+  let a=mkUnits(A,o.bonusA||0),b=mkUnits(Bk,o.bonusB||0),hero=null;
   if(o.hero){hero={hero:1,hp:o.heroHp,atk:heroAtk()*2,def:heroDef()};a.push(hero)}
   for(let round=0;round<400&&a.length&&b.length;round++){
     const hb=b.map(()=>0),ha=a.map(()=>0);
@@ -1161,6 +1188,48 @@ function simulate(A,Bk,o={}){
   }
   const aS=zero(),bS=zero();a.forEach(u=>{if(!u.hero)aS[u.t]++});b.forEach(u=>bS[u.t]++);
   return{aWin:b.length===0&&a.length>0,aSurv:aS,bSurv:bS,heroHp:hero?Math.max(0,hero.hp):0};
+}
+
+/* ================= похідний табір ================= */
+// у таборі герой швидко одужує, поранені стають у стрій, піднімається дух і йде вишкіл; у дорозі все це повільніше
+function campTick(dh){
+  if(!G.wounded)initCamp();const c=!!G.camp,h=G.hero;
+  if(c)h.hp=Math.min(h.maxHp,h.hp+h.maxHp*.045*dh);
+  const rate=c?.07:.008;
+  for(const k of ORDER){const w=G.wounded[k];if(!w){G.healAcc[k]=0;continue}let acc=(G.healAcc[k]||0)+w*rate*dh+(c?.05*dh:0);
+    while(acc>=1&&G.wounded[k]>0&&total(G.army)<armyLimit()){G.wounded[k]--;G.army[k]++;acc--}G.healAcc[k]=Math.min(acc,1.5)}
+  if(c){G.spirit=Math.min(100,G.spirit+4*dh);G.drill=Math.min(100,G.drill+.8*dh);
+    if(!G.campDone&&h.hp>=h.maxHp&&total(G.wounded)===0&&G.spirit>=100){G.campDone=true;toast('Загін відпочив і рветься в бій. Вишкіл триває, доки стоїте табором.')}}
+  else if(G.target)G.spirit=Math.max(35,G.spirit-.12*dh);
+}
+function healAll(){initCamp();for(const k of ORDER){const n=Math.min(G.wounded[k],Math.max(0,armyLimit()-total(G.army)));G.wounded[k]-=n;G.army[k]+=n}}
+function toggleCamp(){
+  if(G.camp){G.camp=null;G.waiting=false;toast('Табір знято.');updateHud();return}
+  if(terAt(G.x,G.y)===T_WATER){toast('На воді табір не поставити — спершу до берега.',true);return}
+  const t=G.towns.find(t=>dist(t,G)<90);if(t){toast(t.f===0?'Поруч ваше місто: відпочити в ньому можна безкоштовно.':'Біля міста табір не ставлять — відпочити можна в корчмі.',true);return}
+  initCamp();G.camp={x:G.x,y:G.y};G.target=null;G.path=null;G.waiting=true;G.campDone=false;SFX.play('click');
+  toast('Табір розбито: воїни відпочивають, лікуються й тренуються.');updateHud();
+}
+// модель табору на 3D-мапі: частокіл, намети, вогнище, прапор вашої барви
+function campGroup(){
+  const g=new THREE.Group(),L=c=>new THREE.MeshLambertMaterial({color:c}),cx=G.camp.x,cz=G.camp.y,h0=heightAt(cx,cz),n=34,R=46,M=new THREE.Matrix4(),E=new THREE.Euler();
+  const stake=new THREE.CylinderGeometry(1.4,1.7,14,6);stake.translate(0,7,0);const tip=new THREE.ConeGeometry(1.7,4,6);tip.translate(0,16,0);
+  const st=new THREE.InstancedMesh(stake,L('#6b4a2c'),n),tp=new THREE.InstancedMesh(tip,L('#9a7a50'),n);let k=0;
+  for(let i=0;i<n;i++){const a=i/n*Math.PI*2;if(Math.abs(Math.atan2(Math.sin(a-.5),Math.cos(a-.5)))<.3)continue;const x=Math.cos(a)*R,z=Math.sin(a)*R;
+    E.set((Math.random()-.5)*.12,0,(Math.random()-.5)*.12);M.makeRotationFromEuler(E);M.setPosition(x,heightAt(cx+x,cz+z)-h0-1,z);st.setMatrixAt(k,M);tp.setMatrixAt(k,M);k++}
+  st.count=tp.count=k;st.castShadow=tp.castShadow=true;g.add(st,tp);
+  [[-17,-12,12,21,'#d9cdb0'],[17,-15,11,19,'#cfc2a2'],[-3,19,14,24,FAC[0].color]].forEach(([x,z,r,hh,c])=>{const t=new THREE.Mesh(new THREE.ConeGeometry(r,hh,6),L(c));t.position.set(x,heightAt(cx+x,cz+z)-h0+hh/2-.5,z);t.castShadow=true;t.receiveShadow=true;g.add(t)});
+  const logs=new THREE.Mesh(new THREE.CylinderGeometry(3.4,3.8,1.4,8),L('#3a2a1a'));logs.position.set(9,heightAt(cx+9,cz+3)-h0+.6,3);g.add(logs);
+  const fire=new THREE.Mesh(new THREE.ConeGeometry(2.6,6.5,7),new THREE.MeshBasicMaterial({color:'#ffb040'}));fire.position.set(9,heightAt(cx+9,cz+3)-h0+3.6,3);g.add(fire);g.userData.fire=fire;
+  const ph=heightAt(cx-3,cz+19)-h0,pole=new THREE.Mesh(new THREE.CylinderGeometry(.6,.6,40,5),L('#4a3420'));pole.position.set(-3,ph+20,19);g.add(pole);
+  const flag=new THREE.Mesh(new THREE.PlaneGeometry(16,10),new THREE.MeshLambertMaterial({color:FAC[0].color,side:THREE.DoubleSide}));flag.position.set(5,ph+34,19);g.add(flag);g.userData.flag=flag;
+  g.position.set(cx,h0,cz);return g;
+}
+function syncCamp3D(M){
+  if(G.camp&&M.camp&&(M.camp.userData.x!==G.camp.x||M.camp.userData.y!==G.camp.y)){M.sc.remove(M.camp);M.camp=null}
+  if(G.camp&&!M.camp){M.camp=campGroup();M.camp.userData.x=G.camp.x;M.camp.userData.y=G.camp.y;M.sc.add(M.camp)}
+  if(!G.camp&&M.camp){M.sc.remove(M.camp);M.camp=null}
+  if(M.camp){const t=performance.now(),f=M.camp.userData.fire;f.scale.set(1+Math.sin(t/70)*.08,1+Math.sin(t/90)*.18+Math.random()*.08,1);M.camp.userData.flag.rotation.y=Math.sin(t/500)*.3}
 }
 
 /* ================= world tick ================= */
@@ -1174,6 +1243,8 @@ function worldStep(dh){
   G.hour+=dh;
   while(G.hour>=24){G.hour-=24;newDay()}
   G.hero.hp=Math.min(G.hero.maxHp,G.hero.hp+G.hero.maxHp*.006*dh);
+  if(G.camp&&G.target){G.camp=null;toast('Табір знято, рушаємо далі.')}
+  campTick(dh);
   // player
   const tp=targetPos();
   if(tp){
@@ -1267,6 +1338,7 @@ function newDay(){
 
 /* ================= UI shell ================= */
 const modal=$('#modal'),sheet=$('#sheet');
+UIART.ui_ic_camp='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6dc98"/><stop offset=".6" stop-color="#d09a42"/><stop offset="1" stop-color="#94631f"/></linearGradient></defs><path d="M32 9 7 50h50z" fill="url(#g)" stroke="#4a2e0e" stroke-width="2" stroke-linejoin="round"/><path d="M32 9 25 50h14z" fill="#5a3812"/><path d="M32 9v-5" stroke="#d09a42" stroke-width="2.5"/><path d="M33 4h11l-3 3 3 3H33z" fill="#c43a2c"/><g fill="url(#g)" stroke="#4a2e0e" stroke-width="1.2"><path d="M3 61v-9l2.5-4 2.5 4v9z"/><path d="M10 61v-9l2.5-4 2.5 4v9z"/><path d="M17 61v-9l2.5-4 2.5 4v9z"/><path d="M42 61v-9l2.5-4 2.5 4v9z"/><path d="M49 61v-9l2.5-4 2.5 4v9z"/><path d="M56 61v-9l2.5-4 2.5 4v9z"/></g></svg>');
 document.querySelectorAll('img.sbi[data-ic]').forEach(i=>i.src=UIART['ui_ic_'+i.dataset.ic]);
 // натиск: кнопка коротко стискається і світиться, щоб було видно, що її натиснуто
 {const P='button,.hs';let cur=null,t0=0;
@@ -1374,7 +1446,7 @@ function marketTab(t){
 function devTab(t){
   const own=t.f===0;
   return `<div class="stats"><div class="stat"><small>Дохід на день</small><b>${own?'+'+townIncome(t):'—'}</b></div><div class="stat"><small>Гарнізон</small><b>${total(t.garrison)}</b></div><div class="stat"><small>Власник</small><b style="font-size:14px">${FAC[t.f].name}</b></div></div>
-  <div class="acts">${hasSmith(t)?`<button class="btn" data-a="smith">Коваль</button>`:''}<button class="btn" data-a="rest">Відпочити в корчмі · 10</button>${BOAT_LV[(G.boatLv||0)+1]?`<button class="btn" data-a="boats" ${G.gold>=BOAT_LV[(G.boatLv||0)+1].cost?'':'disabled'}>Човни: ${BOAT_LV[(G.boatLv||0)+1].n} · ${BOAT_LV[(G.boatLv||0)+1].cost}</button>`:''}${own?`<button class="btn" data-a="rename">Перейменувати</button>`:''}${!own?`<button class="btn red" data-a="attackTown">Напасти</button>`:''}</div>`;
+  <div class="acts">${hasSmith(t)?`<button class="btn" data-a="smith">Коваль</button>`:''}<button class="btn" data-a="rest">${own?'Відпочити · безкоштовно':'Відпочити в корчмі · 10'}</button>${BOAT_LV[(G.boatLv||0)+1]?`<button class="btn" data-a="boats" ${G.gold>=BOAT_LV[(G.boatLv||0)+1].cost?'':'disabled'}>Човни: ${BOAT_LV[(G.boatLv||0)+1].n} · ${BOAT_LV[(G.boatLv||0)+1].cost}</button>`:''}${own?`<button class="btn" data-a="rename">Перейменувати</button>`:''}${!own?`<button class="btn red" data-a="attackTown">Напасти</button>`:''}</div>`;
 }
 /* ================= спорядження героя ================= */
 const GEAR={
@@ -1438,7 +1510,7 @@ function openEncounter(p){
     :`<div class="eacts two"><button class="btn red" data-a="declare">Напасти</button><button class="btn ghost" data-a="pass">Пройти повз</button></div>`;
   show(`<div class="encw"><button class="xbtn" data-a="${hostile?'flee':'pass'}" aria-label="Закрити">✕</button><div class="enc"><div class="enl">
     <div class="ehead">${ban}<div>${bandit?'<span class="eyebrow" style="color:var(--ag)">Розбійники</span>':fbadge(p.f)}<h2>${esc(p.name)}</h2><p>${hostile?(bandit?'Розбійники перекрили дорогу.':'Ворожий загін іде на вас.'):'Вони не ворожі до вас. Напад означає війну з усім королівством.'}</p></div></div>
-    <div class="esub"><svg class="ic"><use href="#i-people"/></svg>Їхній загін · ${total(p.army)}</div><div class="eus${ORDER.filter(t=>p.army[t]>0).length>2?' many':''}">${encUnits(p.army)}</div></div>${art}</div>
+    ${G.camp&&hostile?'<p class="campnote">Ви в таборі за частоколом: вороги слабші на 15%.</p>':''}<div class="esub"><svg class="ic"><use href="#i-people"/></svg>Їхній загін · ${total(p.army)}</div><div class="eus${ORDER.filter(t=>p.army[t]>0).length>2?' many':''}">${encUnits(p.army)}</div></div>${art}</div>
     <div class="ecmp" style="--c:${col}">${SKULL}${txt}</div>${acts}</div>`,'wide');
 }
 function declareWar(f){if(f>=1&&f<=3&&!G.war[f]){initDiplo();G.war[f]=true;addRel(f,-40);if(G.ally[f]){delete G.ally[f]}if(G.liege===f){G.liege=0;addFame(-20)}toast(`Війна з ${FAC[f].name}!`,true)}}
@@ -1448,20 +1520,21 @@ function splitAlly(aSurv,A){const out=zero();for(const k of ORDER){const mine=G.
 function autoBattle(c){
   const startA={...G.army},startB={...enemyArmyOf(c)},al=allyHelp(),mix=zero();for(const k of ORDER)mix[k]=(G.army[k]||0)+al.A[k];
   if(al.names.length)toast(`На допомогу прийшли: ${al.names.join(', ')}`);
-  const r0=simulate(mix,startB,{hero:true,heroHp:G.hero.hp,bonusB:c.town?(c.town.type==='village'?.1:siegeBonus(siegeOf(c.town))):0}),r={...r0,aSurv:splitAlly(r0.aSurv,al.A)};
+  const r0=simulate(mix,startB,{hero:true,heroHp:G.hero.hp,bonusB:c.town?(c.town.type==='village'?.1:siegeBonus(siegeOf(c.town))):(G.camp?-.15:0),bonusA:pBonus()}),r={...r0,aSurv:splitAlly(r0.aSurv,al.A)};
   applyResult(c,{win:r.aWin,aSurv:r.aSurv,bSurv:r.bSurv,heroHp:r.heroHp,startA,startB,auto:true});
 }
 function applyResult(c,r){
   fillArmy(r.startA);fillArmy(r.startB);fillArmy(r.aSurv);fillArmy(r.bSurv);fillArmy(G.army);if(!isFinite(G.gold))G.gold=0;
   const lost=zero(),killed=zero();let back=0,kTot=0,lTot=0,xp=0,loot=0;
-  const rate=r.win||r.retreat?.35:.15;
-  ORDER.forEach(k=>{const d=Math.max(0,r.startA[k]-r.aSurv[k]),b=Math.round(d*rate);G.army[k]=r.aSurv[k]+b;lost[k]=d-b;back+=b;lTot+=d-b;
+  const rate=r.win||r.retreat?.5:.25;initCamp();
+  // частина полеглих лише поранені: вони не б'ються, доки не одужають (швидко — в таборі чи місті)
+  ORDER.forEach(k=>{const d=Math.max(0,r.startA[k]-r.aSurv[k]),b=Math.round(d*rate);G.army[k]=r.aSurv[k];G.wounded[k]+=b;lost[k]=d-b;back+=b;lTot+=d-b;
     const kk=Math.max(0,r.startB[k]-r.bSurv[k]);killed[k]=kk;kTot+=kk;xp+=kk*TYPES[k].hp/4;loot+=kk*TYPES[k].cost*.35});
   xp=Math.round(xp);loot=Math.round(loot);
   G.hero.hp=r.heroHp>0?Math.max(1,r.heroHp):Math.round(G.hero.maxHp*.15);
   let head,note='',extraBtn='';
   if(r.win){
-    head='Перемога';G.gold+=loot;
+    head='Перемога';G.gold+=loot;G.spirit=Math.min(100,G.spirit+8);G.drill=Math.min(100,G.drill+2);
     {const ef=c.party?c.party.f:c.town?c.town.f:4;addFame(Math.round(kTot/3)+(c.party&&c.party.kind==='lord'?10:0)+(c.town?25:0),c.town?'місто взято':'перемога');
       if(ef>=1&&ef<=3){addRel(ef,-8);[1,2,3].forEach(o=>{if(o!==ef)addRel(o,3)})}else[1,2,3].forEach(o=>addRel(o,1))}
     if(c.town)G.siege=null;
@@ -1469,10 +1542,10 @@ function applyResult(c,r){
     if(c.town){const t=c.town;t.f=0;t.garrison=zero();note=`<p class="cmp" style="--c:var(--gold)">${TYPE_N[t.type]} ${esc(t.name)} тепер ваше. Залиште воїнів у гарнізоні, інакше його відіб’ють.</p>`;
       extraBtn=`<button class="btn gold" data-a="renameT" data-v="${t.id}">Перейменувати</button><button class="btn" data-a="openT" data-v="${t.id}">До міста</button>`}
   }else if(r.retreat){
-    head='Відступ';if(c.party){c.party.army=r.bSurv;c.party.cool=3}else c.town.garrison=r.bSurv;
+    head='Відступ';G.spirit=Math.max(10,G.spirit-10);G.camp=null;if(c.party){c.party.army=r.bSurv;c.party.cool=3}else c.town.garrison=r.bSurv;
   }else{
     addFame(-8);if(c.town)G.siege=null;
-    head='Поразка';const g=Math.round(G.gold*.25);G.gold-=g;
+    head='Поразка';G.spirit=Math.max(10,G.spirit-25);G.camp=null;const g=Math.round(G.gold*.25);G.gold-=g;
     if(c.party){c.party.army=r.bSurv;c.party.cool=6;if(!total(c.party.army))removeParty(c.party)}else c.town.garrison=r.bSurv;
     const safe=G.towns.filter(t=>!(t.f>0&&G.war[t.f])).sort((a,b)=>dist(G,a)-dist(G,b))[0];
     if(safe){G.x=safe.x;G.y=safe.y+30}G.target=null;
@@ -1484,7 +1557,7 @@ function applyResult(c,r){
   <div class="stats">
     <div class="stat"><small>Вбито ворогів</small><b>${kTot}</b></div>
     <div class="stat"><small>Ваші загиблі</small><b>${lTot}</b></div>
-    <div class="stat"><small>Поранені повернулись</small><b>${back}</b></div>
+    <div class="stat"><small>Поранені</small><b>${back}</b></div>
     <div class="stat"><small>Здобич</small><b>${r.win?'+'+loot:'0'}</b></div>
     <div class="stat"><small>Досвід</small><b>+${xp}</b></div>
   </div>
@@ -1495,7 +1568,7 @@ function applyResult(c,r){
   CUR={town:c.town,loot:spoils,lootNext:false};
   save();
 }
-function addXp(x){const h=G.hero,r0=heroRank();h.xp+=x;while(h.xp>=xpNeed()){h.xp-=xpNeed();h.lvl++;h.maxHp+=15;h.hp=Math.min(h.maxHp,h.hp+15)}if(heroRank()>r0)toast(`Новий ранг: ${RANKS[heroRank()].n}!`)}
+function addXp(x){const h=G.hero;h.xp+=x;while(h.xp>=xpNeed()){h.xp-=xpNeed();h.lvl++;h.maxHp+=15;h.hp=Math.min(h.maxHp,h.hp+15);toast(`Новий рівень героя: ${h.lvl}`)}}
 
 /* ================= actions ================= */
 const ACT={
@@ -1514,7 +1587,9 @@ const ACT={
     const old=t.name;t.name=val.slice(0,24);save();toast(`«${old}» тепер зветься «${t.name}»`);CUR&&CUR.tab?openTown(t,CUR.tab):closeModal()},
   hire:v=>{const[k,n]=v.split(':');const t=CUR.town,T=TYPES[k];const c=Math.min(+n,t.recruits[k],Math.floor(G.gold/T.cost),armyLimit()-total(G.army));
     if(c<=0)return;t.recruits[k]-=c;G.army[k]+=c;G.gold-=c*T.cost;SFX.play('coin');toast(`Найнято: ${T.n.toLowerCase()} ×${c}`);openTown(t,'hire')},
-  rest:()=>{if(G.gold<10){toast('Не вистачає золота.',true);return}G.gold-=10;G.hero.hp=G.hero.maxHp;G.hour+=8;while(G.hour>=24){G.hour-=24;newDay()}toast('Герой відпочив і повністю здоровий.');openTown(CUR.town,'dev')},
+  rest:()=>{const t=CUR.town,free=t&&t.f===0;if(!free&&G.gold<10){toast('Не вистачає золота.',true);return}if(!free)G.gold-=10;G.hero.hp=G.hero.maxHp;healAll();G.spirit=Math.max(G.spirit,90);G.hour+=8;while(G.hour>=24){G.hour-=24;newDay()}toast(free?'Відпочили у своєму місті безкоштовно: усі здорові.':'Відпочили в корчмі: герой і поранені здорові.');openTown(t,'dev')},
+  rank:v=>{const k=+v,h=G.hero;initCamp();if(!h.ranks.includes(k)){if(G.gold<RANKS[k].cost)return;G.gold-=RANKS[k].cost;h.ranks.push(k);SFX.play('win')}else SFX.play('click');setRank(k);toast(`Ранг: ${RANKS[k].n}`);save();armyPanel()},
+  trainHero:()=>{const c=trainCost(),h=G.hero;if(G.gold<c)return;G.gold-=c;h.lvl++;h.maxHp+=15;h.hp=Math.min(h.maxHp,h.hp+15);SFX.play('win');toast(`Наставник вишколив героя: рівень ${h.lvl}`);save();armyPanel()},
   gar:v=>{const[k,d]=v.split(':'),t=CUR.town;if(d==='in'&&G.army[k]>0){G.army[k]--;t.garrison[k]++}else if(d==='out'&&t.garrison[k]>0&&total(G.army)<armyLimit()){t.garrison[k]--;G.army[k]++}openTown(t,'garrison')},
   garAll:()=>{const t=CUR.town;['militia','sword','archer'].forEach(k=>{t.garrison[k]+=G.army[k];G.army[k]=0});openTown(t,'garrison')},
   attackTown:()=>{const t=CUR.town;show(`${fbadge(t.f)}<h2>Напасти на ${esc(t.name)}?</h2><p>Це оголосить війну: ${FAC[t.f].name}. Їхні лорди почнуть полювати на вас і ваші міста.</p>
@@ -1526,7 +1601,7 @@ const ACT={
   auto:()=>autoBattle(CUR),
   flee:()=>{const p=CUR.party;let lost=0;
     if(armyPower(p.army)>playerPower()*.6&&total(G.army)>0){ORDER.forEach(k=>{const d=Math.round(G.army[k]*.12);G.army[k]-=d;lost+=d})}
-    p.cool=3;const d=dist(p,G)||1;G.x=clamp(G.x+(G.x-p.x)/d*40,40,W-40);G.y=clamp(G.y+(G.y-p.y)/d*40,40,H-40);
+    p.cool=3;G.camp=null;const d=dist(p,G)||1;G.x=clamp(G.x+(G.x-p.x)/d*40,40,W-40);G.y=clamp(G.y+(G.y-p.y)/d*40,40,H-40);
     closeModal();toast(lost?`Ви відступили. Ар’єргард утратив ${lost} воїнів.`:'Ви відступили.',!!lost)},
   pass:()=>{CUR.party.cool=2;closeModal()},
   declare:()=>{const p=CUR.party;declareWar(p.f);openEncounter(p)},
@@ -1536,7 +1611,7 @@ const ACT={
   newGo:()=>colorPanel(false),
   pickColor:v=>{const c=PCOLORS[+v][1];const btn=sheet.querySelector(`.csw[data-v="${v}"]`);if(btn&&!colorPanel.change){sheet.querySelectorAll('.csw').forEach(b=>b.classList.toggle('on',b===btn));const box=btn.parentElement;if(box.classList.contains('picking'))return;box.classList.add('picking');box.insertAdjacentHTML('afterend','<p class="pickmsg">Готуємо мапу…</p>');SFX.play('click');setTimeout(()=>{pickedColor=c;ACT.pick('3')},380);return}if(colorPanel.change){G.color=c;applyColor();save();toast('Колір прапора змінено.');menuPanel()}else{pickedColor=c;ACT.pick('3')}},
   colorMenu:()=>colorPanel(true),
-  pick:v=>{newGame(+v);initDiplo();G.color=pickedColor||G.color||'#e0aa3e';applyColor();buildTerrain();save();closeModal();enterMap();introPanel()},
+  pick:v=>{newGame(+v);initDiplo();initCamp();G.color=pickedColor||G.color||'#e0aa3e';applyColor();buildTerrain();save();closeModal();enterMap();introPanel()},
   cont:()=>{closeModal();enterMap()},
   menu:()=>menuPanel(),
   save:()=>{save();toast('Гру збережено.')},
@@ -1581,15 +1656,19 @@ function armyPanel(){
   const own=G.towns.filter(t=>t.f===0);
   show(`<span class="eyebrow" style="color:var(--gold)">Ваш загін</span><h2>${RANKS[heroRank()].n}, рівень ${h.lvl}</h2>
   <p class="muted">${FAC[G.pf].name}</p>
-  <div class="ranks">${RANKS.map((r,k)=>`<div class="rank${k===heroRank()?' on':''}${k>heroRank()?' locked':''}"><img src="${portrait(G.pf,k)}" alt="${r.n}" class="${portraitCut(G.pf)?'cut':''}"><b>${r.n}</b><small>${k>heroRank()?`з рівня ${r.lvl}`:k===heroRank()?'зараз':'пройдено'}</small></div>`).join('')}</div>
+  <div class="ranks">${RANKS.map((r,k)=>{const own=(h.ranks||[0]).includes(k),cur=k===heroRank();return `<div class="rank${cur?' on':''}${own?'':' locked'}"><img src="${portrait(G.pf,k)}" alt="${r.n}" class="${portraitCut(G.pf)?'cut':''}"><b>${r.n}</b><small>${k?`+${r.hp} здоров’я · +${r.atk} удар · +${r.lead} воїнів`:'початковий'}</small>${cur?'<span class="rk-on">Зараз</span>':own?`<button class="btn sm" data-a="rank" data-v="${k}">Обрати</button>`:`<button class="btn sm gold" data-a="rank" data-v="${k}" ${G.gold>=r.cost?'':'disabled'}>${r.cost} зол.</button>`}</div>`}).join('')}</div>
+  <div class="trainrow"><span>Наставник: <b>+1 рівень</b> · здоров’я +15, удар +2, загін +5</span><button class="btn sm gold" data-a="trainHero" ${G.gold>=trainCost()?'':'disabled'}>Тренувати · ${trainCost()}</button></div>
   <div class="xpbar"><i style="width:${Math.round(h.xp/xpNeed()*100)}%"></i></div><p class="muted">Досвід ${h.xp} з ${xpNeed()}</p>
   <div class="stats">
     <div class="stat"><small>Здоров’я</small><b>${Math.round(h.hp)}/${h.maxHp}</b></div>
     <div class="stat"><small>Удар</small><b>${heroAtk()}</b></div>
     <div class="stat"><small>Захист</small><b>${Math.round(heroDef()*100)}%</b></div>
     <div class="stat"><small>Загін</small><b>${total(G.army)}/${armyLimit()}</b></div>
+    <div class="stat"><small>Поранені</small><b>${total(G.wounded||{})}</b></div>
+    <div class="stat"><small>Бойовий дух</small><b>${Math.round(G.spirit??80)}%</b></div>
+    <div class="stat"><small>Вишкіл</small><b>${Math.round(G.drill||0)}%</b></div>
   </div>
-  <p class="muted">${Object.keys(GEAR).map(k=>gearItem(k).n).join(' · ')}</p>
+  <p class="muted">${Object.keys(GEAR).map(k=>gearItem(k).n).join(' · ')}. Поранені одужують у таборі (кнопка «Табір» ліворуч) чи в місті.</p>
   <h3>Воїни · платня ${wage} на день</h3>${armyRows(G.army,k=>`<button class="btn sm ghost" data-a="dismiss" data-v="${k}">Відпустити 1</button>`)}
   <div class="acts"><button class="btn gold" data-a="close">Закрити</button></div>`);
 }
@@ -1612,6 +1691,8 @@ function helpPanel(){
   <p><b>Бої.</b> На початку бою військо <b>чекає наказу</b>. Кнопка з людьми дає наказ усім (атака, стоять, за мною), картки загонів унизу — кожному загону окремо. Ви керуєте героєм: ліва половина екрана — джойстик, меч — удар, щит — блок, ривок — кидок уперед; усе це витрачає витривалість (синя смуга). Клавіатура: WASD, пробіл, Q, Shift.</p>
   <p><b>Облоги.</b> Біля ворожого міста чи замку ставте табір: збийте драбини (проходи на мур), збудуйте таран (виламує ворота), або моріть гарнізон голодом. Що краще підготовлений штурм, то слабші захисники на стінах.</p>
   <p><b>Слава й дипломатія.</b> Перемоги додають славу і звання. Дарами покращуйте стосунки з князівствами, укладайте союзи (союзні лорди допомагають у бою), ідіть на службу за щоденну платню або проголосіть власне королівство.</p>
+  <p><b>Табір.</b> Кнопка з наметом ліворуч ставить табір будь-де на мапі (не на воді й не біля міста). У таборі час іде сам: герой одужує, поранені стають у стрій, піднімається бойовий дух і йде вишкіл. Якщо нападуть — б'єтеся за частоколом, вороги слабші. Торкніться мапи, щоб рушити далі. У своїх містах відпочинок безкоштовний, у чужих — 10 золотих.</p>
+  <p><b>Ранги й тренування.</b> У вікні «Армія» можна купити будь-який ранг героя — досвідченого, отамана чи елітного воїна — і перемикатися між купленими. Наставник за золото підвищує рівень героя.</p>
   <p><b>Торгівля.</b> На ринку міста купуйте товари там, де їх виробляють, і везіть туди, де їх потребують. Обоз більший, коли більше війська.</p>
   <p><b>Військо.</b> Ополченці зі списами б'ють далеко й вузько, шаблюки — широким махом і можуть зачепити двох, сокирники пробивають броню, лучники стріляють дугою, пищальники — рідко, але влучно й боляче, кіннота таранить з розгону. Щитоносці самі закриваються від ударів. У кожного воїна є <b>бойовий дух</b>: він падає від ран і смертей товаришів і росте поруч із героєм. Зламаний дух — воїн тікає з поля з білим прапорцем. Перемагає той, хто знищив або розігнав усе вороже військо.</p>
   <p><b>Міста.</b> У своїх містах будуйте житло, кузню, ринок і стайню у вкладці «Будівлі». Спорядження героя — кнопка зі шоломом ліворуч.</p>
@@ -1723,6 +1804,9 @@ function lootPanel(){
 
 /* ================= слава й дипломатія ================= */
 // слава росте від перемог і завоювань; стосунки з кожною фракцією від −100 до 100
+function initCamp(){const h=G.hero;if(h.rank==null){h.rank=RANKS.reduce((i,r,k)=>h.lvl>=r.lvl?k:i,0);h.maxHp+=RANKS[h.rank].hp;h.hp=Math.min(h.hp,h.maxHp)}
+  if(!h.ranks){h.ranks=[];for(let k=0;k<=h.rank;k++)h.ranks.push(k)}if(G.spirit==null)G.spirit=80;if(G.drill==null)G.drill=0;G.wounded=fillArmy(G.wounded||zero());G.healAcc=G.healAcc||{}}
+function setRank(k){const h=G.hero,d=RANKS[k].hp-RANKS[heroRank()].hp;h.maxHp+=d;h.hp=clamp(h.hp+Math.max(0,d),1,h.maxHp);h.rank=k}
 function initDiplo(){G.fame=G.fame||0;G.rel=G.rel||{1:0,2:0,3:0};G.ally=G.ally||{};if(G.liege===undefined)G.liege=0}
 const relName=r=>r<=-50?'ворожі':r<-10?'холодні':r<20?'нейтральні':r<50?'дружні':'братні';
 const relCol=r=>r<-10?'var(--blood)':r<20?'var(--ash)':'var(--good)';
@@ -1933,8 +2017,8 @@ function buildGround(siege){
 function startBattle(c){
   fillArmy(G.army);if(c.party)fillArmy(c.party.army);if(c.town)fillArmy(c.town.garrison);
   const enemy=enemyArmyOf(c),f=c.party?c.party.f:c.town.f;
-  B={c,f,units:[],arrows:[],fx:[],decals:[],corpses:[],shake:0,orders:Object.fromEntries(ORDER.map(k=>[k,'wait'])),order:'wait',fled:[[],[]],resA:[],resB:[],order:'charge',siege:!!c.town,bonus:c.town?.15:0,
-    startA:{...G.army},startB:{...enemy},flash:0,over:false,ground:buildGround(!!(c.town&&c.town.type!=="village")),uid:0};
+  B={c,f,units:[],arrows:[],fx:[],decals:[],corpses:[],shake:0,orders:Object.fromEntries(ORDER.map(k=>[k,'wait'])),order:'wait',fled:[[],[]],resA:[],resB:[],order:'charge',siege:!!c.town,bonus:c.town?.15:(G.camp&&c.party?-.15:0),
+    startA:{...G.army},startB:{...enemy},flash:0,over:false,camp:!!(G.camp&&c.party),ground:buildGround(!!(c.town&&c.town.type!=="village")),uid:0};
   ORDER.forEach(k=>{for(let i=0;i<G.army[k];i++)B.resA.push(k);for(let i=0;i<enemy[k];i++)B.resB.push(k)});
   const al=allyHelp();B.allyA=al.A;ORDER.forEach(k=>{for(let i=0;i<al.A[k];i++)B.resA.push(k)});if(al.names.length)setTimeout(()=>toast(`На допомогу прийшли: ${al.names.join(', ')}`),900);
   B.siege=!!(c.town&&c.town.type!=='village');if(B.siege)setupSiegeBattle(c.town);
@@ -1950,9 +2034,9 @@ function startBattle(c){
 function spawnUnit(team,k){
   const T=TYPES[k],back=T.ranged?90:T.mounted?40:0;
   const x=team===0?clamp(90+Math.random()*170-back,30,BW-30):B.wall?WALLX+40+Math.random()*(BW-WALLX-110):clamp(BW-90-Math.random()*170+back,30,BW-60);
-  const y=BH*.15+Math.random()*BH*.7,hp=T.hp*(1+(team===1?B.bonus:0));
-  B.units.push({id:B.uid++,team,t:k,x,y,vx:0,vy:0,hp,maxHp:hp,atk:T.atk,def:T.def,spd:T.spd*(.92+Math.random()*.16),r:T.r,face:team?Math.PI:0,sx:team?-1:1,
-    ph:Math.random()*6,st:0,at:-1,pend:null,hitT:0,cd:Math.random(),tgt:null,rt:0,state:team===0?'wait':'advance',mor:T.mor*(team===1?1+B.bonus:1),morMax:T.mor*(team===1?1+B.bonus:1),spd2:1,ax:x+(team?-60:60),ay:y,fx:-50-Math.random()*90,fy:(Math.random()-.5)*220,mounted:T.mounted});
+  const y=BH*.15+Math.random()*BH*.7,hp=T.hp*(team===1?1+B.bonus:drillHp());
+  B.units.push({id:B.uid++,team,t:k,x,y,vx:0,vy:0,hp,maxHp:hp,atk:T.atk*(team===0?1+(G.drill||0)*.002:1),def:T.def,spd:T.spd*(.92+Math.random()*.16),r:T.r,face:team?Math.PI:0,sx:team?-1:1,
+    ph:Math.random()*6,st:0,at:-1,pend:null,hitT:0,cd:Math.random(),tgt:null,rt:0,state:team===0?'wait':'advance',mor:T.mor*(team===1?1+B.bonus:spiritK()),morMax:T.mor*(team===1?1+B.bonus:spiritK()),spd2:1,ax:x+(team?-60:60),ay:y,fx:-50-Math.random()*90,fy:(Math.random()-.5)*220,mounted:T.mounted});
 }
 function reinforce(){
   let a=0,b=0;B.units.forEach(u=>{if(!u.hero)u.team?b++:a++});
@@ -2217,6 +2301,7 @@ function drawParty(p){
   drawFigure(p.x,p.y,p.kind==='lord'?2:0,p.kind==='lord'?'e':'b',col,moving,!!p.left,false);
 }
 function drawPlayer(){
+  if(G.camp){const{x,y}=G.camp;ctx.strokeStyle='#6b4a2c';ctx.lineWidth=3;ctx.beginPath();ctx.ellipse(x,y,44,18,0,.6,5.9);ctx.stroke();ctx.fillStyle='#d9cdb0';ctx.beginPath();ctx.moveTo(x-30,y+4);ctx.lineTo(x-20,y-16);ctx.lineTo(x-10,y+4);ctx.fill();ctx.fillStyle=FAC[0].color;ctx.beginPath();ctx.moveTo(x+8,y+6);ctx.lineTo(x+20,y-20);ctx.lineTo(x+32,y+6);ctx.fill();ctx.fillStyle='#ffb040';ctx.beginPath();ctx.arc(x-2,y+8,3+Math.random(),0,7);ctx.fill()}
   if(terAt(G.x,G.y)===T_WATER){ctx.fillStyle='#6a4628';ctx.beginPath();ctx.ellipse(G.x,G.y,30,10,0,0,7);ctx.fill()}
   const tp=G.path&&G.path[0],moving=!!targetPos()&&!uiOpen;
   ctx.fillStyle='rgba(216,164,67,.2)';ctx.beginPath();ctx.ellipse(G.x,G.y,30+Math.sin(performance.now()/300)*2,11,0,0,7);ctx.fill();
@@ -2754,6 +2839,7 @@ function drawMap3D(dt){
     const nx=G.path&&G.path[0];put('me',G.x,G.y,Math.min(heroRank(),2),'p',!!targetPos()&&!uiOpen,nx?nx.x-G.x:0,nx?nx.y-G.y:0,26);
   }
   for(const[k,F]of M.figs)if(!seen.has(k)){M.sc.remove(F.s);M.sc.remove(F.sh);M.figs.delete(k);const bt=M.boats&&M.boats.get(k);if(bt){M.sc.remove(bt);M.boats.delete(k)}}
+  syncCamp3D(M);
   GL.r.render(M.sc,GL.cam);
   // накладка: маршрут, підписи міст і загонів з кольором фракції, ніч
   ctx.setTransform(DPR,0,0,DPR,0,0);ctx.clearRect(0,0,VW,VH);
@@ -2885,6 +2971,17 @@ function build3DBattle(){
   if(T.wet.some(v=>v)){const water=new THREE.Mesh(new THREE.PlaneGeometry(EW,EH).rotateX(-Math.PI/2),new THREE.MeshLambertMaterial({color:SE.water,transparent:true,opacity:.86}));water.position.set(BW/2,T.WL,BH/2);water.receiveShadow=true;sc.add(water)}
   sc.add(forestMesh(battleTrees(),SE,battleHeight,1.6));
   if(!SE.snow)sc.add(grassTufts(SE,GL.small?1600:3200));
+  // бій біля табору: частокіл довкола ваших воїнів (широкий прохід до ворога), намети й вогнище
+  if(B.camp){const x0=6,x1=340,y0=BH*.1,y1=BH*.9,gy0=BH*.3,gy1=BH*.7,pts=[],step=17;
+    for(let x=x0;x<=x1;x+=step){pts.push([x,y0]);pts.push([x,y1])}for(let y=y0+step;y<y1;y+=step){pts.push([x0,y]);if(y<gy0||y>gy1)pts.push([x1,y])}
+    const stake=new THREE.CylinderGeometry(4,5,40,6);stake.translate(0,20,0);const tip=new THREE.ConeGeometry(5,12,6);tip.translate(0,46,0);
+    const L=c=>new THREE.MeshLambertMaterial({color:c}),st=new THREE.InstancedMesh(stake,L('#6b4a2c'),pts.length),tp=new THREE.InstancedMesh(tip,L('#9a7a50'),pts.length),M=new THREE.Matrix4(),E=new THREE.Euler();
+    const dry=([x,y])=>battleHeight(x,y)>GL.bh.WL+.5,dp=pts.filter(dry);st.count=tp.count=dp.length;
+    dp.forEach(([x,y],i)=>{E.set((Math.random()-.5)*.1,0,(Math.random()-.5)*.1);M.makeRotationFromEuler(E);M.setPosition(x,battleHeight(x,y)-2,y);st.setMatrixAt(i,M);tp.setMatrixAt(i,M)});
+    st.castShadow=tp.castShadow=true;sc.add(st,tp);
+    [[70,BH*.2,'#d9cdb0'],[60,BH*.8,'#cfc2a2'],[40,BH*.42,FAC[0].color],[40,BH*.62,'#d9cdb0']].filter(([x,y])=>battleHeight(x,y)>GL.bh.WL+.5).forEach(([x,y,c])=>{const t=new THREE.Mesh(new THREE.ConeGeometry(34,62,6),L(c));t.position.set(x,battleHeight(x,y)+30,y);t.castShadow=true;sc.add(t)});
+    const fx=110,fy=BH*.3,fh=battleHeight(fx,fy),logs=new THREE.Mesh(new THREE.CylinderGeometry(10,11,4,8),L('#3a2a1a'));logs.position.set(fx,fh+2,fy);sc.add(logs);
+    const fire=new THREE.Mesh(new THREE.ConeGeometry(8,22,7),new THREE.MeshBasicMaterial({color:'#ffb040'}));fire.position.set(fx,fh+13,fy);sc.add(fire);GL.campFire=fire}else GL.campFire=null;
   let gate=null,ram=null;
   if(B.wall){const K=makeKit(400);sc.add(K.group);const gapAt=z=>B.breach.find(b=>b.kind==='gate'&&Math.abs(z-b.y)<b.w);
     // мур із зубцями; ворота — проміжок, закритий стулками, поки таран їх не виламає
@@ -2909,6 +3006,7 @@ function poolFig(Bt){const F=(Bt.pool&&Bt.pool.pop())||(()=>{const f=figSprite(B
   F.s.visible=F.sh.visible=F.ring.visible=true;return F}
 function drawBattle3D(dt){
   const Bt=GL.bat;if(!Bt)return drawBattle();
+  if(GL.campFire){const t=performance.now();GL.campFire.scale.set(1+Math.sin(t/70)*.08,1+Math.sin(t/90)*.2+Math.random()*.08,1)}
   const h=B.hero,v=VIEW.battle,hx=h.hp>0?h.x:(B.camx??BW/2),hy=h.hp>0?h.y:(B.camy??BH/2);B.camx=hx;B.camy=hy;
   // режим «від героя»: камера за спиною, повертається слідом за героєм
   if(v.hero){const want=Math.atan2(-Math.cos(h.face),-Math.sin(h.face));let d=want-v.cyaw;d=Math.atan2(Math.sin(d),Math.cos(d));v.cyaw+=d*Math.min(1,dt*2.6)}else v.cyaw=v.yaw;
@@ -2980,8 +3078,8 @@ function updateHud(){
     {const c=calOf(G.day,G.hour);$('#hDay').textContent=c.m[0].toUpperCase()+c.m.slice(1)+' '+c.y;$('#hDay').parentElement.title='День походу '+G.day}$('#hHour').textContent=String(Math.floor(G.hour)).padStart(2,'0')+':00';
     $('#hGold').textContent=Math.floor(G.gold).toLocaleString('uk-UA');$('#hArmy').innerHTML=`${total(G.army)}<b>/${armyLimit()}</b>`;$('#hSky').setAttribute('href',G.hour<6||G.hour>=20?'#x-moon':'#x-sun');
     $('#hHp').style.width=Math.round(G.hero.hp/G.hero.maxHp*100)+'%';
-    $('#hLvl').textContent=G.hero.lvl;$('#bagN').textContent=G.bag&&G.bag.length?G.bag.length:'';$('#boatBtn').classList.toggle('on',G.sail!==false);$('#hTer').textContent=(terAt(G.x,G.y)===T_WATER?'Пливемо · '+BOAT_LV[G.boatLv||0].n.toLowerCase():TER_N[terAt(G.x,G.y)])+(G.target&&G.slope>.08?' · підйом':G.target&&G.slope<-.08?' · спуск':'')+' · '+SEASONS[G.season||0].n;$('#waitBtn').classList.toggle('on',!!G.waiting);
-  }else if(B){
+    $('#hLvl').textContent=G.hero.lvl;{const cc=$('#campCard');cc.hidden=!G.camp;$('#waitBtn').classList.toggle('on',!!G.camp);if(G.camp){if(!$('#ccIc').src)$('#ccIc').src=UIART.ui_ic_camp;$('#ccHp').style.width=Math.round(G.hero.hp/G.hero.maxHp*100)+'%';$('#ccW').textContent=total(G.wounded||{});$('#ccSp').style.width=Math.round(G.spirit)+'%';$('#ccDr').style.width=Math.round(G.drill)+'%'}}$('#bagN').textContent=G.bag&&G.bag.length?G.bag.length:'';$('#boatBtn').classList.toggle('on',G.sail!==false);$('#hTer').textContent=(terAt(G.x,G.y)===T_WATER?'Пливемо · '+BOAT_LV[G.boatLv||0].n.toLowerCase():TER_N[terAt(G.x,G.y)])+(G.target&&G.slope>.08?' · підйом':G.target&&G.slope<-.08?' · спуск':'')+' · '+SEASONS[G.season||0].n;$('#waitBtn').classList.toggle('on',!!G.waiting);
+  }else if(B){$('#campCard').hidden=true;
     let a=B.resA.length,b=B.resB.length;B.units.forEach(u=>{if(!u.hero)u.team?b++:a++});
     {let m=0,n=0;B.units.forEach(u=>{if(u.team===0&&!u.hero){m+=u.mor/u.morMax;n++}});const pm=n?Math.round(m/n*100):100;$('#bM').textContent=pm+'%';$('#bM').style.color=pm<35?'#e0675a':pm<60?'#e0aa3e':'#9fd17a'}
     $('#bA').textContent=a;$('#bB').textContent=b;$('#bHp').style.width=Math.max(0,Math.round(B.hero.hp/B.hero.maxHp*100))+'%';
@@ -3057,7 +3155,7 @@ $('#boatBtn').onclick=()=>{G.sail=G.sail===false;G.path=null;$('#boatBtn').class
   toast(G.sail?`Човни на воді (${BOAT_LV[G.boatLv||0].n}): перепливаємо річки й озера.`:'Човни на березі: через річки й озера не пройти.');if(!G.sail&&terAt(G.x,G.y)===T_WATER){const p=cellC(nearestPassable(cellAt(G.x,G.y)));G.x=p.x;G.y=p.y}};
 $('#ovBtn').onclick=()=>{GL.overview=!GL.overview;$('#ovBtn').classList.toggle('on',GL.overview);if(GL.overview){G.zoom=Math.max(VW/W,VH/H);cam.follow=false;cam.x=G.x;cam.y=G.y}else{cam.follow=true;G.zoom=Math.max(.35,G.zoom)}};
 $('#zc').onclick=()=>{cam.follow=true;VIEW.map.yaw=0};
-$('#waitBtn').onclick=()=>{G.waiting=!G.waiting;if(G.waiting)G.target=null;updateHud()};
+$('#waitBtn').onclick=toggleCamp;$('#campOff').onclick=toggleCamp;
 $('#heroBtn').onclick=()=>{if(!uiOpen)equipPanel()};
 $('#eqBtn').onclick=()=>equipPanel();
 $('#bagBtn').onclick=()=>{CUR={};bagPanel()};
@@ -3122,7 +3220,7 @@ function frame(now){
     const want3d=GL.ok&&(scene==='battle'?!!GL.bat:!GL.overview&&!!GL.map);if(GL.on!==want3d){GL.on=want3d;$('#gl').style.display=want3d?'block':'none'}
     if(scene==='battle'&&B){if(!B.over)bUpdate(dt);if(B)GL.bat?drawBattle3D(dt):drawBattle()}
     else{
-      if(!uiOpen&&(G.target||G.waiting)){const dh=dt*HPS*(G.waiting?2.5:1);const steps=Math.ceil(dh/.25);for(let i=0;i<steps&&!uiOpen;i++)worldStep(dh/steps)}
+      if(!uiOpen&&(G.target||G.waiting||G.camp)){const dh=dt*HPS*(G.waiting||G.camp?2.5:1);const steps=Math.ceil(dh/.25);for(let i=0;i<steps&&!uiOpen;i++)worldStep(dh/steps)}
       GL.on?drawMap3D(dt):drawMap();
     }
     hudT-=dt;if(hudT<=0){hudT=.15;updateHud()}
@@ -3136,7 +3234,7 @@ function boot(data){
   showTitle();setLoad(.15,'Завантаження світу…');
   // світ будується трохи згодом, щоб меню й смужка завантаження з'явились одразу
   setTimeout(()=>{
-    if(saved){G=saved;if(!isFinite(G.gold))G.gold=300;initDiplo();applyColor();fillArmy(G.army);G.towns.forEach(t=>{fillArmy(t.garrison);t.recruits=t.recruits||{}});G.parties.forEach(p=>fillArmy(p.army));G.oldMap=!G.towns.some(t=>t.art);if(!G.pf)G.pf=1;G.towns.forEach(t=>{if(t.name==='Вербиця')t.name='Вербовець'});buildTerrain();enterMap();
+    if(saved){G=saved;if(!isFinite(G.gold))G.gold=300;initDiplo();initCamp();applyColor();fillArmy(G.army);G.towns.forEach(t=>{fillArmy(t.garrison);t.recruits=t.recruits||{}});G.parties.forEach(p=>fillArmy(p.army));G.oldMap=!G.towns.some(t=>t.art);if(!G.pf)G.pf=1;G.towns.forEach(t=>{if(t.name==='Вербиця')t.name='Вербовець'});buildTerrain();enterMap();
     }else{newGame();buildTerrain();enterMap()}
     setLoad(.85,'Готуємо військо…');
     if(fromHot)hideTitle();
