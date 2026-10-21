@@ -858,6 +858,56 @@ body.advon .legend{top:calc(env(safe-area-inset-top,0px) + 74px)}
 @media (orientation:portrait) and (max-width:700px){.amw{grid-template-columns:1fr}.amv{height:220px;margin:10px 10px 0}}
 .advdlg .adp{position:relative;overflow:hidden;background-position:50% 18%}
 .advdlg .adp video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 18%;display:block}
+
+/* ===== навчання з Радником ===== */
+.tutbox{position:fixed;z-index:46;width:min(380px,46vw);display:grid;grid-template-columns:62px minmax(0,1fr);gap:10px;padding:8px 32px 9px 8px;border:1px solid var(--ag);border-radius:6px;
+  background:var(--grain),linear-gradient(#13202f,#0a121b);box-shadow:0 0 0 1px #000,inset 0 0 0 2px rgba(5,10,16,.9),inset 0 0 0 3px rgba(201,154,75,.22),0 12px 30px rgba(0,0,0,.65);animation:advin .28s cubic-bezier(.2,.8,.2,1)}
+.tutbox.tl{top:calc(env(safe-area-inset-top,0px) + 8px);left:max(10px,env(safe-area-inset-left,0px))}
+.tutbox.tr{top:calc(env(safe-area-inset-top,0px) + 8px);right:max(10px,env(safe-area-inset-right,0px))}
+.tutbox.bl{bottom:calc(env(safe-area-inset-bottom,0px) + 8px);left:max(10px,env(safe-area-inset-left,0px))}
+.tutbox.br{bottom:calc(env(safe-area-inset-bottom,0px) + 8px);right:max(10px,env(safe-area-inset-right,0px))}
+.tutbox.onmap{top:calc(env(safe-area-inset-top,0px) + 74px);right:max(10px,env(safe-area-inset-right,0px));left:auto;bottom:auto}
+.tutbox.onmapb{bottom:calc(env(safe-area-inset-bottom,0px) + 8px);right:max(84px,env(safe-area-inset-right,0px));left:auto;top:auto}
+.tutbox .tf{width:62px;height:72px;object-fit:cover;object-position:50% 18%;border:1px solid var(--ag);border-radius:4px;box-shadow:0 0 0 1px #000;background:#0b1118}
+.tutbox .tbd{min-width:0}
+.tutbox .tn{display:block;font-family:var(--f-head);font-size:12px;font-weight:700;letter-spacing:.16em;color:var(--agl);text-transform:uppercase}
+.tutbox p{margin:2px 0 4px;font-size:13.5px;line-height:1.38;color:#f3ead6}
+.topts{margin:0 0 4px;padding:0;list-style:none;font-size:12.5px;line-height:1.3;color:#d9cfb8}.topts li{margin:2px 0}.topts b{color:var(--agl);font-weight:700}
+.tkeys{margin:2px 0 4px;font-size:12.5px;line-height:1.5;color:#d9cfb8}
+.tutbox kbd,.tkeys kbd{display:inline-block;min-width:20px;padding:0 6px;margin:0 1px;border:1px solid var(--ag);border-bottom-width:3px;border-radius:4px;background:#1a2636;color:#f3ead6;font:700 12px/1.45 'Alegreya Sans',sans-serif;text-align:center}
+.tgoal{display:flex;align-items:center;gap:6px;margin:4px 0 2px;padding:3px 8px;border-left:3px solid var(--agl);background:rgba(236,199,126,.1);font-size:12.5px;color:#f1e3c0}
+.tgoal::before{content:"◎";color:var(--agl);font-weight:700}
+.tacts{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:6px 10px;margin-top:5px}
+.tskip{margin-right:auto;padding:4px 0;border:0;background:none;color:#a99c80;font-size:12px;text-decoration:underline;cursor:pointer}
+.tskip.arm{color:#ffab98}
+.tutgoal{position:fixed;z-index:46;display:flex;align-items:center;gap:8px;max-width:min(380px,60vw);padding:3px 12px 3px 3px;border:1px solid var(--ag);border-radius:20px;
+  background:rgba(10,18,27,.93);color:#f1e3c0;font-size:13px;line-height:1.2;text-align:left;box-shadow:0 4px 14px rgba(0,0,0,.55);cursor:pointer;animation:advin .28s}
+.tutgoal img{width:30px;height:30px;border-radius:50%;flex:none}
+.tutgoal span::before{content:"◎ ";color:var(--agl);font-weight:700}
+.tutgoal.onmap{top:calc(env(safe-area-inset-top,0px) + 74px);right:max(10px,env(safe-area-inset-right,0px))}
+.tutgoal.bat,.tutgoal.mod{top:calc(env(safe-area-inset-top,0px) + 6px);left:50%;transform:translateX(-50%)}
+#tutRings{position:fixed;inset:0;z-index:47;pointer-events:none}
+.tring{position:fixed;display:block;border:3px solid var(--agl);border-radius:12px;box-shadow:0 0 0 2px rgba(0,0,0,.5),0 0 18px 4px rgba(236,199,126,.6);animation:tring 1.1s ease-in-out infinite}
+.tring.round{border-radius:50%}
+.tring.pt{border-width:3px;background:radial-gradient(closest-side,rgba(236,199,126,.22),transparent)}
+.tring.pt::after{content:"▼";position:absolute;left:50%;top:-28px;transform:translateX(-50%);color:var(--agl);font-size:20px;line-height:1;text-shadow:0 2px 3px #000;animation:tbob .7s ease-in-out infinite alternate}
+.tring.edge{border-style:dashed}.tring.edge::after{content:"➤";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(var(--a));color:var(--agl);font-size:22px;text-shadow:0 2px 3px #000}
+@keyframes tring{50%{box-shadow:0 0 0 2px rgba(0,0,0,.5),0 0 30px 9px rgba(236,199,126,.9)}}
+@keyframes tbob{to{transform:translate(-50%,-6px)}}
+.ordmenu{position:fixed;z-index:31;display:flex;flex-direction:column;gap:5px;padding:6px;border:1px solid var(--ag);border-radius:6px;background:rgba(10,18,27,.96);box-shadow:0 10px 24px rgba(0,0,0,.6)}
+.ordmenu button{display:flex;align-items:center;gap:8px;min-width:124px;min-height:40px;padding:4px 12px;border:1px solid #3c5676;border-radius:4px;background:linear-gradient(#1a2f49,#0f1e31);
+  color:#f1e3c0;font-family:var(--f-head);font-size:15px;letter-spacing:.04em;text-align:left;cursor:pointer}
+.ordmenu button .ic{width:20px;height:20px;color:var(--agl)}
+.ordmenu button.on{background:linear-gradient(#e2b25c,#b8853a 60%,#946726);border-color:#5e4318;color:#1d1408}.ordmenu button.on .ic{color:#1d1408}
+@media (orientation:landscape) and (max-height:520px){
+  .tutbox{width:min(360px,46vw);grid-template-columns:50px minmax(0,1fr);gap:8px;padding:6px 28px 7px 6px}.tutbox .tf{width:50px;height:58px}
+  .tutbox p{font-size:12.5px;line-height:1.32;margin:1px 0 3px}.topts,.tkeys,.tgoal{font-size:11.5px}.tutbox .tn{font-size:11px}
+  .tutbox.onmap,.tutgoal.onmap{top:calc(env(safe-area-inset-top,0px) + 56px)}.tutbox.onmapb{right:max(64px,env(safe-area-inset-right,0px))}
+  .tutbox .btn.sm{padding:3px 10px;font-size:12px;min-height:30px}.tskip{font-size:11px}
+  .tutgoal{font-size:12px}.tutgoal img{width:26px;height:26px}
+  .ordmenu button{min-height:34px;font-size:13px;min-width:112px}
+}
+@media (orientation:portrait) and (max-width:700px){.tutbox{width:min(380px,92vw)}.tutbox.tl,.tutbox.tr,.tutbox.bl,.tutbox.br,.tutbox.onmap{left:4vw;right:auto}}
 </style>
 
 <canvas id="gl"></canvas>
@@ -956,6 +1006,10 @@ body.advon .legend{top:calc(env(safe-area-inset-top,0px) + 74px)}
 <button class="advbtn" id="advBtn" hidden aria-label="Радник" title="Радник"><img alt=""></button>
 <div class="advtip hide" id="advTip" hidden role="status" aria-live="polite"><img class="atf" id="advFace" alt="Радник"><div class="atb"><b class="atn">Радник</b><p id="advTxt"></p><div class="ata"><button class="btn sm gold" id="advOk">Зрозуміло</button></div></div><button class="atx" id="advX" aria-label="Закрити">✕</button></div>
 <div class="advdlg" id="advDlg" hidden></div>
+<div class="tutbox" id="tutBox" hidden role="status" aria-live="polite"><img class="tf" id="tutFace" alt=""><div class="tbd"><b class="tn">Радник</b><p id="tutTxt"></p><ul class="topts" id="tutOpts"></ul><div class="tkeys" id="tutKeys"></div><div class="tgoal" id="tutGoalIn"></div><div class="tacts" id="tutActs"></div></div><button class="atx" id="tutX" aria-label="Згорнути">✕</button></div>
+<button class="tutgoal" id="tutGoal" hidden><img alt=""><span></span></button>
+<div id="tutRings"></div>
+<div class="ordmenu" id="ordMenu" hidden><button data-o="charge"><svg class="ic"><use href="#i-swords"/></svg>Атака</button><button data-o="hold"><svg class="ic"><use href="#i-shield"/></svg>Стояти</button><button data-o="follow"><svg class="ic"><use href="#i-run"/></svg>За мною</button></div>
 <div class="corner" id="corner" hidden>
   <div class="camctl">
     <button class="zb" id="tUp" aria-label="Підняти камеру">⤒</button>
@@ -999,7 +1053,7 @@ body.advon .legend{top:calc(env(safe-area-inset-top,0px) + 74px)}
     <button class="hs round" data-t="lang" style="left:86.1%;top:2.6%;width:3.4%;height:6%" aria-label="Мова"></button>
     <button class="hs round" data-t="sound" style="left:90.6%;top:2.6%;width:3.4%;height:6%" aria-label="Звук"></button>
     <button class="hs round" data-t="music" style="left:95.1%;top:2.6%;width:3.4%;height:6%" aria-label="Музика"></button>
-    <div class="tver">Версія 21.10.4 · Радник</div>
+    <div class="tver">Версія 21.10.5 · Навчання</div>
     <div class="tload" id="tload"><span id="tloadTxt">Завантаження…</span><i><b id="tbar"></b></i></div>
   </div>
 </div>
@@ -1993,7 +2047,7 @@ function takeLoot(){const L=CUR.loot||[];let n=0;while(L.length&&bagFree()){bag(
   if(n)toast(`Трофеї в рюкзаку: ${n}`);if(L.length)toast(`Рюкзак повний: ${L.length} ${L.length>1?'речі лишились':'річ лишилась'} на полі бою.`,true);CUR.loot=[]}
 function takePris(){const n=claimCaptives(CUR.cap||{});SFX.play('coin');toast(n?`Полонених: +${n}. Найняти їх можна у вікні «Армія».`:'Полонених нікуди брати — місць немає.',!n)}
 function claimRest(){if(!CUR)return;if(CUR.hasLoot&&!CUR.lootTaken){takeLoot();CUR.lootTaken=true}if(CUR.hasPris&&!CUR.prisTaken){takePris();CUR.prisTaken=true}}
-function rewardCheck(){save();if((!CUR.hasLoot||CUR.lootTaken)&&(!CUR.hasPris||CUR.prisTaken)){closeModal();return}
+function rewardCheck(){save();if((!CUR.hasLoot||CUR.lootTaken)&&(!CUR.hasPris||CUR.prisTaken)&&!/^v_/.test(tutSt())){closeModal();return}
   const mark=(id,txt)=>{const b=$('#'+id);if(b){b.disabled=true;b.classList.add('rwdone');b.textContent=txt}};if(CUR.lootTaken)mark('rwLoot','✓ Трофеї забрано');if(CUR.prisTaken)mark('rwPris','✓ Полонених забрано')}
 function rollCaptives(killed){const rate={militia:.25,archer:.22,sword:.14,axe:.14,musket:.14,knight:.06},cap={};let n=0;
   for(const k of ORDER){const v=Math.round((killed[k]||0)*rate[k]*(.7+Math.random()*.6));cap[k]=v;n+=v}
@@ -2177,10 +2231,11 @@ function worldStep(dh){
   // parties
   for(const p of G.parties.slice()){
     if(p.kind==='mine'){mineStep(p,dh);continue}
+    if(p.tut)continue;
     if(p.cool>0)p.cool-=dh;
     const hostile=isHostile(p),dP=dist(p,G);
     let chasing=false;
-    if(hostile&&p.cool<=0&&dP<380){
+    if(hostile&&p.cool<=0&&dP<380&&!tutOn()){
       const ratio=armyPower(p.army)/playerPower();
       if(ratio>.85){p.tx=G.x;p.ty=G.y;chasing=true}
       else if(dP<260){p.tx=clamp(p.x+(p.x-G.x),60,W-60);p.ty=clamp(p.y+(p.y-G.y),60,H-60);chasing=true}
@@ -2196,7 +2251,7 @@ function worldStep(dh){
   }
   // party vs party
   outer:for(let i=0;i<G.parties.length;i++)for(let j=i+1;j<G.parties.length;j++){
-    const a=G.parties[i],b=G.parties[j];if(a.f===b.f)continue;const peace=(x,y)=>x.kind==='mine'&&!(y.kind==='bandit'||G.war[y.f]);if(peace(a,b)||peace(b,a))continue;
+    const a=G.parties[i],b=G.parties[j];if(a.f===b.f||a.tut||b.tut)continue;const peace=(x,y)=>x.kind==='mine'&&!(y.kind==='bandit'||G.war[y.f]);if(peace(a,b)||peace(b,a))continue;
     if(dist(a,b)<18){if(a.kind==='mine'||b.kind==='mine'){const m=a.kind==='mine'?a:b,o=m===a?b:a,n0=total(m.army);setTimeout(()=>{const txt=total(m.army)?`${m.name} розбив ${o.name}, утративши ${n0-total(m.army)}.`:`${m.name} загинув у сутичці з ${o.name}.`;toast(txt,!total(m.army),4500);logEvent(txt,total(m.army)?'good':'lost')},0)}const r=simulate(a.army,b.army);a.army=r.aSurv;b.army=r.bSurv;
       [a,b].forEach(p=>{if(total(p.army)===0)removeParty(p)});
       const w=total(a.army)?a:b;
@@ -2207,7 +2262,7 @@ function worldStep(dh){
   for(const p of G.parties){
     const want=G.target&&G.target.kind==='party'&&G.target.id===p.id;
     if(p.kind==='mine'){if(want&&dist(p,G)<26){G.target=null;mergeMine(p);return}continue}
-    if(dist(p,G)<22&&((isHostile(p)&&p.cool<=0)||want)){openEncounter(p);return}
+    if(dist(p,G)<22&&((isHostile(p)&&p.cool<=0&&(!tutOn()||p.tut))||want)){openEncounter(p);return}
   }
 }
 function think(p){
@@ -2273,7 +2328,7 @@ document.querySelectorAll('img.sbi[data-ic]').forEach(i=>i.src=UIART['ui_ic_'+i.
  ['pointerup','pointercancel','pointerleave'].forEach(n=>document.addEventListener(n,up,true));}
 function show(html,cls){sheet.className='sheet'+(cls?' '+cls:'');sheet.innerHTML=html;addCloseX();modal.hidden=false;uiOpen=true;sheet.scrollTop=0}
 // єдина кнопка закриття для всіх вікон: прилипає до верхнього правого кута, закриває лише верхнє вікно
-function addCloseX(){if(sheet.querySelector('.xbtn')||!sheet.querySelector('[data-a]'))return;sheet.classList.add('hasx');
+function addCloseX(){if(sheet.querySelector('.xbtn')||!sheet.querySelector('[data-a]')||sheet.classList.contains('nox'))return;sheet.classList.add('hasx');
   sheet.insertAdjacentHTML('afterbegin','<div class="xbar"><button class="xbtn" data-a="xclose" aria-label="Закрити" title="Закрити">✕</button></div>')}
 // «×» = власна кнопка вікна «Назад»/«Скасувати»; після бою — спершу забрати нагороди; інакше просто закрити
 function xClose(){const bs=[...sheet.querySelectorAll('button[data-a]')].filter(b=>!b.closest('.xbar')&&!b.disabled);
@@ -2292,7 +2347,7 @@ function armyRows(a,extra){
 }
 const fbadge=f=>`<span class="eyebrow" style="color:${FAC[f].color}">${FAC[f].name}</span>`;
 
-sheet.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b||b.disabled)return;if(!/^adv/.test(b.dataset.a))SFX.play('click');const fn=ACT[b.dataset.a];if(fn)fn(b.dataset.v)});
+sheet.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b||b.disabled)return;if(!/^(adv|tut)/.test(b.dataset.a))SFX.play('click');const fn=ACT[b.dataset.a];if(fn)fn(b.dataset.v)});
 sheet.addEventListener('submit',e=>{e.preventDefault();if(e.target.id==='foundForm'){foundTown();return}if(e.target.id==='realmForm'){const n=$('#realmInput').value.trim().replace(/\s+/g,' ').slice(0,28);if(G.kingdom&&n)G.kingdom=n;else G.realm=n||null;applyColor();save();closeModal();renderLegend();toast(n?`Ваша держава: ${n}`:'Назву прибрано.');return}if(e.target.id==='renameForm')ACT.renameSave(e.target.dataset.v);
   if(e.target.id==='kingForm'){const n=$('#kingInput').value.trim().replace(/\s+/g,' ').slice(0,28);if(!n||!canKingdom())return;G.kingdom=n;if(G.liege){G.liege=0}applyColor();addFame(50,'нове королівство');save();toast(`Проголошено королівство «${n}»!`);SFX.play('win');diplomacyPanel()}});
 
@@ -2440,7 +2495,7 @@ function encUnits(a){
   return ORDER.filter(t=>a[t]>0).map(t=>`<div class="eu"><img src="${UIART[UTHUMB[t]]}" alt=""><span class="ec">${UNIT_IC[t]||''}</span><span><b>${TYPES[t].n}</b><span class="sub">Здоров’я ${TYPES[t].hp} · Удар ${TYPES[t].atk}${TYPES[t].ranged?' · Стріляють':''}${TYPES[t].mounted?' · Кіннота':''}</span></span><span class="en">${a[t]}</span></div>`).join('')||'<p class="muted">Нікого немає.</p>';
 }
 function openEncounter(p){
-  CUR={party:p};G.target=null;G.waiting=false;
+  CUR={party:p};if(p.tut&&tutOn()){tutSnap();tutGo('enc1')}G.target=null;G.waiting=false;
   const hostile=isHostile(p),[txt,col]=cmpText(armyPower(p.army)/playerPower()),lord=p.kind==='lord',bandit=p.kind==='bandit',pcE=winChance(p.army,G.camp?-.15:0);
   const art=lord?`<div class="enr lord" style="background-image:url(${portrait(p.f,p.name.startsWith('Князь')||p.name.startsWith('Кошовий')||p.name.startsWith('Воєвода Тарас')?3:2)})"></div>`:`<div class="enr" style="background-image:url(${UIART.ui_en_art})"></div>`;
   const ban=bandit?`<span class="eban" style="background-image:url(${UIART.ui_en_skull})"></span>`:`<span class="eban c" style="border-top-color:${FAC[p.f].color}"><svg class="ic"><use href="#i-banner"/></svg></span>`;
@@ -2511,7 +2566,8 @@ function applyResult(c,r){
   </div></div>
   <div class="vacts">${cap.n?`<button class="btn bronze" id="rwPris" data-a="claimPris"><img src="${vi('bpris')}" alt=""><span>Забрати полонених <small>· ${cap.n} ·</small></span></button>`:''}${spoils.length?`<button class="btn gold" id="rwLoot" data-a="claimLoot"><img src="${vi('bchest')}" alt=""><span>Забрати трофеї <small>· ${spoils.length} ·</small></span></button>`:''}${extraBtn}${extraBtn&&(spoils.length||cap.n)?'':`<button class="btn sm2 ${extraBtn||spoils.length||cap.n?'ghost':'gold'}" data-a="${spoils.length||cap.n?'rewardAll':'close'}">На мапу</button>`}</div>`,'wide vict');
   CUR={town:c.town,loot:spoils,lootNext:false,cap:cap.n?cap.cap:null,hasLoot:spoils.length>0,hasPris:cap.n>0,lootTaken:false,prisTaken:false};
-  if(!advSt().met)advTell('meet',ADVT.meet,{now:1,modal:1});else if(r.win&&c.town)advTell('town1',ADVT.town1(c.town),{face:2,now:1});
+  if(advSt().met&&r.win&&c.town)advTell('town1',ADVT.town1(c.town),{face:2,now:1});
+  tutAfterBattle(c,r,spoils.length,cap.n);if(c.party&&c.party.tut&&!tutOn()&&G.parties.includes(c.party))removeParty(c.party);
   save();
 }
 function addXp(x){const h=G.hero;h.xp+=x;while(h.xp>=xpNeed()){h.xp-=xpNeed();h.lvl++;h.maxHp+=15;h.hp=Math.min(h.maxHp,h.hp+15);toast(`Новий рівень героя: ${h.lvl}`)}}
@@ -2519,7 +2575,6 @@ function addXp(x){const h=G.hero;h.xp+=x;while(h.xp>=xpNeed()){h.xp-=xpNeed();h.
 /* ================= радник ================= */
 // старий козак при герої: слухає події гри, перевіряє стан і підказує доречне; що вже казав — пам'ятає у збереженні
 const ADVT={
-  meet:'Ого, козаче! А ти, бачу, не з полохливих! Гарно тримався в бою. Та шаблею махати — то ще пів справи. Треба й голову на плечах мати! Я вже своє повоював, тепер молодим допомагаю. То що скажеш, підемо разом? Я тобі дещо підкажу, а ти вже сам вирішуй, як чинити.',
   market:'О, козаче, дивися, скільки добра! Тільки не скуповуй усе підряд. Десь товар дешевший, а десь за нього добру копійчину дадуть. Торгівля — теж наука!',
   fish:'А знаєш, козаче, не все ж шаблею заробляти! Візьми вудку, посидь коло води. І душу відведеш, і рибину на продаж упіймаєш.',
   bite:'Чує моє серце, скоро риба піде! Як маєш вудку — не барися. Можна й на вечерю наловити, і копійчину заробити.',
@@ -2530,7 +2585,8 @@ const ADVT={
   rank:'Оце так! Ростеш, козаче! Скоро вже сам старих отаманів учитимеш. Тільки дивись, щоб від слави голова не закрутилася!',
   campaign:'Тепер ти не лише сам воюєш, а й інших у похід посилаєш! Добре це діло. Тільки отамана обирай розумного, бо не кожен доведе хлопців до перемоги.',
   found:'Ого, козаче! Власне поселення заснував! Колись тут вітер гуляв, а тепер люди житимуть. Дивись, може, ще й велике місто виросте!',
-  meet2:'Звати мене дід Петро, а хлопці кличуть просто Радником. Сорок літ у сідлі — від Січі до самого Криму! Тепер буду при тобі: побачу, що щось не так, — підкажу. А захочеш поради сам — клич мене й питай про золото, військо, міста, рибу чи нові землі.',
+  hello:'Здоров, козаче! Бачу, в похід зібрався. Звати мене дід Петро. Свого часу я чимало шляхів сходив, а тепер молодим допомагаю. Ходімо разом — покажу, як загоном керувати та першу перемогу здобути!',
+  helloOld:'Здоров, козаче! Звати мене дід Петро. Свого часу я чимало шляхів сходив, а тепер молодим допомагаю. Як потрібна порада — тисни мій портрет праворуч угорі, я й прийду.',
   joke:'Ну що, козаче, знову по пораду? Та ти й сам уже непогано даєш собі раду!',
 };
 // обличчя: 0 усмішка · 1 серйозний · 2 сміється · 3 здивування · 4 думає · 5 підморгує
@@ -2542,11 +2598,12 @@ function advStage(){const rk=heroRank(),own=G.towns.filter(t=>t.f===0).length;re
 const advCall=()=>['козаче','козаче','отамане','гетьмане'][advStage()];
 // поставити пораду в чергу. o.rep — повторювана (інакше лише раз за гру), o.gap — пауза між повторами в годинах гри,
 // o.now — відповідь на подію (без загальної паузи), o.when — коли можна показати (типово: на мапі без вікон), o.ok — чи ще доречна в мить показу
-function advTell(id,txt,o={}){if(!G)return;const A=advSt();if(!A.met&&id!=='meet')return;
+function advTell(id,txt,o={}){if(!G||tutOn())return;   // під час навчання сторонніх порад немає
+  const A=advSt();if(!A.met&&id!=='meet')return;
   if(!o.rep&&A.seen[id])return;if(o.rep&&A.last[id]!=null&&advNow()-A.last[id]<(o.gap||48))return;
   if(ADV.q.some(t=>t.id===id)||(ADV.cur&&ADV.cur.id===id))return;
   ADV.q.push({id,txt,face:o.face||0,rep:!!o.rep,ev:!!o.now,when:o.when,ok:o.ok,btn:o.btn,keep:!!o.keep,big:!!o.big,modal:!!o.modal,exp:o.exp?performance.now()+o.exp:0})}
-function advShow(t){const A=advSt();if(t.modal){A.seen[t.id]=true;A.any=advNow();if(t.id==='meet')A.met=true;save();advMeet(0);return}
+function advShow(t){const A=advSt();if(t.modal){A.seen[t.id]=true;A.any=advNow();if(t.id==='meet')A.met=true;save();tutMeet('old');return}
   ADV.cur=t;if(t.rep)A.last[t.id]=advNow();else A.seen[t.id]=true;A.any=advNow();if(t.id==='meet')A.met=true;
   const el=$('#advTip');$('#advFace').src=t.big?UIART.ui_av_p1:UIART['ui_av_f'+t.face];$('#advTxt').textContent=t.txt;$('#advOk').textContent=t.btn||'Зрозуміло';
   el.classList.toggle('low',uiOpen);el.classList.toggle('big',t.big);el.hidden=false;void el.offsetWidth;el.classList.remove('hide');
@@ -2559,7 +2616,7 @@ function garWeak(t){if(!AIF.some(f=>G.war[f]))return false;const g=total(t.garri
 const advInTown=()=>G.towns.some(t=>dist(t,G)<TR(t)+40);
 // періодична перевірка стану — лише справжні, доречні зараз поради
 function advCheck(){const A=advSt();
-  if(!A.met){if(G.hero.lvl>1||G.hero.xp>0)advTell('meet',ADVT.meet,{now:1,modal:1});return}
+  if(!A.met){if(!G.tut)advTell('meet',ADVT.helloOld,{now:1,modal:1});return}
   {const rk=heroRank();if(A.rk==null)A.rk=rk;if(rk>A.rk){A.rk=rk;advTell('rank'+rk,ADVT.rank,{face:2,now:1})}}
   if(uiOpen)return;
   const st=advStage(),N=total(G.army),Wd=total(G.wounded||{}),inT=advInTown(),onW=terAt(G.x,G.y)===T_WATER;
@@ -2581,6 +2638,7 @@ function advCheck(){const A=advSt();
 function advTick(now){if(!G)return;const A=advSt(),onMap=scene==='map'&&!$('#hud').hidden&&$('#title').hidden;if(uiOpen&&!$('#advDlg').hidden)advDlgClose();
   const bt=$('#advBtn'),btOn=onMap&&A.met&&!(ADV.cur&&ADV.cur.id==='meet');if(bt.hidden===btOn){bt.hidden=!btOn;document.body.classList.toggle('advon',btOn);if(btOn&&!bt.firstChild.src)bt.firstChild.src=UIART.ui_av_ic}
   if(ADV.ring&&btOn&&!uiOpen){ADV.ring=false;bt.classList.remove('fresh');void bt.offsetWidth;bt.classList.add('fresh')}
+  if(tutOn()){ADV.q.length=0;if(ADV.cur)advHide();return}
   if(!onMap){if(ADV.cur)advHide();if(!$('#advDlg').hidden)advDlgClose();return}
   if(ADV.cur){if(now>ADV.until||(AL.cur&&!ADV.cur.keep))advHide();return}   // воєнна тривога важливіша за пораду
   if(now<ADV.next)return;
@@ -2636,18 +2694,188 @@ function advDlg(sel){const el=$('#advDlg');ADV.sel=sel;if(ADV.cur)advHide();
   el.innerHTML=`<div class="adp" style="background-image:url(${sel<0?UIART.ui_av_vp:UIART.ui_av_vt})"><video poster="${sel<0?UIART.ui_av_vp:UIART.ui_av_vt}" autoplay muted loop playsinline><source src="assets/adv_${sel<0?'pipe':'talk'}_hq.webm" type="video/webm"><source src="assets/adv_${sel<0?'pipe':'talk'}_hq.mp4" type="video/mp4"></video></div><div class="adm"><div class="adh">Радник<small>${RK}</small></div>${body}</div><button class="atx" data-q="x" aria-label="Закрити">✕</button>`;
   el.hidden=false;el.querySelector('.adm').scrollTop=0}
 function advDlgClose(){const el=$('#advDlg');el.hidden=true;el.innerHTML='';ADV.greet=null}
-// перша зустріч після бою: велике вікно посередині, радник говорить (відео), дві сторінки — привітання й хто він такий
-function advMeet(pg){ADV.ring=true;
-  show(`<div class="amw"><div class="amv" style="background-image:url(${UIART.ui_av_vt})"><video poster="${UIART.ui_av_vt}" autoplay muted loop playsinline preload="auto"><source src="assets/adv_talk_hq.webm" type="video/webm"><source src="assets/adv_talk_hq.mp4" type="video/mp4"></video><i class="amc tl"></i><i class="amc tr"></i><i class="amc bl"></i><i class="amc br"></i><span class="amn">${pg?'Дід Петро':'Радник'}</span></div>
-  <div class="amm"><div class="vhead"><img class="vl" src="${UIART.ui_w_laur}" alt=""><h2>Радник</h2><img class="vl r" src="${UIART.ui_w_laur}" alt=""></div>
-  <p class="amsub">${pg?'Старий запорожець, тепер — ваш порадник':'Після бою до вас підходить старий козак'}</p>
-  <div class="amt"><p id="amTxt"></p>${pg?`<div class="amhint"><img src="${UIART.ui_av_ic}" alt=""><span>Мій портрет — праворуч угорі на мапі. Натисни, коли потрібна допомога.</span></div>`:''}</div>
-  <div class="amdots"><i class="${pg?'':'on'}"></i><i class="${pg?'on':''}"></i></div>
-  <div class="acts"><button class="btn gold" data-a="${pg?'advGo':'advNext'}">${pg?'Гайда!':'Підемо разом!'}</button></div></div></div>`,'wide advmeet');
-  advType($('#amTxt'),pg?ADVT.meet2:ADVT.meet);SFX.play(pg?'advPick':'advMeet')}
 // текст з'являється, ніби радник говорить; місце під нього зайняте одразу, тож вікно не стрибає. Дотик — показати все
 function advType(el,txt){clearInterval(ADV.tw);if(!el)return;el.innerHTML=`<span class="tg">${esc(txt)}</span><span class="ty"></span>`;const ty=el.lastChild;let i=0,k=0;const st=Math.max(1,Math.round(txt.length/90));
   ADV.tw=setInterval(()=>{i+=st;ty.textContent=txt.slice(0,i);if(++k%4===0&&i<txt.length)SFX.play('advTalk');if(i>=txt.length||!ty.isConnected)clearInterval(ADV.tw)},28);el.onclick=()=>{clearInterval(ADV.tw);ty.textContent=txt}}
+
+/* ================= навчання з Радником ================= */
+// покрокове навчання нової гри: одна коротка репліка — одна дія. Етап зберігається з грою, пропустити можна будь-коли.
+// where: map — на мапі без вікон, modal — у вікні (зустріч, перемога, місто), battle — у бою; wait — показати, щойно закриються вікна
+const TUT={open:true,shown:'',side:'',skip:0,ring:[],keep:new WeakMap()};
+const tutOn=()=>!!(G&&G.tut&&!G.tut.done);
+const tutSt=()=>tutOn()?G.tut.st:'';
+const touchUI=()=>matchMedia('(pointer:coarse)').matches;
+const KC=s=>s.split(' ').map(k=>`<kbd>${k}</kbd>`).join('');
+const tutParty=()=>G.parties.find(p=>p.tut);
+const tutTown=()=>G.towns.find(t=>t.id===G.tut.town);
+const tutSafe=t=>!(t.f>0&&G.war[t.f]);
+const TUTS={
+  move:{w:'map',say:'Це мапа наших земель. Натисни на вільне місце — загін рушить туди. А на поселення чи чужий загін — підійдеш до них.',goal:'Дійди до позначеного місця',ring:()=>[{pt:G.tut.pt}],btn:'Гаразд'},
+  bandit:{w:'map',say:'Он розбійники біля шляху! Небагато їх, нам до снаги. Натисни на загін — підійдемо й розберемося.',goal:'Підійди до розбійників',ring:()=>{const p=tutParty();return p?[{pt:p,r:32}]:[]},btn:'Гаразд',face:5},
+  enc1:{w:'modal',say:'Поглянь, скільки нас і скільки їх. Та сама кількість ще не все — важливо, які воїни в загоні.',goal:'Роздивися ворога',ring:()=>['.eus','.ecmp'],next:'Далі',face:4},
+  enc2:{w:'modal',say:'Для першого разу бери шаблю сам. Покажу, як триматися в бою!',opts:[['Битися самому','керуєш героєм і даєш накази війську'],['Автобій','результат одразу, але можливі втрати'],['Відступити','відмовитися від бою, поки ще можна']],goal:'Натисни «Битися самому»',ring:()=>['.eact[data-a="fight"]'],btn:'Гаразд',face:2},
+  b_move:{w:'battle',say:'Спершу розімни ноги, козаче! Пересунь героя до позначки.',keys:()=>touchUI()?'Тягни пальцем у лівій половині екрана — це джойстик.':KC('W A S D')+' — рух героя',goal:'Пересунь героя до позначки',ring:()=>[...(touchUI()?['.joybase']:[]),{bpt:B&&B.tutPt}],btn:'Спробую!'},
+  b_atk:{w:'battle',say:'А тепер махни шаблею! Кнопка з мечем — твій удар.',keys:()=>touchUI()?'':KC('Пробіл')+' або клік мишею в правій половині — удар',goal:'Вдар шаблею',ring:()=>['#atkBtn'],btn:'Спробую!',face:2},
+  b_blk:{w:'battle',say:'Не кожен удар треба приймати на сорочку! Щит допоможе захиститися.',keys:()=>(touchUI()?'Тримай кнопку щита натиснутою':'Тримай '+KC('Q'))+': поки тримаєш — щит піднятий, але сили тануть.',goal:'Підніми щит і потримай',ring:()=>['#blockBtn'],btn:'Спробую!',face:1},
+  b_dash:{w:'battle',say:'Ривком можна наблизитися або вискочити з-під удару. Та стеж за синьою смугою — сили не безкінечні!',keys:()=>touchUI()?'':KC('Shift')+' — ривок',goal:'Зроби ривок',ring:()=>['#dashBtn','.bar.st'],btn:'Спробую!'},
+  b_ord:{w:'battle',say:'Хлопці чекають твого слова! Дай наказ атакувати — й рушимо разом.',keys:()=>touchUI()?'Кнопка з людьми відкриває накази.':'Кнопка з людьми, або '+KC('1')+' атака · '+KC('2')+' стояти · '+KC('3')+' за мною',goal:'Дай наказ «Атака»',ring:()=>[$('#ordMenu').hidden?'#orderBtn':'#ordMenu [data-o="charge"]'],btn:'Спробую!',face:5},
+  b_fight:{w:'battle',goal:'Розбий розбійників',silent:1},
+  v_win:{w:'modal',say:'Оце вже діло, козаче! Першу перемогу здобув. Тепер погляньмо, що лишилося після бою.',goal:'Подивися, що лишилося після бою',ring:()=>['.vhead'],next:'Далі',face:2},
+  v_loot:{w:'modal',say:'Спершу трофеї — зброя й одяг переможених. Забирай, на ринку згодяться!',goal:'Забери трофеї',ring:()=>['#rwLoot'],btn:'Гаразд'},
+  v_pris:{w:'modal',say:'Ці здалися в полон. Тільки знай: полонений — ще не воїн у загоні. Найняти його можна задарма: «Армія → Полонені».',goal:'Забери полонених',ring:()=>['#rwPris'],btn:'Гаразд',face:4},
+  v_stats:{w:'modal',say:'А тут наші втрати й поранені. Поранений не б’ється, доки не одужає — у таборі чи в місті.',goal:'Глянь на втрати й поранених',ring:()=>['.vstats .vs:nth-child(2)','.vstats .vs:nth-child(3)'],next:'Далі',face:1},
+  v_close:{w:'modal',say:'Добре! Тепер повертаймося на мапу.',goal:'Закрий вікно бою',ring:()=>[sheet.querySelector('.vacts [data-a="rewardAll"],.vacts [data-a="close"]')?'.vacts [data-a="rewardAll"],.vacts [data-a="close"]':'.xbar .xbtn'],btn:'Гаразд'},
+  town:{w:'map',say:'Ходімо до поселення. Там трофеї продамо, воїнів підлікуємо й до нового походу підготуємося.',goal:()=>`Дійди до поселення: ${tutTown()?tutTown().name:''}`,ring:()=>{const t=tutTown();return t?[{pt:t,r:52}]:[]},btn:'Гаразд'},
+  t_market:{w:'modal',say:'Тут, на ринку, продаси трофеї. Зазирни на «Ринок».',goal:'Відкрий «Ринок»',ring:()=>['.tabs [data-v="market"]'],btn:'Гаразд'},
+  t_sell:{w:'modal',say:'Ось твій рюкзак: трофеї й риба — на продаж. Продаси, коли схочеш.',goal:'Глянь на рюкзак',ring:()=>['.mkbag'],next:'Далі',face:5},
+  t_hire:{w:'modal',say:'А в «Наймі» беруть воїнів — за золото, звісно.',goal:'Відкрий «Найм»',ring:()=>['.tabs [data-v="hire"]'],btn:'Гаразд'},
+  t_rest:{w:'modal',say:'А в «Розвитку» — відпочинок: поранені одужують, і ти сили набираєш.',goal:'Відкрий «Розвиток»',ring:()=>['.tabs [data-v="dev"]'],btn:'Гаразд'},
+  t_rest2:{w:'modal',say:'Ось тут. У своєму місті — задарма, в чужому — за кілька монет.',goal:'Знайди «Відпочити»',ring:()=>['.tbody [data-a="rest"]'],next:'Далі',face:5},
+  final:{w:'any',say:'Ну що ж, козаче, основи вже знаєш! Далі шлях обирай сам. А як потрібна порада — тисни на мій портрет праворуч угорі.',next:'Дякую, діду!',end:1,face:2},
+  lose:{w:'map',say:'Буває, козаче. Головне — сам живий! Дай пораненим оговтатися, зберемо хлопців і спробуємо ще.',goal:'Спробуй ще раз',acts:[['retry','Спробувати ще'],['end','Завершити навчання']],face:4},
+  fled:{w:'map',say:'Не бійся, козаче — розбійників лише жменька! Спробуймо ще раз?',goal:'Повернися до бою',acts:[['retry','До бою'],['end','Завершити навчання']],face:5},
+};
+const tutWhere=w=>w==='any'?true:w==='battle'?scene==='battle'&&!!B&&!B.over:w==='modal'?uiOpen&&scene==='map':scene==='map'&&!uiOpen&&$('#title').hidden;
+// бій стоїть, поки відкрита репліка
+const tutPause=()=>scene==='battle'&&!!B&&B.tut&&TUT.open&&/^b_/.test(tutSt())&&tutSt()!=='b_fight';
+function tutGo(st){G.tut.st=st;TUT.open=!TUTS[st].silent;TUT.shown='';TUT.side='';TUT.low=false;TUT.skip=0;if(B&&B.tut)dashReq=false;if(st==='move'||st==='bandit'||st==='town')TUT.frame=1;save()}
+function tutFrame(){const s=tutSt(),T=G.tut,o=s==='move'?T.pt:s==='bandit'?tutParty():s==='town'?tutTown():null;if(!o)return;const d=Math.hypot(o.x-G.x,o.y-G.y);
+  if(d>4500)return;cam.follow=false;cam.x=(o.x+G.x)/2;cam.y=(o.y+G.y)/2;if(GL.on&&!GL.overview)VIEW.map.d=clamp(Math.max(VIEW.map.d,d*2.6+600),400,7000);else G.zoom=clamp(Math.min(G.zoom,Math.min(VW,VH)*.7/Math.max(1,d)),ovMin(),1.15)}
+// безпечне місце поруч: суходіл, далеко від міст, і туди справді можна дійти
+function tutSpot(cx,cy,r0,r1,ok){
+  for(let k=0;k<500;k++){const a=Math.random()*6.283,r=r0+Math.random()*(r1-r0),x=cx+Math.cos(a)*r,y=cy+Math.sin(a)*r;
+    if(x<120||y<120||x>W-120||y>H-120)continue;const c=cellAt(x,y),tt=terAt(x,y);
+    if(!passable(c)||ISLE[c]||tt===T_WATER||tt===T_SWAMP||tt===T_FORD||tt===T_MOUNT)continue;
+    if(G.towns.some(t=>Math.hypot(t.x-x,t.y-y)<TR(t)+160))continue;if(ok&&!ok(x,y))continue;
+    const P=findPath(cx,cy,x,y,false);if(!P||!P.length)continue;const e=P[P.length-1];if(Math.hypot(e.x-x,e.y-y)>30)continue;return{x,y}}
+  return null}
+const nearRoad=(x,y)=>[[0,0],[40,0],[-40,0],[0,40],[0,-40],[60,60],[-60,-60]].some(([dx,dy])=>terAt(x+dx,y+dy)===T_ROAD);
+// навчальні розбійники: жменька ополченців, стоять на місці, ніхто інший їх не чіпає
+function tutSpawnBandits(c,near){
+  let s=null;if(near)s=tutSpot(c.x,c.y,70,140);
+  else{s=tutSpot(c.x,c.y,380,560,(x,y)=>Math.hypot(x-G.x,y-G.y)>460&&nearRoad(x,y))||tutSpot(c.x,c.y,380,560,(x,y)=>Math.hypot(x-G.x,y-G.y)>460)||tutSpot(c.x,c.y,200,400)}
+  if(!s)s={x:c.x+60,y:c.y};
+  const old=tutParty();if(old)G.parties=G.parties.filter(q=>q!==old);
+  // заберемо з дороги чужі ватаги, що стоять зовсім поруч
+  G.parties=G.parties.filter(q=>q.kind!=='bandit'||Math.hypot(q.x-s.x,q.y-s.y)>700&&Math.hypot(q.x-G.x,q.y-G.y)>600);
+  const p={id:G.nid++,kind:'bandit',name:'Розбійники з-під шляху',boat:false,f:4,x:s.x,y:s.y,tx:s.x,ty:s.y,army:fillArmy({militia:4,archer:1}),goal:null,wait:0,cool:0,hx:s.x,hy:s.y,tut:1};
+  G.parties.push(p);if(G.tut)G.tut.pid=p.id;return p}
+function tutPickTown(){
+  const c=G.towns.filter(t=>tutSafe(t)&&!t.isle).sort((a,b)=>dist(a,G)-dist(b,G));
+  for(const t of c.slice(0,6)){const P=findPath(G.x,G.y,t.x,t.y,false);if(P&&P.length&&Math.hypot(P[P.length-1].x-t.x,P[P.length-1].y-t.y)<TR(t)+60)return t.id}
+  return c[0]&&c[0].id}
+// нова гра: позначка для першого кроку й розбійники трохи далі
+function tutInit(){const pt=tutSpot(G.x,G.y,260,340)||{x:G.x+200,y:G.y};G.tut={st:'meet',pt:{x:Math.round(pt.x),y:Math.round(pt.y)}};tutSpawnBandits(pt);TUT.open=true}
+// після перезапуску: вікна й бій не зберігаються — повертаємося до найближчого кроку, що має сенс
+function tutRestore(){const T=G.tut;if(!T||T.done)return;
+  if(/^(enc|b_)/.test(T.st))T.st='bandit';
+  if(/^(v_|t_)/.test(T.st))T.st='town';
+  if(['meet','move','bandit','lose','fled'].includes(T.st)&&!tutParty())tutSpawnBandits(T.st==='meet'||T.st==='move'?T.pt:{x:G.x,y:G.y},T.st==='lose'||T.st==='fled');
+  if(T.st==='town'&&!tutTown())T.town=tutPickTown();
+  TUT.open=true;TUT.shown='';TUT.frame=1}
+// запам'ятати стан перед навчальним боєм: повтор не дасть ні золота, ні досвіду понад перший раз
+const TSNAP=['army','wounded','gold','hero','spirit','drill','fame','x','y','prisoners'];
+function tutSnap(){if(G.tut.snap)return;const s={};TSNAP.forEach(k=>{if(G[k]!==undefined)s[k]=JSON.parse(JSON.stringify(G[k]))});G.tut.snap=s}
+function tutRetry(){const T=G.tut;if(T.snap)Object.assign(G,JSON.parse(JSON.stringify(T.snap)));G.target=null;G.path=null;G.camp=null;
+  let p=tutParty();if(!p)p=tutSpawnBandits({x:G.x,y:G.y},true);else{p.army=fillArmy({militia:4,archer:1});p.cool=0;if(dist(p,G)>160){const s=tutSpot(G.x,G.y,70,140);if(s){p.x=p.tx=s.x;p.y=p.ty=s.y}}}
+  save();openEncounter(p)}
+function tutEnd(skipped){if(!G.tut)return;const keepB=B&&B.tut;G.tut={done:true,skipped:!!skipped};if(uiOpen&&CUR&&CUR.party&&CUR.party.tut)closeModal();
+  if(keepB){B.hold=false;B.tut=false}else{const p=tutParty();if(p)G.parties=G.parties.filter(q=>q!==p)}
+  TUT.open=false;tutDraw(true);$('#advBtn').classList.add('fresh');save()}
+// після бою з навчальними розбійниками
+function tutAfterBattle(c,r,nLoot,nPris){
+  if(!tutOn()||!c.party||!c.party.tut)return;const T=G.tut;
+  if(r.win){T.won=1;delete T.snap;T.vl=nLoot;T.vp=nPris;T.town=tutPickTown();tutGo('v_win')}
+  else tutGo(r.retreat?'fled':'lose')}
+const tutVNext=()=>{const T=G.tut,s=T.st;const seq=['v_win',...(T.vl?['v_loot']:[]),...(T.vp?['v_pris']:[]),'v_stats','v_close'];const i=seq.indexOf(s);tutGo(seq[i+1]||'town')};
+function tutNext(){const s=tutSt(),d=TUTS[s];if(!d)return;
+  if(d.end){tutEnd(false);return}
+  if(s==='enc1')tutGo('enc2');else if(s.startsWith('v_'))tutVNext();else if(s==='t_sell')tutGo('t_hire');else if(s==='t_rest2')tutGo('final')}
+// чи виконано крок — перевіряємо щокадру за станом гри, а не за закриттям репліки
+function tutCheck(){const s=tutSt(),T=G.tut;
+  if(s==='meet'){if(scene==='map'&&!uiOpen&&$('#title').hidden)tutMeet('tut');return}
+  if(s==='move'){if(Math.hypot(G.x-T.pt.x,G.y-T.pt.y)<55){G.target=null;G.path=null;tutGo('bandit')}return}
+  if(s==='bandit'&&!tutParty()){tutSpawnBandits({x:G.x,y:G.y});return}
+  if((s==='enc1'||s==='enc2')&&!uiOpen&&scene==='map'){tutGo('bandit');return}
+  if(B&&B.tut){const h=B.hero;
+    if(s==='b_move'&&B.tutPt&&Math.hypot(h.x-B.tutPt.x,h.y-B.tutPt.y)<45)tutGo('b_atk');
+    else if(s==='b_atk'&&B.tutAtk)tutGo('b_blk');
+    else if(s==='b_blk'&&B.tutBlk>.3)tutGo('b_dash');
+    else if(s==='b_dash'&&B.tutDash)tutGo('b_ord');
+    else if(s==='b_ord'&&B.tutOrd){B.hold=false;tutGo('b_fight')}
+    return}
+  if(s.startsWith('v_')){if(!uiOpen&&scene==='map'){tutGo('town');return}
+    if(s==='v_loot'&&CUR&&CUR.lootTaken)tutVNext();else if(s==='v_pris'&&CUR&&CUR.prisTaken)tutVNext();return}
+  if(s==='town'&&uiOpen&&CUR&&CUR.town&&sheet.classList.contains('town')&&tutSafe(CUR.town)){tutGo('t_market');return}
+  if(s.startsWith('t_')){if(!uiOpen){tutGo('town');return}const tab=CUR&&CUR.tab;
+    if(s==='t_market'&&tab==='market')tutGo('t_sell');else if(s==='t_hire'&&tab==='hire')tutGo('t_rest');else if(s==='t_rest'&&tab==='dev')tutGo('t_rest2')}
+}
+// поточна репліка, ціль і підсвічування
+function tutRender(){const s=tutSt(),d=TUTS[s],box=$('#tutBox');
+  const key=s+'|'+(touchUI()?1:0);if(TUT.shown===key)return;TUT.shown=key;
+  $('#tutFace').src=UIART['ui_av_f'+(d.face||0)];$('#tutTxt').textContent=d.say||'';
+  $('#tutOpts').innerHTML=(d.opts||[]).map(([a,b])=>`<li><b>${a}</b> — ${b}</li>`).join('');
+  const k=d.keys?d.keys():'';$('#tutKeys').innerHTML=k;$('#tutKeys').hidden=!k;
+  const g=typeof d.goal==='function'?d.goal():d.goal;$('#tutGoalIn').textContent=g||'';$('#tutGoalIn').hidden=!g;
+  $('#tutGoal span').textContent=g||'';
+  const acts=d.acts?d.acts.map(([a,n],i)=>`<button class="btn sm ${i?'ghost':'gold'}" data-t="${a}">${n}</button>`).join(''):d.next?`<button class="btn sm gold" data-t="next">${d.next}</button>`:`<button class="btn sm gold" data-t="ok">${d.btn||'Гаразд'}</button>`;
+  $('#tutActs').innerHTML=acts+(d.end||d.acts?'':`<button class="tskip" data-t="skip">Пропустити навчання</button>`);
+  if(TUT.open)SFX.play('adv')}
+function tutTargets(){const s=tutSt(),d=TUTS[s];if(!d||!d.ring)return[];const out=[];
+  for(const t of d.ring()){if(!t)continue;
+    if(typeof t==='string'){const el=[...document.querySelectorAll(t)].find(e=>e.offsetParent!==null||e.getClientRects().length);if(!el)continue;
+      if(TUT.scr!==s&&uiOpen&&sheet.contains(el)){TUT.scr=s;el.scrollIntoView({block:'nearest',inline:'nearest'})}   // підсвічене у вікні має бути видно
+      const r=el.getBoundingClientRect();if(r.width<2)continue;
+      let round=TUT.keep.get(el);if(round==null){const br=getComputedStyle(el).borderRadius;round=/50%/.test(br)||parseFloat(br)>=Math.min(r.width,r.height)/2-2;TUT.keep.set(el,round)}
+      out.push({x:r.left-6,y:r.top-6,w:r.width+12,h:r.height+12,round})}
+    else if(t.pt){if(scene!=='map'||uiOpen)continue;const p=t.pt;let q;
+      if(GL.on)q=proj(p.x,p.y,Math.max(-3,heightAt(p.x,p.y))+2);else q={x:(p.x-cam.x)*G.zoom+VW/2,y:(p.y-cam.y)*G.zoom+VH/2,ok:true};
+      const R=t.r||30,mg=46;let x=q.x,y=q.y,edge=!q.ok||x<4||x>VW-4||y<4||y>VH-4;
+      if(edge){if(!q.ok){x=VW-x;y=VH-y}const cx=VW/2,cy=VH/2,dx=x-cx,dy=y-cy,k=Math.min((VW/2-mg)/Math.max(1,Math.abs(dx)),(VH/2-mg-20)/Math.max(1,Math.abs(dy)));x=cx+dx*k;y=cy+dy*k+10}
+      out.push({x:x-R,y:y-R*.62,w:R*2,h:R*1.24,round:true,pt:!edge,edge,ang:Math.atan2(y-VH/2,x-VW/2)})}
+    else if(t.bpt&&B){const p=t.bpt;let q;
+      if(GL.bat)q=proj(p.x,p.y,battleHeight(p.x,p.y)+1);else{const z=clamp(Math.max(VW/650,VH/900),.6,1.4);q={x:(p.x-(B.camx??BW/2))*z+VW/2,y:(p.y-(B.camy??BH/2))*z+VH/2,ok:true}}
+      if(!q.ok)continue;out.push({x:q.x-30,y:q.y-18,w:60,h:36,round:true,pt:true})}}
+  return out}
+function tutDraw(off){const box=$('#tutBox'),chip=$('#tutGoal'),RG=$('#tutRings');
+  const s=off?'':tutSt(),d=TUTS[s],here=!!d&&tutWhere(d.w)&&!(scene==='map'&&!$('#advDlg').hidden);
+  if(!here){box.hidden=true;chip.hidden=true;RG.replaceChildren();return}
+  tutRender();
+  const tg=tutTargets();
+  // місце для репліки — подалі від того, що підсвічуємо
+  if(!TUT.side){let side='tr';if(d.w!=='map'&&tg.length){const cx=tg.reduce((a,r)=>a+r.x+r.w/2,0)/tg.length,cy=tg.reduce((a,r)=>a+r.y+r.h/2,0)/tg.length;side=(cy>VH*.45?'t':'b')+(cx<VW*.5?'r':'l')}TUT.side=side}
+  box.className='tutbox '+TUT.side+(d.w==='map'?(TUT.low?' onmapb':' onmap'):'');box.hidden=!TUT.open||!!d.silent;
+  // репліка не повинна закривати те, що підсвічено: накладаються — переносимо на інший бік
+  if(!box.hidden&&tg.length&&performance.now()>(TUT.flipT||0)){const b=box.getBoundingClientRect(),hit=tg.some(r=>r.x<b.right&&r.x+r.w>b.left&&r.y<b.bottom&&r.y+r.h>b.top);
+    if(hit){TUT.flipT=performance.now()+700;if(d.w==='map')TUT.low=!TUT.low;else TUT.side=(TUT.side[0]==='t'?'b':'t')+TUT.side[1]}}
+  const g=typeof d.goal==='function'?d.goal():d.goal;chip.className='tutgoal '+(d.w==='battle'?'bat':d.w==='map'?'onmap':'mod');chip.hidden=TUT.open&&!d.silent||!g;
+  // кільця підсвічування
+  while(RG.children.length<tg.length)RG.appendChild(document.createElement('i'));while(RG.children.length>tg.length)RG.lastChild.remove();
+  tg.forEach((r,i)=>{const el=RG.children[i];el.className='tring'+(r.round?' round':'')+(r.pt?' pt':'')+(r.edge?' edge':'');el.style.cssText=`left:${r.x}px;top:${r.y}px;width:${r.w}px;height:${r.h}px;--a:${r.edge?r.ang:0}rad`})}
+function tutTick(){if(!G){return}
+  if(!tutOn()){if(!$('#tutBox').hidden||!$('#tutGoal').hidden||$('#tutRings').children.length)tutDraw(true);return}
+  tutCheck();if(!tutOn())return;if(TUT.frame&&tutWhere(TUTS[tutSt()].w)){TUT.frame=0;tutFrame()}tutDraw()}
+// вікно знайомства: на початку нової гри (з навчанням) або в старому збереженні (просто привітатися)
+function tutMeet(mode){ADV.ring=true;const A=advSt();A.met=true;A.seen.meet=true;save();
+  show(`<div class="amw"><div class="amv" style="background-image:url(${UIART.ui_av_vt})"><video poster="${UIART.ui_av_vt}" autoplay muted loop playsinline preload="auto"><source src="assets/adv_talk_hq.webm" type="video/webm"><source src="assets/adv_talk_hq.mp4" type="video/mp4"></video><i class="amc tl"></i><i class="amc tr"></i><i class="amc bl"></i><i class="amc br"></i><span class="amn">Дід Петро</span></div>
+  <div class="amm"><div class="vhead"><img class="vl" src="${UIART.ui_w_laur}" alt=""><h2>Радник</h2><img class="vl r" src="${UIART.ui_w_laur}" alt=""></div>
+  <p class="amsub">${mode==='tut'?'Біля вашого табору — старий козак':'Старий запорожець, тепер — ваш порадник'}</p>
+  <div class="amt"><p id="amTxt"></p><div class="amhint"><img src="${UIART.ui_av_ic}" alt=""><span>Мій портрет — праворуч угорі на мапі. Тисни, коли потрібна порада.</span></div></div>
+  <div class="acts">${mode==='tut'?'<button class="btn gold" data-a="tutStart">Гайда, покажи!</button><button class="btn ghost" data-a="tutSkip">Пропустити навчання</button>':'<button class="btn gold" data-a="advGo">Добре, діду!</button>'}</div></div></div>`,'wide advmeet nox');
+  advType($('#amTxt'),mode==='tut'?ADVT.hello:ADVT.helloOld);SFX.play('advMeet')}
+$('#tutBox').addEventListener('click',e=>{const b=e.target.closest('[data-t]');if(!b||!tutOn())return;const a=b.dataset.t;
+  if(a==='skip'){if(!TUT.skip){TUT.skip=1;b.textContent='Точно пропустити?';b.classList.add('arm');return}SFX.play('advOk');tutEnd(true);toast('Навчання пропущено. Радник — праворуч угорі, як знадобиться.');return}
+  SFX.play(a==='ok'?'advOk':'advPick');
+  if(a==='ok'){TUT.open=false;dashReq=false}else if(a==='next')tutNext();else if(a==='retry')tutRetry();else if(a==='end'){tutEnd(false);toast('Далі — сам. Радник праворуч угорі, як знадобиться.')}});
+$('#tutX').onclick=()=>{SFX.play('advOk');TUT.open=false;dashReq=false};   // «×» лише згортає репліку: ціль лишається
+$('#tutGoal').onclick=()=>{SFX.play('advPick');TUT.open=true;TUT.shown=''};
+// накази війську: окреме меню з трьох кнопок замість перебирання однією
+function ordMenu(on){const m=$('#ordMenu');if(on===undefined)on=m.hidden;if(!on||!B||B.over){m.hidden=true;return}
+  const r=$('#orderBtn').getBoundingClientRect();m.style.right=Math.max(6,innerWidth-r.right)+'px';m.style.bottom=Math.max(6,innerHeight-r.top+10)+'px';
+  m.querySelectorAll('[data-o]').forEach(b=>b.classList.toggle('on',b.dataset.o===B.order));m.hidden=false}
+$('#ordMenu').onclick=e=>{const b=e.target.closest('[data-o]');if(!b)return;SFX.play('click');setOrder(b.dataset.o);ordMenu(false)};
+document.addEventListener('pointerdown',e=>{const m=$('#ordMenu');if(!m.hidden&&!(e.target.closest&&e.target.closest('#ordMenu,#orderBtn')))m.hidden=true},true);
+$('#tutGoal img').src=UIART.ui_av_ic;
 
 /* ================= actions ================= */
 const ACT={
@@ -2669,7 +2897,7 @@ const ACT={
   rest:()=>{const t=CUR.town,free=t&&t.f===0;if(!free&&G.gold<10){toast('Не вистачає золота.',true);return}if(!free)G.gold-=10;G.hero.hp=G.hero.maxHp;healAll();G.spirit=Math.max(G.spirit,90);G.hour+=8;while(G.hour>=24){G.hour-=24;newDay()}toast(free?'Відпочили у своєму місті безкоштовно: усі здорові.':'Відпочили в корчмі: герой і поранені здорові.');openTown(t,'dev')},
   prisoners:()=>prisonPanel(),
   xclose:()=>xClose(),
-  advNext:()=>advMeet(1),advGo:()=>{SFX.play('advOk');closeModal()},
+  tutStart:()=>{SFX.play('advPick');closeModal();tutGo('move')},tutSkip:()=>{SFX.play('advOk');closeModal();tutEnd(true)},advGo:()=>{SFX.play('advOk');closeModal()},
   found:()=>foundPanel(),fdType:v=>{FD.name=($('#foundName')||{}).value||FD.name;FD.type=v;foundPanel()},
   cNew:()=>campaignPanel(true),armyBack:()=>armyPanel(),
   cSel:v=>{const[k,d]=v.split(':');CAMP.sel[k]=d==='all'?(CAMP.sel[k]===G.army[k]?0:G.army[k]):clamp((CAMP.sel[k]||0)+(+d),0,G.army[k]);campaignPanel()},
@@ -2702,7 +2930,7 @@ const ACT={
   flee:()=>{const p=CUR.party;let lost=0;
     if(armyPower(p.army)>playerPower()*.6&&total(G.army)>0){ORDER.forEach(k=>{const d=Math.round(G.army[k]*.12);G.army[k]-=d;lost+=d})}
     p.cool=3;G.camp=null;const d=dist(p,G)||1;G.x=clamp(G.x+(G.x-p.x)/d*40,40,W-40);G.y=clamp(G.y+(G.y-p.y)/d*40,40,H-40);
-    closeModal();toast(lost?`Ви відступили. Ар’єргард утратив ${lost} воїнів.`:'Ви відступили.',!!lost)},
+    closeModal();if(p.tut&&tutOn())tutGo('fled');toast(lost?`Ви відступили. Ар’єргард утратив ${lost} воїнів.`:'Ви відступили.',!!lost)},
   pass:()=>{CUR.party.cool=2;closeModal()},
   declare:()=>{const p=CUR.party;declareWar(p.f);openEncounter(p)},
   peace:v=>{const f=+v,cost=peaceCost();if(G.gold<cost)return;G.gold-=cost;G.war[f]=false;initDiplo();G.rel[f]=Math.max(G.rel[f],-10);G.parties.forEach(p=>{if(p.f===f)p.cool=4});toast(`Мир із ${FAC[f].name}.`);diplomacyPanel()},
@@ -2711,7 +2939,7 @@ const ACT={
   newGo:()=>colorPanel(false),
   pickColor:v=>{const c=PCOLORS[+v][1];const btn=sheet.querySelector(`.csw[data-v="${v}"]`);if(btn&&!colorPanel.change){sheet.querySelectorAll('.csw').forEach(b=>b.classList.toggle('on',b===btn));const box=btn.parentElement;if(box.classList.contains('picking'))return;box.classList.add('picking');{const ld=sheet.querySelector('.fload');if(ld){ld.hidden=false;const cb=sheet.querySelector('.facts .btn');if(cb)cb.disabled=true}else box.insertAdjacentHTML('afterend','<p class="pickmsg">Готуємо мапу…</p>')}SFX.play('click');setTimeout(()=>{pickedColor=c;ACT.pick('3')},380);return}if(colorPanel.change){G.color=c;applyColor();save();toast('Колір прапора змінено.');menuPanel()}else{pickedColor=c;ACT.pick('3')}},
   colorMenu:()=>colorPanel(true),
-  pick:v=>{newGame(+v);initDiplo();initCamp();G.color=pickedColor||G.color||'#e0aa3e';applyColor();buildTerrain();save();closeModal();enterMap();introPanel()},
+  pick:v=>{newGame(+v);initDiplo();initCamp();G.color=pickedColor||G.color||'#e0aa3e';applyColor();buildTerrain();tutInit();save();closeModal();enterMap();introPanel()},
   cont:()=>{closeModal();enterMap()},
   menu:()=>menuPanel(),
   save:()=>{save();toast('Гру збережено.')},
@@ -3141,7 +3369,7 @@ function siegeWaypoint(u,e){
 /* ================= real-time battle ================= */
 const BW=1500,BH=950,CAP=32;
 const joy={id:null,ox:0,oy:0,x:0,y:0};
-const keys={};let atkHeld=false,dashReq=false,blockHeld=false;
+const keys={};let atkHeld=false,atkTap=false,dashReq=false,blockHeld=false;   // atkTap — короткий дотик до меча не губиться між кадрами
 function buildGround(siege){
   const c=document.createElement('canvas');c.width=BW;c.height=BH;const g=c.getContext('2d');
   g.fillStyle=siege?'#6c665a':'#527038';g.fillRect(0,0,BW,BH);
@@ -3157,7 +3385,7 @@ function buildGround(siege){
 function startBattle(c){
   fillArmy(G.army);if(c.party)fillArmy(c.party.army);if(c.town)fillArmy(c.town.garrison);
   const enemy=enemyArmyOf(c),f=c.party?c.party.f:c.town.f;
-  B={c,f,units:[],arrows:[],fx:[],decals:[],corpses:[],shake:0,orders:Object.fromEntries(ORDER.map(k=>[k,'wait'])),order:'wait',fled:[[],[]],resA:[],resB:[],order:'charge',siege:!!c.town,bonus:c.town?.15:(G.camp&&c.party?-.15:0),
+  B={c,f,units:[],arrows:[],fx:[],decals:[],corpses:[],shake:0,orders:Object.fromEntries(ORDER.map(k=>[k,'wait'])),order:'wait',fled:[[],[]],resA:[],resB:[],siege:!!c.town,bonus:c.town?.15:(G.camp&&c.party?-.15:0),
     startA:{...G.army},startB:{...enemy},flash:0,over:false,camp:!!(G.camp&&c.party),ground:buildGround(!!(c.town&&c.town.type!=="village")),uid:0};
   ORDER.forEach(k=>{for(let i=0;i<G.army[k];i++)B.resA.push(k);for(let i=0;i<enemy[k];i++)B.resB.push(k)});
   const al=allyHelp();B.allyA=al.A;ORDER.forEach(k=>{for(let i=0;i<al.A[k];i++)B.resA.push(k)});if(al.names.length)setTimeout(()=>toast(`На допомогу прийшли: ${al.names.join(', ')}`),900);
@@ -3166,10 +3394,11 @@ function startBattle(c){
   shuffle(B.resA);shuffle(B.resB);
   const h={id:B.uid++,team:0,hero:1,t:'hero',x:210,y:BH/2,vx:0,vy:0,hp:G.hero.hp,maxHp:G.hero.maxHp,atk:heroAtk(),def:heroDef(),spd:165*heroSpd(),sta:100,blocking:false,r:15,face:0,sx:1,ph:0,st:0,at:-1,pend:null,hitT:0,cd:0,dash:0,dashCd:0,mounted:1};
   B.hero=h;B.units.push(h);
+  B.tut=!!(c.party&&c.party.tut&&tutOn());if(B.tut){B.hold=true;B.tutPt={x:clamp(h.x+170,60,BW-60),y:clamp(h.y-30,60,BH-60)}}   // навчальний бій: вороги стоять, доки не дано наказ
   reinforce();SFX.play('horn');SFX.ambient(true);if(musicOn&&!BGM.paused)BGM.volume=.22;if(GL.ok){VIEW.battle.cyaw=VIEW.battle.yaw=0;build3DBattle()}
   scene='battle';$('#hud').hidden=true;$('#side').hidden=true;$('#corner').hidden=true;$('#bhud').hidden=false;
-  $('#orderLbl').textContent=ORD_N.wait;setTimeout(()=>toast('Військо чекає наказу: кнопка з людьми — наказ усім, картки внизу — окремим загонам.'),400);$('#bLvl').textContent=G.hero.lvl;sqKey='';$('#fleeBtn').disabled=false;
-  joy.id=null;joy.x=joy.y=0;atkHeld=false;blockHeld=false;
+  $('#orderLbl').textContent=ORD_N.wait;if(!B.tut)setTimeout(()=>toast('Військо чекає наказу: кнопка з людьми — наказ усім, картки внизу — окремим загонам.'),400);$('#bLvl').textContent=G.hero.lvl;sqKey='';$('#fleeBtn').disabled=false;
+  joy.id=null;joy.x=joy.y=0;atkHeld=false;blockHeld=false;$('#ordMenu').hidden=true;if(B.tut)tutGo('b_move');
 }
 function spawnUnit(team,k){
   const T=TYPES[k],back=T.ranged?90:T.mounted?40:0;
@@ -3229,7 +3458,7 @@ function resolveAttack(u){
 }
 function heroSwing(h){
   const near=nearestEnemy(h);if(near&&dist(h,near)<95)h.face=Math.atan2(near.y-h.y,near.x-h.x);
-  h.cd=ATK_T;startAttack(h,{kind:'hero'});
+  h.cd=ATK_T;startAttack(h,{kind:'hero'});if(B.tut)B.tutAtk=1;
 }
 function steer(u,mx,my,dt,acc){const k=Math.min(1,dt*(acc||7)),sp=u.spd*(u.spd2||1);u.vx+=(mx*sp-u.vx)*k;u.vy+=(my*sp-u.vy)*k}
 function bUpdate(dt){
@@ -3240,18 +3469,18 @@ function bUpdate(dt){
     if(GL.bat){const c=camVecs(VIEW.battle.cyaw),wx=c.rx*mx-c.fx*my,wy=c.rz*mx-c.fz*my;mx=wx;my=wy}
     h.dashCd-=dt;h.dash-=dt;
     // витривалість: ривок і удари її витрачають, блок тримає щит, поки є сили
-    h.blocking=(blockHeld||keys.q)&&h.sta>0&&h.at<0;
+    h.blocking=(blockHeld||keys.q)&&h.sta>0&&h.at<0;if(B.tut&&h.blocking)B.tutBlk=(B.tutBlk||0)+dt;
     if(h.blocking)h.sta=Math.max(0,h.sta-16*dt);else if(h.at<0)h.sta=Math.min(100,h.sta+24*dt);
-    if(dashReq&&h.dashCd<=0&&h.sta>=25){h.dash=.25;h.dashCd=1.2;h.sta-=25;if(l>.1){h.vx=mx*h.spd*2.6;h.vy=my*h.spd*2.6}}dashReq=false;
+    if(dashReq&&h.dashCd<=0&&h.sta>=25){h.dash=.25;if(B.tut)B.tutDash=1;h.dashCd=1.2;h.sta-=25;if(l>.1){h.vx=mx*h.spd*2.6;h.vy=my*h.spd*2.6}}dashReq=false;
     const slow=h.at>=0?.35:h.blocking?.45:1;
     if(h.dash<=0)steer(h,mx*slow,my*slow,dt,12);
     if(l>.1&&h.at<0&&!h.blocking)h.face=Math.atan2(my,mx);
     if(h.blocking){const e=nearestEnemy(h);if(e&&dist(h,e)<140)h.face=Math.atan2(e.y-h.y,e.x-h.x)}
     h.cd-=dt;
-    if((atkHeld||keys[' ']||keys.j)&&h.cd<=0&&!h.blocking&&h.sta>=8){h.sta-=8;heroSwing(h)}
+    if((atkHeld||atkTap||keys[' ']||keys.j)&&h.cd<=0&&!h.blocking&&h.sta>=8){atkTap=false;h.sta-=8;heroSwing(h)}
   }
   buildGrid();B.tick=(B.tick||0)+1;
-  for(const u of B.units){if(u.hero||u.hp<=0)continue;if(dist(u,B.hero)>700&&(u.id+B.tick)%2)continue;unitAI(u,dt*((dist(u,B.hero)>700)?2:1))}
+  for(const u of B.units){if(u.hero||u.hp<=0)continue;if(B.hold&&u.team===1){u.vx*=.8;u.vy*=.8;u.blocking=false;continue}if(dist(u,B.hero)>700&&(u.id+B.tick)%2)continue;unitAI(u,dt*((dist(u,B.hero)>700)?2:1))}
   const U=B.units;
   // рух, крок, поворот, таймери анімації
   for(const u of U){
@@ -3369,7 +3598,7 @@ function finishAuto(){
   endBattle({win:r.aWin,aSurv:r.aSurv,bSurv:r.bSurv,heroHp:B.hero.hp>0?r.heroHp:0});
 }
 function endBattle(o){
-  if(B.over)return;B.over=true;SFX.ambient(false);if(musicOn&&!BGM.paused)BGM.volume=.5;if(GL.bat){GL.bat.sc.traverse(o=>{if(o.geometry&&o.geometry!==GL.ringGeo&&o.geometry!==GL.shadowGeo)o.geometry.dispose()});GL.bat=null}
+  if(B.over)return;B.over=true;$('#ordMenu').hidden=true;SFX.ambient(false);if(musicOn&&!BGM.paused)BGM.volume=.5;if(GL.bat){GL.bat.sc.traverse(o=>{if(o.geometry&&o.geometry!==GL.ringGeo&&o.geometry!==GL.shadowGeo)o.geometry.dispose()});GL.bat=null}
   const res={win:o.win,retreat:!!o.retreat,aSurv:splitAlly(o.aSurv||bSurv(0),B.allyA||zero()),bSurv:o.bSurv||bSurv(1),heroHp:o.heroHp!==undefined?o.heroHp:Math.max(0,B.hero.hp),startA:B.startA,startB:B.startB};
   const c=B.c;scene='map';$('#bhud').hidden=true;enterMap();
   applyResult(c,res);B=null;
@@ -4329,7 +4558,7 @@ $('#dipBtn').onclick=()=>{CUR={};diplomacyPanel()};
 $('#armyBtn').onclick=()=>armyPanel();
 $('#menuBtn').onclick=()=>menuPanel();
 const atk=$('#atkBtn');
-atk.addEventListener('pointerdown',e=>{e.preventDefault();atkHeld=true});
+atk.addEventListener('pointerdown',e=>{e.preventDefault();atkHeld=true;atkTap=true});
 ['pointerup','pointercancel','pointerleave'].forEach(ev=>atk.addEventListener(ev,()=>atkHeld=false));
 $('#dashBtn').addEventListener('pointerdown',e=>{e.preventDefault();dashReq=true});
 const blk=$('#blockBtn');
@@ -4337,9 +4566,9 @@ blk.addEventListener('pointerdown',e=>{e.preventDefault();blockHeld=true});
 ['pointerup','pointercancel','pointerleave'].forEach(ev=>blk.addEventListener(ev,()=>blockHeld=false));
 const ORD_N={wait:'чекають',charge:'атака',hold:'стоять',follow:'за мною'};
 // наказ усім (k не задано) або одному загону
-function setOrder(o,k){if(!B)return;(k?[k]:ORDER).forEach(t=>B.orders[t]=o);if(!k)B.order=o;
+function setOrder(o,k){if(!B)return;if(B.tut&&o==='charge'&&!k)B.tutOrd=1;(k?[k]:ORDER).forEach(t=>B.orders[t]=o);if(!k)B.order=o;
   if(o==='hold')B.units.forEach(u=>{if(u.team===0&&(!k||u.t===k)){u.ax=u.x;u.ay=u.y}});$('#orderLbl').textContent=ORD_N[B.order];sqKey='';renderSquads()}
-$('#orderBtn').onclick=()=>setOrder(B.order==='charge'?'hold':B.order==='hold'?'follow':'charge');
+$('#orderBtn').onclick=()=>{SFX.play('click');ordMenu()};
 $('#autoBtn').onclick=()=>{if(B&&!B.over)finishAuto()};
 $('#fleeBtn').onclick=()=>{if(B&&!B.over)endBattle({win:false,retreat:true})};
 
@@ -4391,13 +4620,13 @@ function frame(now){
   if(paused){requestAnimationFrame(frame);return}
   if(G){
     const want3d=GL.ok&&(scene==='battle'?!!GL.bat:!GL.overview&&!!GL.map);if(GL.on!==want3d){GL.on=want3d;$('#gl').style.display=want3d?'block':'none'}
-    if(scene==='battle'&&B){if(!B.over)bUpdate(dt);if(B)GL.bat?drawBattle3D(dt):drawBattle()}
+    if(scene==='battle'&&B){if(!B.over&&!tutPause())bUpdate(dt);if(B)GL.bat?drawBattle3D(dt):drawBattle()}
     else{
       if(!uiOpen&&(G.target||G.waiting||G.camp)){const dh=dt*HPS*(G.waiting||G.camp?2:1);const steps=Math.ceil(dh/.25);for(let i=0;i<steps&&!uiOpen;i++)worldStep(dh/steps)}
       GL.on?drawMap3D(dt):drawMap();
     }
     hudT-=dt;if(hudT<=0){hudT=.15;updateHud()}
-    tickAlarm();advTick(now);
+    tickAlarm();advTick(now);tutTick();
   }
   requestAnimationFrame(frame);
 }
@@ -4408,7 +4637,7 @@ function boot(data){
   showTitle();setLoad(.15,'Завантаження світу…');
   // світ будується трохи згодом, щоб меню й смужка завантаження з'явились одразу
   setTimeout(()=>{
-    if(saved){G=saved;if(!isFinite(G.gold))G.gold=300;growSave();initDiplo();initCamp();applyColor();fillArmy(G.army);G.towns.forEach(t=>{fillArmy(t.garrison);t.recruits=t.recruits||{}});G.parties.forEach(p=>fillArmy(p.army));G.oldMap=!G.towns.some(t=>t.art);if(!G.pf)G.pf=1;G.towns.forEach(t=>{if(t.name==='Вербиця')t.name='Вербовець'});buildTerrain();enterMap();
+    if(saved){G=saved;if(!isFinite(G.gold))G.gold=300;growSave();initDiplo();initCamp();applyColor();fillArmy(G.army);G.towns.forEach(t=>{fillArmy(t.garrison);t.recruits=t.recruits||{}});G.parties.forEach(p=>fillArmy(p.army));G.oldMap=!G.towns.some(t=>t.art);if(!G.pf)G.pf=1;G.towns.forEach(t=>{if(t.name==='Вербиця')t.name='Вербовець'});buildTerrain();tutRestore();enterMap();
     }else{newGame();buildTerrain();enterMap()}
     setLoad(.85,'Готуємо військо…');
     if(fromHot)hideTitle();
