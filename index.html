@@ -1134,6 +1134,7 @@ function buildTerrain(){
     t.beginPath();t.moveTo(W*mx(.4),H+50);for(let u=.4;u<=.92;u+=.004)t.lineTo(W*mx(u),Math.min(H+50,H*my(coastV(u))-grow/2));t.lineTo(W*mx(.92),H+50);t.closePath();t.fill()};
   [[56,SE.snow?'#c8c4b4':'#a59c6c',.22],[34,SE.snow?'#d4d2c8':'#b5aa78',.35],[16,SE.snow?'#a8a89c':'#6e7448',.5],[6,'#486f78',.75],[0,SE.water,1],[-14,SE.snow?'#8aa6b6':'#245470',.7]].forEach(([grow,col,al])=>layer(al,t=>{t.strokeStyle=col;t.fillStyle=col;waterShape(t,grow)}));
   layer(.22,t=>{t.strokeStyle=t.fillStyle='#9fd0e4';waterShape(t,-30)});
+  WATERS.mask=waterMask(W,H,g2=>waterShape(g2,0));
   if(hort){g.fillStyle=SE.snow?'#e6eaec':'#5f7a3a';g.beginPath();g.ellipse(hort.x,hort.y,82,46,.6,0,7);g.fill()}
   // броди: мілина з камінням
   fords.forEach(f=>{g.save();g.translate(f.x,f.y);g.rotate(f.a+Math.PI/2);g.fillStyle='rgba(205,190,140,.55)';g.fillRect(-46,-14,92,28);
@@ -1287,6 +1288,53 @@ function realmPanel(){
   <div class="acts"><button class="btn gold" type="submit">Зберегти</button><button class="btn ghost" type="button" data-a="close">Скасувати</button></div></form>`);
   const i=$('#realmInput');setTimeout(()=>{i.focus();i.select()},50);
 }
+
+/* ================= вода: плавні береги, тінь від берега, хвилі ================= */
+// маска: червоний — сама вода (трохи розмита, щоб береги були округлі), зелений — сильно розмита (глибина від берега)
+function soften(c,k){const w=Math.max(2,Math.round(c.width/k)),h=Math.max(2,Math.round(c.height/k)),s=document.createElement('canvas');s.width=w;s.height=h;const sg=s.getContext('2d');sg.imageSmoothingEnabled=true;sg.imageSmoothingQuality='high';sg.drawImage(c,0,0,w,h);
+  const o=document.createElement('canvas');o.width=c.width;o.height=c.height;const og=o.getContext('2d');og.imageSmoothingEnabled=true;og.imageSmoothingQuality='high';og.drawImage(s,0,0,o.width,o.height);return o}
+function waterMask(w,h,draw,px){
+  const MW=px||2048,MH=Math.round(MW*h/w),c=document.createElement('canvas');c.width=MW;c.height=MH;const g=c.getContext('2d');g.fillStyle='#000';g.fillRect(0,0,MW,MH);
+  g.save();g.scale(MW/w,MH/h);g.fillStyle=g.strokeStyle='#fff';draw(g);g.restore();
+  const a=soften(c,2),b=soften(soften(c,12),3),A=a.getContext('2d').getImageData(0,0,MW,MH),Bd=b.getContext('2d').getImageData(0,0,MW,MH).data,d=A.data;
+  for(let i=0;i<d.length;i+=4){d[i+1]=Math.min(d[i],Bd[i]);d[i+2]=0;d[i+3]=255}
+  a.getContext('2d').putImageData(A,0,0);return a;
+}
+const WATER_VS=`varying vec2 vUv;varying vec3 vW;uniform vec2 uOrig,uSize;
+#include <fog_pars_vertex>
+void main(){vec4 wp=modelMatrix*vec4(position,1.);vW=wp.xyz;vUv=(wp.xz-uOrig)/uSize;vec4 mvPosition=viewMatrix*wp;gl_Position=projectionMatrix*mvPosition;
+#include <fog_vertex>
+}`;
+const WATER_FS=`uniform sampler2D uMask;uniform float uTime,uWave,uScale,uIce;uniform vec3 uDeep,uShallow,uFoam;uniform vec2 uSunUv;varying vec2 vUv;varying vec3 vW;
+#include <fog_pars_fragment>
+float wh(vec2 p){float t=uTime*.8;return sin(p.x*.11+t*1.1+sin(p.y*.05)*1.8)*.45+sin(p.y*.14-t*.9+p.x*.04)*.35+sin((p.x-p.y)*.21+t*1.5)*.2;}
+void main(){
+  vec4 m=texture2D(uMask,vUv);float a=smoothstep(.38,.62,m.r);if(a<.01)discard;
+  float deep=smoothstep(.15,.85,m.g);vec2 p=vW.xz/uScale;
+  float dist=length(vW-cameraPosition),wk=uWave*(1.-smoothstep(900.,4200.,dist))*(1.-uIce);
+  float e=.6,h0=wh(p);vec3 n=normalize(vec3(-(wh(p+vec2(e,0.))-h0)/e*wk*.35,1.,-(wh(p+vec2(0.,e))-h0)/e*wk*.35));
+  vec3 L=normalize(vec3(-.55,1.3,-.75)),V=normalize(cameraPosition-vW);
+  vec3 col=mix(uShallow,uDeep,deep);
+  col*=.82+.18*max(dot(n,L),0.)+h0*.04*wk;
+  // тінь від берега: якщо в бік сонця суходіл — вода в тіні берега
+  float bank=texture2D(uMask,vUv+uSunUv).r;col*=1.-(1.-smoothstep(.3,.7,bank))*.32;
+  // світлі відблиски хвиль і легка піна біля берега
+  float sp=pow(max(dot(reflect(-L,n),V),0.),24.)*(.5+.5*deep);col+=vec3(1.,.97,.88)*sp*.22*(1.-uIce);
+  float rim=smoothstep(.40,.52,m.r)*(1.-smoothstep(.52,.7,m.r));col=mix(col,uFoam,rim*(.28+.12*sin(uTime*1.7+vW.x*.05+vW.z*.04))*(1.-uIce*.5));
+  float alpha=a*mix(.62,.93,deep);if(uIce>.5){col=mix(col,vec3(.86,.92,.96),.55);alpha=a*.96;}
+  gl_FragColor=vec4(col,alpha);
+#include <fog_fragment>
+}`;
+function makeWater(mask,ox,oz,sw,sh,y,SE,scale,sun,big){
+  const tex=new THREE.CanvasTexture(mask);tex.flipY=false;tex.wrapS=tex.wrapT=THREE.ClampToEdgeWrapping;tex.anisotropy=Math.min(8,GL.r.capabilities.getMaxAnisotropy());
+  const deep=new THREE.Color(SE.water).multiplyScalar(.78),sh2=new THREE.Color(SE.water).lerp(new THREE.Color('#5fa7a8'),.45).lerp(new THREE.Color('#c9b98a'),.12);
+  const mat=new THREE.ShaderMaterial({uniforms:THREE.UniformsUtils.merge([THREE.UniformsLib.fog,{uMask:{value:null},uTime:{value:0},uWave:{value:1},uScale:{value:scale},uIce:{value:SE.snow?1:0},
+    uDeep:{value:deep},uShallow:{value:sh2},uFoam:{value:new THREE.Color('#eef4f2')},uSunUv:{value:new THREE.Vector2(-.55*sun/sw,-.75*sun/sh)},uOrig:{value:new THREE.Vector2(ox,oz)},uSize:{value:new THREE.Vector2(sw,sh)}}]),
+    vertexShader:WATER_VS,fragmentShader:WATER_FS,transparent:true,depthWrite:false,fog:true});
+  mat.uniforms.uMask.value=tex;
+  const bw=big||sw,bh=big||sh,m=new THREE.Mesh(new THREE.PlaneGeometry(bw,bh,Math.ceil(bw/600),Math.ceil(bh/600)).rotateX(-Math.PI/2),mat);m.position.set(ox+sw/2,y,oz+sh/2);m.renderOrder=2;(GL.waterMats||(GL.waterMats=[])).push(mat);return m;
+}
+function tickWater(){const t=performance.now()/1000;if(GL.waterMats)GL.waterMats.forEach(m=>m.uniforms.uTime.value=t)}
 
 /* ================= полонені й вишкіл воїнів ================= */
 const PRIS_CAP=()=>Math.max(10,Math.floor(armyLimit()/2));
@@ -2881,7 +2929,7 @@ function setFig(F,fr,x,y,h,Hw,left,sx){
 /* ---------- земля за межами мапи (видно, але туди не пройти) ---------- */
 function skirtFn(SE){
   const n=makeNoise(mulberry(G.seed+91),31),n2=makeNoise(mulberry(G.seed+92),11),E=8000;
-  return(x,y)=>{const cx=clamp(x,0,W),cy=clamp(y,0,H),dd=Math.hypot(x-cx,y-cy);if(!dd)return heightAt(x,y)-6;
+  return(x,y)=>{const cx=clamp(x,0,W),cy=clamp(y,0,H),dd=Math.hypot(x-cx,y-cy);if(!dd){const din=Math.min(x,W-x,y,H-y),k=clamp(din/400,0,1);return (heightAt(x,y)-6)*(1-k)-90*k}   // усередині мапи облямівка ховається глибоко під землею, щоб не вилазила в озерах
     const u=(x+E)/(W+2*E),v=(y+E)/(H+2*E),sea=y>H-40&&WATERS.isSea&&WATERS.isSea(cx,H-30);
     let t=sea?-40:8+n(u,v)*70+n2(u,v)*60+(x<0&&y>H*.55?Math.max(0,n(u*2%1,v*2%1)-.35)*420:0);
     const k=clamp(dd/700,0,1),out=Math.max(-x,x-W,-y,y-H),ef=clamp((E-out)/1800,0,1),es=ef*ef*(3-2*ef);return (heightAt(cx,cy)*(1-k*k*(3-2*k))+t*(k*k*(3-2*k))-2)*es-8*(1-es)}
@@ -2970,10 +3018,9 @@ function build3DMap(){
   const tm=terrainMesh(W,H,HMW-1,HMH-1,heightAt,terrain);addDetail(tm.material,grassDetail(SE),[W/110,H/110]);sc.add(tm);
   {const haze=new THREE.Color(SE.snow?'#dfe4e6':SE.g[1]).lerp(new THREE.Color(SE.sky),.35);sc.fog.color.copy(haze);sc.background=haze;
    // нескінченна рівнина за краєм світу, щоб у кадрі ніде не було порожнечі
-   const far=new THREE.Mesh(new THREE.PlaneGeometry(260000,260000).rotateX(-Math.PI/2),new THREE.MeshLambertMaterial({color:SE.snow?'#dfe4e6':SE.g[1]}));far.position.set(W/2,-10,H/2);sc.add(far)}
+   const far=new THREE.Mesh(new THREE.PlaneGeometry(260000,260000,40,40).rotateX(-Math.PI/2),new THREE.MeshLambertMaterial({color:SE.snow?'#dfe4e6':SE.g[1]}));far.position.set(W/2,-10,H/2);sc.add(far)}
   const E=8000,sk=skirtFn(SE);sc.add(skirtMesh(E,sk,SE));sc.add(forestMesh(skirtTrees(E,sk),SE,(x,y)=>sk(x,y),.95));
-  const water=new THREE.Mesh(new THREE.PlaneGeometry(W+E*2,H+E*2).rotateX(-Math.PI/2),new THREE.MeshPhongMaterial({color:SE.water,transparent:true,opacity:.88,shininess:28,specular:'#2e4650'}));
-  water.position.set(W/2,-4,H/2);water.receiveShadow=true;sc.add(water);
+  GL.waterMats=[];const water=makeWater(WATERS.mask,0,0,W,H,-1.2,SE,1,14,W+2*8000);sc.add(water);
   sc.add(forestMesh(TREES,SE,heightAt,.95));
   const K=makeKit(9000);sc.add(K.group);const flags=buildTownModels(K,SE,heightAt);flags.forEach(f=>{sc.add(f.pole);sc.add(f.flag)});bridgeMeshes(K);
   GL.map={sc,sun,tm,flags,figs:new Map(),K};
@@ -3003,7 +3050,7 @@ function drawMap3D(dt){
     const nx=G.path&&G.path[0];put('me',G.x,G.y,Math.min(heroRank(),2),'p',!!targetPos()&&!uiOpen,nx?nx.x-G.x:0,nx?nx.y-G.y:0,13);
   }
   for(const[k,F]of M.figs)if(!seen.has(k)){M.sc.remove(F.s);M.sc.remove(F.sh);M.figs.delete(k);const bt=M.boats&&M.boats.get(k);if(bt){M.sc.remove(bt);M.boats.delete(k)}}
-  syncCamp3D(M);
+  syncCamp3D(M);tickWater();
   GL.r.render(M.sc,GL.cam);
   // накладка: маршрут, підписи міст і загонів з кольором фракції, ніч
   ctx.setTransform(DPR,0,0,DPR,0,0);ctx.clearRect(0,0,VW,VH);
@@ -3135,7 +3182,8 @@ function build3DBattle(){
   // земля за краєм ділянки й вода — як на мапі
   const outer=new THREE.Mesh(new THREE.PlaneGeometry(EW+9000,EH+9000).rotateX(-Math.PI/2),new THREE.MeshLambertMaterial({color:SE.snow?'#dfe4e6':SE.g[1]}));
   const edgeH=(battleHeight(-BEX,BH/2)+battleHeight(BW+BEX,BH/2)+battleHeight(BW/2,-BEZ)+battleHeight(BW/2,BH+BEZ))/4;outer.position.set(BW/2,Math.min(edgeH,T.WL+1)-3,BH/2);outer.receiveShadow=true;sc.add(outer);
-  if(T.wet.some(v=>v)){const water=new THREE.Mesh(new THREE.PlaneGeometry(EW,EH).rotateX(-Math.PI/2),new THREE.MeshLambertMaterial({color:SE.water,transparent:true,opacity:.86}));water.position.set(BW/2,T.WL,BH/2);water.receiveShadow=true;sc.add(water)}
+  GL.waterMats=[];if(T.wet.some(v=>v)){const mk=waterMask(EW,EH,g=>{for(let j=0;j<T.nz;j++)for(let i=0;i<T.nx;i++)if(T.wet[j*T.nx+i]){g.beginPath();g.arc(i*BHS,j*BHS,BHS*.78,0,7);g.fill()}},1024);
+    sc.add(makeWater(mk,-BEX,-BEZ,EW,EH,T.WL+.35,SE,1.6,30))}
   sc.add(forestMesh(battleTrees(),SE,battleHeight,1.6));
   if(!SE.snow)sc.add(grassTufts(SE,GL.small?1600:3200));
   // бій біля табору: частокіл довкола ваших воїнів (широкий прохід до ворога), намети й вогнище
@@ -3174,6 +3222,7 @@ function poolFig(Bt){const F=(Bt.pool&&Bt.pool.pop())||(()=>{const f=figSprite(B
 function drawBattle3D(dt){
   const Bt=GL.bat;if(!Bt)return drawBattle();
   if(GL.cam.near!==4||GL.cam.far!==16000){GL.cam.near=4;GL.cam.far=16000;GL.cam.updateProjectionMatrix()}
+  tickWater();
   if(GL.campFire){const t=performance.now();GL.campFire.scale.set(1+Math.sin(t/70)*.08,1+Math.sin(t/90)*.2+Math.random()*.08,1)}
   const h=B.hero,v=VIEW.battle,hx=h.hp>0?h.x:(B.camx??BW/2),hy=h.hp>0?h.y:(B.camy??BH/2);B.camx=hx;B.camy=hy;
   // режим «від героя»: камера за спиною, повертається слідом за героєм
