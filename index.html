@@ -1053,7 +1053,7 @@ body.advon .legend{top:calc(env(safe-area-inset-top,0px) + 74px)}
     <button class="hs round" data-t="lang" style="left:86.1%;top:2.6%;width:3.4%;height:6%" aria-label="Мова"></button>
     <button class="hs round" data-t="sound" style="left:90.6%;top:2.6%;width:3.4%;height:6%" aria-label="Звук"></button>
     <button class="hs round" data-t="music" style="left:95.1%;top:2.6%;width:3.4%;height:6%" aria-label="Музика"></button>
-    <div class="tver">Версія 21.10.6 · Голос Радника</div>
+    <div class="tver">Версія 21.10.7 · Голос Радника</div>
     <div class="tload" id="tload"><span id="tloadTxt">Завантаження…</span><i><b id="tbar"></b></i></div>
   </div>
 </div>
@@ -2586,7 +2586,9 @@ const ADVT={
   rank:'Оце так! Ростеш, козаче! Скоро вже сам старих отаманів учитимеш. Тільки дивись, щоб від слави голова не закрутилася!',
   campaign:'Тепер ти не лише сам воюєш, а й інших у похід посилаєш! Добре це діло. Тільки отамана обирай розумного, бо не кожен доведе хлопців до перемоги.',
   found:'Ого, козаче! Власне поселення заснував! Колись тут вітер гуляв, а тепер люди житимуть. Дивись, може, ще й велике місто виросте!',
-  hello:'Здоров, козаче! Бачу, в похід зібрався. Звати мене дід Петро. Свого часу я чимало шляхів сходив, а тепер молодим допомагаю. Ходімо разом — покажу, як загоном керувати та першу перемогу здобути!',
+  hello:'Здоров, козаче! Сам у похід зібрався? Звати мене дід Петро. Я вже своє повоював, тепер молодим допомагаю. Ходімо разом: ти шаблею махатимеш, а я підказуватиму, куди її краще не встромляти!',
+  skip0:'О, бачу, вже сам із вусами! То рушай. А як знадобиться порада — мій портрет праворуч угорі. Тисни, я не кусаюся!',
+  skip1:'Гаразд, козаче, відпускаю у вільне плавання! Тільки як заблукаєш — не соромся покликати. Я теж колись дорогу за сонцем шукав. Уночі особливо незручно було!',
   helloOld:'Здоров, козаче! Звати мене дід Петро. Свого часу я чимало шляхів сходив, а тепер молодим допомагаю. Як потрібна порада — тисни мій портрет праворуч угорі, я й прийду.',
   listen:'Слухаю, козаче. Що підказати?',
   gold:'Є кілька шляхів, козаче. Бий посильні загони розбійників, забирай трофеї та продавай їх на ринку. Купуй товари там, де дешевше, а вези туди, де дорожче. Можна й риби наловити. Та платню війську завжди тримай у голові — великий загін потребує чимало золота.',
@@ -2730,6 +2732,7 @@ const TUTS={
   bandit:{w:'map',say:'Он розбійники біля шляху! Небагато їх, нам до снаги. Натисни на загін — підійдемо ближче.',goal:'Підійди до розбійників',ring:()=>{const p=tutParty();return p?[{pt:p,r:32}]:[]},btn:'Гаразд',face:5,v:'bandit'},
   enc1:{w:'modal',say:'Поглянь, скільки нас і скільки їх. Та сама кількість ще не все — важливо, які воїни в загоні.',goal:'Роздивися ворога',ring:()=>['.eus','.ecmp'],next:'Далі',face:4},
   enc2:{w:'modal',say:'Для першого разу бери шаблю сам. Покажу, як триматися в бою!',opts:[['Битися самому','керуєш героєм і даєш накази війську'],['Автобій','результат одразу, але можливі втрати'],['Відступити','відмовитися від бою, поки ще можна']],goal:'Натисни «Битися самому»',ring:()=>['.eact[data-a="fight"]'],btn:'Гаразд',face:2},
+  b_intro:{w:'battle',say:'Оце добра справа! Спершу ноги розімнемо, тоді й шабля попрацює. Усе потроху, козаче!',next:'Далі',face:2,v:'fight'},
   b_move:{w:'battle',say:'Спершу розімни ноги, козаче! Пересунь героя до позначки.',keys:()=>touchUI()?'Тягни пальцем у лівій половині екрана — це джойстик.':KC('W A S D')+' — рух героя',goal:'Пересунь героя до позначки',ring:()=>[...(touchUI()?['.joybase']:[]),{bpt:B&&B.tutPt}],btn:'Спробую!'},
   b_atk:{w:'battle',say:'А тепер махни шаблею! Кнопка з мечем — твій удар.',keys:()=>touchUI()?'':KC('Пробіл')+' або клік мишею в правій половині — удар',goal:'Вдар шаблею',ring:()=>['#atkBtn'],btn:'Спробую!',face:2},
   b_blk:{w:'battle',say:'Не кожен удар треба приймати на сорочку! Щит допоможе захиститися.',keys:()=>(touchUI()?'Тримай кнопку щита натиснутою':'Тримай '+KC('Q'))+': поки тримаєш — щит піднятий, але сили тануть.',goal:'Підніми щит і потримай',ring:()=>['#blockBtn'],btn:'Спробую!',face:1},
@@ -2795,9 +2798,11 @@ function tutSnap(){if(G.tut.snap)return;const s={};TSNAP.forEach(k=>{if(G[k]!==u
 function tutRetry(){const T=G.tut;if(T.snap)Object.assign(G,JSON.parse(JSON.stringify(T.snap)));G.target=null;G.path=null;G.camp=null;
   let p=tutParty();if(!p)p=tutSpawnBandits({x:G.x,y:G.y},true);else{p.army=fillArmy({militia:4,archer:1});p.cool=0;if(dist(p,G)>160){const s=tutSpot(G.x,G.y,70,140);if(s){p.x=p.tx=s.x;p.y=p.ty=s.y}}}
   save();openEncounter(p)}
-function tutEnd(skipped){if(!G.tut)return;voxStop();const keepB=B&&B.tut;G.tut={done:true,skipped:!!skipped};if(uiOpen&&CUR&&CUR.party&&CUR.party.tut)closeModal();
+function tutEnd(skipped,quiet){if(!G.tut)return;voxStop();const keepB=B&&B.tut,was=G.tut.st;G.tut={done:true,skipped:!!skipped};if(uiOpen&&CUR&&CUR.party&&CUR.party.tut)closeModal();
   if(keepB){B.hold=false;B.tut=false}else{const p=tutParty();if(p)G.parties=G.parties.filter(q=>q!==p)}
-  TUT.open=false;tutDraw(true);$('#advBtn').classList.add('fresh');save()}
+  TUT.open=false;tutDraw(true);$('#advBtn').classList.add('fresh');
+  if(!quiet){const k=was==='meet'?'skip0':'skip1';advTell(k,ADVT[k],{now:1,face:5,v:k})}
+  save()}
 // після бою з навчальними розбійниками
 function tutAfterBattle(c,r,nLoot,nPris){
   if(!tutOn()||!c.party||!c.party.tut)return;const T=G.tut;
@@ -2805,8 +2810,8 @@ function tutAfterBattle(c,r,nLoot,nPris){
   else tutGo(r.retreat?'fled':'lose')}
 const tutVNext=()=>{const T=G.tut,s=T.st;const seq=['v_win',...(T.vl?['v_loot']:[]),...(T.vp?['v_pris']:[]),'v_stats','v_close'];const i=seq.indexOf(s);tutGo(seq[i+1]||'town')};
 function tutNext(){const s=tutSt(),d=TUTS[s];if(!d)return;
-  if(d.end){tutEnd(false);return}
-  if(s==='start')tutGo('move');else if(s==='time')tutGo('bandit');else if(s==='enc1')tutGo('enc2');else if(s.startsWith('v_'))tutVNext();else if(s==='t_sell')tutGo('t_hire');else if(s==='t_rest2')tutGo('final')}
+  if(d.end){tutEnd(false,true);return}
+  if(s==='b_intro')tutGo('b_move');else if(s==='start')tutGo('move');else if(s==='time')tutGo('bandit');else if(s==='enc1')tutGo('enc2');else if(s.startsWith('v_'))tutVNext();else if(s==='t_sell')tutGo('t_hire');else if(s==='t_rest2')tutGo('final')}
 // чи виконано крок — перевіряємо щокадру за станом гри, а не за закриттям репліки
 function tutCheck(){const s=tutSt(),T=G.tut;
   if(s==='meet'){if(scene==='map'&&!uiOpen&&$('#title').hidden)tutMeet('tut');return}
@@ -2878,11 +2883,11 @@ function tutMeet(mode){ADV.ring=true;const A=advSt();A.met=true;A.seen.meet=true
   <p class="amsub">${mode==='tut'?'Біля вашого табору — старий козак':'Старий запорожець, тепер — ваш порадник'}</p>
   <div class="amt"><p id="amTxt"></p><div class="amhint"><img src="${UIART.ui_av_ic}" alt=""><span>Мій портрет — праворуч угорі на мапі. Тисни, коли потрібна порада.</span></div></div>
   <div class="acts">${mode==='tut'?'<button class="btn gold" data-a="tutStart">Гайда, покажи!</button><button class="btn ghost" data-a="tutSkip">Пропустити навчання</button>':'<button class="btn gold" data-a="advGo">Добре, діду!</button>'}</div></div></div>`,'wide advmeet nox');
-  advType($('#amTxt'),mode==='tut'?ADVT.hello:ADVT.helloOld);SFX.play('advMeet')}
+  advType($('#amTxt'),mode==='tut'?ADVT.hello:ADVT.helloOld);if(!(mode==='tut'&&voxSay('hello')))SFX.play('advMeet')}
 $('#tutBox').addEventListener('click',e=>{const b=e.target.closest('[data-t]');if(!b||!tutOn())return;const a=b.dataset.t;
-  if(a==='skip'){if(!TUT.skip){TUT.skip=1;b.textContent='Точно пропустити?';b.classList.add('arm');return}SFX.play('advOk');tutEnd(true);toast('Навчання пропущено. Радник — праворуч угорі, як знадобиться.');return}
+  if(a==='skip'){if(!TUT.skip){TUT.skip=1;b.textContent='Точно пропустити?';b.classList.add('arm');return}SFX.play('advOk');tutEnd(true);return}
   SFX.play(a==='ok'?'advOk':'advPick');
-  if(a==='ok'){voxStop();TUT.open=false;dashReq=false}else if(a==='next')tutNext();else if(a==='retry')tutRetry();else if(a==='end'){tutEnd(false);toast('Далі — сам. Радник праворуч угорі, як знадобиться.')}});
+  if(a==='ok'){voxStop();TUT.open=false;dashReq=false}else if(a==='next')tutNext();else if(a==='retry')tutRetry();else if(a==='end')tutEnd(false)});
 $('#tutX').onclick=()=>{SFX.play('advOk');voxStop();TUT.open=false;dashReq=false};   // «×» лише згортає репліку: ціль лишається
 $('#tutGoal').onclick=()=>{SFX.play('advPick');TUT.open=true;TUT.shown=''};
 // накази війську: окреме меню з трьох кнопок замість перебирання однією
@@ -3414,7 +3419,7 @@ function startBattle(c){
   reinforce();SFX.play('horn');SFX.ambient(true);if(musicOn&&!BGM.paused)BGM.volume=.22;if(GL.ok){VIEW.battle.cyaw=VIEW.battle.yaw=0;build3DBattle()}
   scene='battle';$('#hud').hidden=true;$('#side').hidden=true;$('#corner').hidden=true;$('#bhud').hidden=false;
   $('#orderLbl').textContent=ORD_N.wait;if(!B.tut)setTimeout(()=>toast('Військо чекає наказу: кнопка з людьми — наказ усім, картки внизу — окремим загонам.'),400);$('#bLvl').textContent=G.hero.lvl;sqKey='';$('#fleeBtn').disabled=false;
-  joy.id=null;joy.x=joy.y=0;atkHeld=false;blockHeld=false;$('#ordMenu').hidden=true;if(B.tut)tutGo('b_move');
+  joy.id=null;joy.x=joy.y=0;atkHeld=false;blockHeld=false;$('#ordMenu').hidden=true;if(B.tut)tutGo('b_intro');
 }
 function spawnUnit(team,k){
   const T=TYPES[k],back=T.ranged?90:T.mounted?40:0;
