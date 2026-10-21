@@ -2438,7 +2438,7 @@ function label(txt,x,y,z,col,size){
 // загони на мапі: фігурка воїна з прапором, що крокує, коли йде
 function drawFigure(x,y,i,kind,col,moving,left,big){
   if(!sprReady()){ctx.fillStyle=col;ctx.beginPath();ctx.arc(x,y-8,9,0,7);ctx.fill();return}
-  const set=aniSet(i,kind),fr=moving?set.walk[Math.floor(performance.now()/(set.walk.length>12?60:90))%set.walk.length]:set.idle,H=big?46:38,k=H/fr.h;
+  const set=aniSet(i,kind),fr=moving?set.walk[Math.floor(performance.now()/(set.walk.length>12?60:90))%set.walk.length]:set.idle,H=big?23:19,k=H/fr.h;
   ctx.fillStyle='rgba(0,0,0,.35)';ctx.beginPath();ctx.ellipse(x,y,H*.3,H*.1,0,0,7);ctx.fill();
   ctx.save();ctx.translate(x,y);ctx.scale((left?-1:1)*k,k);ctx.drawImage(fr,-fr.ax,-fr.ay);ctx.restore();
   // прапор
@@ -2997,11 +2997,11 @@ function drawMap3D(dt){
     M.boats=M.boats||new Map();let bt=M.boats.get(key);const onW=tt===T_WATER;
     // на воді видно лише чайку, сам загін ховаємо
     F.s.visible=F.sh.visible=!onW;
-    if(onW&&!bt){const pf=key==='me'?null:G.parties.find(q=>q.id===key);bt=boatMesh(key==='me'?FAC[0].color:FAC[pf?pf.f:4].color);bt.scale.setScalar(key==='me'?.7:.6);M.sc.add(bt);M.boats.set(key,bt)}
+    if(onW&&!bt){const pf=key==='me'?null:G.parties.find(q=>q.id===key);bt=boatMesh(key==='me'?FAC[0].color:FAC[pf?pf.f:4].color);bt.scale.setScalar(key==='me'?.45:.4);M.sc.add(bt);M.boats.set(key,bt)}
     if(bt){bt.visible=onW;if(onW){bt.position.x=x;bt.position.z=y;if(Math.abs(dirx)+Math.abs(diry)>.5){const want=-Math.atan2(diry,dirx);let dd=want-bt.rotation.y;dd=Math.atan2(Math.sin(dd),Math.cos(dd));bt.rotation.y+=dd*.15}animBoat(bt,moving,now)}}};
   if(sprReady()){
-    for(const p of G.parties){const nx=p.path&&p.path[0],mv=!!nx&&!(p.wait>0)&&(G.target||G.waiting)&&!uiOpen;put(p.id,p.x,p.y,p.kind==='lord'?2:0,p.kind==='lord'?'e':'b',mv,nx?nx.x-p.x:0,nx?nx.y-p.y:0,24)}
-    const nx=G.path&&G.path[0];put('me',G.x,G.y,Math.min(heroRank(),2),'p',!!targetPos()&&!uiOpen,nx?nx.x-G.x:0,nx?nx.y-G.y:0,26);
+    for(const p of G.parties){const nx=p.path&&p.path[0],mv=!!nx&&!(p.wait>0)&&(G.target||G.waiting)&&!uiOpen;put(p.id,p.x,p.y,p.kind==='lord'?2:0,p.kind==='lord'?'e':'b',mv,nx?nx.x-p.x:0,nx?nx.y-p.y:0,12)}
+    const nx=G.path&&G.path[0];put('me',G.x,G.y,Math.min(heroRank(),2),'p',!!targetPos()&&!uiOpen,nx?nx.x-G.x:0,nx?nx.y-G.y:0,13);
   }
   for(const[k,F]of M.figs)if(!seen.has(k)){M.sc.remove(F.s);M.sc.remove(F.sh);M.figs.delete(k);const bt=M.boats&&M.boats.get(k);if(bt){M.sc.remove(bt);M.boats.delete(k)}}
   syncCamp3D(M);
@@ -3020,14 +3020,14 @@ function drawMap3D(dt){
     ctx.beginPath();ctx.moveTo(fx-s*.5,fy);ctx.lineTo(fx+s*.5,fy);ctx.lineTo(fx+s*.5,fy+s*.75);ctx.lineTo(fx,fy+s*1.05);ctx.lineTo(fx-s*.5,fy+s*.75);ctx.closePath();ctx.fill();ctx.stroke()};
   for(const t of G.towns)lab(t.type==='city'?t.name.toUpperCase():t.name,t.x,t.y,heightAt(t.x,t.y)+(t.type==='city'?125:t.type==='castle'?95:55),FAC[t.f].color,t.type!=='village',t.f===0);
   // здалеку підписуємо лише лордів, щоб назви не налазили
-  for(const p of G.parties){if(v.d>2600&&p.kind!=='lord')continue;lab(`${p.name} · ${total(p.army)}`,p.x,p.y,terAt(p.x,p.y)===T_WATER?30:heightAt(p.x,p.y)+32,isHostile(p)?'#e65c4e':FAC[p.f].color,false)}
-  lab(`Ви · ${total(G.army)}`,G.x,G.y,terAt(G.x,G.y)===T_WATER?34:heightAt(G.x,G.y)+34,FAC[0].color,false,true);
+  for(const p of G.parties){if(v.d>2600&&p.kind!=='lord')continue;lab(`${p.name} · ${total(p.army)}`,p.x,p.y,terAt(p.x,p.y)===T_WATER?22:heightAt(p.x,p.y)+19,isHostile(p)?'#e65c4e':FAC[p.f].color,false)}
+  lab(`Ви · ${total(G.army)}`,G.x,G.y,terAt(G.x,G.y)===T_WATER?24:heightAt(G.x,G.y)+20,FAC[0].color,false,true);
   const na=nightA(G.hour);if(na>0){ctx.fillStyle=`rgba(12,18,45,${na})`;ctx.fillRect(0,0,VW,VH)}
   const cmp=$('#zc svg');if(cmp)cmp.style.transform=`rotate(${v.yaw}rad)`;
 }
 function pick3D(sx,sy){
   for(const t of G.towns){const q=proj(t.x,t.y,heightAt(t.x,t.y)+20);if(q.ok&&Math.hypot(q.x-sx,q.y-sy)<(t.type==='village'?36:52))return{town:t}}
-  for(const p of G.parties){const q=proj(p.x,p.y,heightAt(p.x,p.y)+25);if(q.ok&&Math.hypot(q.x-sx,q.y-sy)<32)return{party:p}}
+  for(const p of G.parties){const q=proj(p.x,p.y,heightAt(p.x,p.y)+10);if(q.ok&&Math.hypot(q.x-sx,q.y-sy)<32)return{party:p}}
   GL.ray.setFromCamera({x:sx/VW*2-1,y:-(sy/VH*2-1)},GL.cam);const h=GL.ray.intersectObject(GL.map.tm)[0];return h?{x:h.point.x,y:h.point.z}:null;
 }
 /* ---------- бій у 3D ---------- */
