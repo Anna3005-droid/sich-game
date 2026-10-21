@@ -762,7 +762,7 @@ const UIART={
 /* ================= data ================= */
 // стара мапа 4800×3600 тепер лежить у правій нижній частині; на захід і північ додано нові землі
 // стара мапа 4800×3600 розтягнута на більший світ: міста стоять просторіше, на заході й півночі нові землі
-const W0=4800,H0=3600,W=10400,H=7400,HPS=.6,MOVE_K=5/HPS; // годин за секунду; рух множимо, щоб загін ішов так само швидко
+const W0=4800,H0=3600,W=16640,H=11840,HPS=.6,MOVE_K=5/HPS*1.25;   // мапа в 1,6 раза більша; загони трохи швидші, щоб дорога не тягнулась // годин за секунду; рух множимо, щоб загін ішов так само швидко
 const mx=f=>.1+f*.78,my=f=>.1+f*.8,umx=u=>(u-.1)/.78,umy=v=>(v-.1)/.8;
 // w — зброя; mor — бойовий дух; blk — шанс закритися щитом; ap — пробиття броні
 const TYPES={
@@ -825,6 +825,22 @@ const TOWNS=[
   {n:'Лубни',type:'village',f:3,x:.86,y:.30,art:'village'},
   {n:'Миргород',type:'village',f:3,x:1.0,y:.33,art:'village'},
   {n:'Кременчук',type:'village',f:3,x:.92,y:.62,art:'village'},
+  {n:'Володимир',type:'city',f:1,x:-.008,y:-.068,art:'halych'},
+  {n:'Белз',type:'castle',f:1,x:-.12,y:.062,art:'lutsk'},
+  {n:'Сокаль',type:'village',f:1,x:-.12,y:-.12,art:'village'},
+  {n:'Золочів',type:'village',f:1,x:.076,y:.348,art:'village'},
+  {n:'Самбір',type:'village',f:1,x:-.064,y:.764,art:'village'},
+  {n:'Хотин',type:'castle',f:1,x:.188,y:.764,art:'lutsk'},
+  {n:'Звягель',type:'castle',f:2,x:.272,y:-.094,art:'lutsk'},
+  {n:'Коростень',type:'village',f:2,x:.552,y:.036,art:'village'},
+  {n:'Любеч',type:'castle',f:2,x:.608,y:-.12,art:'chernihiv'},
+  {n:'Остер',type:'village',f:2,x:.748,y:-.12,art:'village'},
+  {n:'Глухів',type:'castle',f:2,x:1.0,y:-.12,art:'chernihiv'},
+  {n:'Брацлав',type:'castle',f:2,x:.496,y:.764,art:'pereyaslav'},
+  {n:'Прилуки',type:'village',f:3,x:.888,y:.166,art:'village'},
+  {n:'Ромни',type:'village',f:3,x:1.0,y:.088,art:'village'},
+  {n:'Ізюм',type:'castle',f:3,x:1.0,y:.504,art:'poltava'},
+  {n:'Кодак',type:'castle',f:3,x:1.0,y:.764,art:'poltava'},
 ].map(t=>({...t,x:mx(t.x),y:my(t.y)}));
 const LORDS=[['Князь Роман','Воєвода Данило','Воєвода Лев'],['Князь Святослав','Воєвода Добриня','Князь Ігор'],['Кошовий Гнат','Отаман Остап','Отаман Байда']];
 // Ранги героя. Пізніше сюди підставимо малюнки для кожної фракції.
@@ -832,6 +848,7 @@ const LORDS=[['Князь Роман','Воєвода Данило','Воєво�
 const RANKS=[{n:'Простий воїн',lvl:1,cost:0,hp:0,atk:0,lead:0},{n:'Досвідчений воїн',lvl:3,cost:400,hp:20,atk:2,lead:3},{n:'Отаман',lvl:6,cost:1200,hp:50,atk:5,lead:6},{n:'Елітний воїн',lvl:10,cost:2500,hp:90,atk:9,lead:10}];
 const BANDIT_NAMES=['Лісові розбійники','Степові грабіжники','Дезертири','Річкові пірати','Зграя Чорного Яна'];
 const TYPE_N={city:'Місто',castle:'Замок',village:'Село'};
+const TR=t=>t.art==='island'?40:t.type==='city'?150:t.type==='castle'?112:100;   // радіус забудови з посадом
 const INCOME={city:120,castle:60,village:40};
 const RECRUIT={city:['militia','sword','archer','musket'],castle:['sword','axe','archer','knight'],village:['militia','axe','archer']};
 const WEAPONS=[{n:'Старий меч',atk:0,cost:0},{n:'Сталевий меч',atk:4,cost:150},{n:'Бойова сокира',atk:8,cost:400},{n:'Лицарський меч',atk:13,cost:900},{n:'Клинок Короля',atk:20,cost:2000}];
@@ -872,9 +889,9 @@ function newGame(pf=1){
   G={v:3,pf,seed,day:1,hour:8,gold:350,x:W*mx(.5),y:H*my(.55),target:null,waiting:false,zoom:VW<700?.8:1,
     hero:{lvl:1,xp:0,hp:150,maxHp:150,weapon:0,armor:0,helm:0,shield:0,boots:0},
     army:{militia:6,sword:2,axe:0,archer:3,musket:0,knight:0},
-    towns,parties:[],war:{1:false,2:false,3:false},respawn:[],nid:100,won:false};
+    towns,parties:[],war:{1:false,2:false,3:false},respawn:[],nid:100,won:false,mapW:W};
   LORDS.forEach((ls,fi)=>ls.forEach(n=>spawnLord(fi+1,n)));
-  for(let i=0;i<22;i++)spawnBandit();
+  for(let i=0;i<34;i++)spawnBandit();
   cam.follow=true;
 }
 function spawnLord(f,name){
@@ -888,7 +905,7 @@ function spawnLord(f,name){
 function spawnBandit(){
   for(let k=0;k<60;k++){
     const x=200+Math.random()*(W-400),y=200+Math.random()*(H-400);
-    if(G.towns.some(t=>Math.hypot(t.x-x,t.y-y)<220))continue;
+    if(G.towns.some(t=>Math.hypot(t.x-x,t.y-y)<TR(t)+180))continue;
     if(Math.hypot(G.x-x,G.y-y)<450)continue;
     if(!passable(cellAt(x,y))||terAt(x,y)===T_FORD)continue;
     const lvl=Math.min(4,1+G.day/12);
@@ -993,7 +1010,7 @@ const HC=40,HMW=W/HC+1,HMH=H/HC+1;let HM=new Float32Array(HMW*HMH),WATERS={sea:[
 function heightAt(x,y){const fx=clamp(x/HC,0,HMW-1.001),fy=clamp(y/HC,0,HMH-1.001),i=Math.floor(fx),j=Math.floor(fy),u=fx-i,v=fy-j,k=j*HMW+i;
   return HM[k]*(1-u)*(1-v)+HM[k+1]*u*(1-v)+HM[k+HMW]*(1-u)*v+HM[k+HMW+1]*u*v}
 function buildTerrain(){
-  const R=mulberry(G.seed+7),S=Math.min(.4,3800/W);G.season=seasonOf(G.day);const SE=SEASONS[G.season];TREE_IMG=makeTreeImgs(SE,true);
+  const R=mulberry(G.seed+7),S=Math.min(.4,4096/W);G.season=seasonOf(G.day);const SE=SEASONS[G.season];TREE_IMG=makeTreeImgs(SE,true);
   TER=new Uint8Array(GW*GH);TREES=[];PEAKS=[];
   const nearTown=(x,y,d)=>G.towns.some(t=>Math.hypot(t.x-x,t.y-y)<d);
   // --- море на півдні з хвилястим берегом ---
@@ -1002,7 +1019,7 @@ function buildTerrain(){
   const isSea=(x,y)=>umy(y/H)>coastV(umx(x/W));
   for(let j=0;j<GH;j++)for(let i=0;i<GW;i++){const x=i*GS+GS/2,y=j*GS+GS/2;if(isSea(x,y))TER[j*GW+i]=T_WATER}
   // --- озера ---
-  const lakes=[];for(let k=0;k<40&&lakes.length<17;k++){const x=W*(.04+R()*.8),y=H*(.06+R()*.6),r=60+R()*55;if(nearTown(x,y,r+160))continue;lakes.push({x,y,r,a:R()*3});markDisc(x,y,r,T_WATER)}
+  const lakes=[];for(let k=0;k<90&&lakes.length<30;k++){const x=W*(.04+R()*.8),y=H*(.06+R()*.6),r=60+R()*55;if(nearTown(x,y,r+280))continue;lakes.push({x,y,r,a:R()*3});markDisc(x,y,r,T_WATER)}
   // --- річки: звивисті, різної ширини ---
   const wn=makeNoise(mulberry(G.seed+21),29),wd=makeNoise(mulberry(G.seed+22),17);
   const rivers=RIVERS.map(r=>{const p0=curvePts(r.pts);const p=p0.map(([x,y],i,a)=>{const j=Math.min(a.length-1,i+1),k=Math.max(0,i-1),dx=a[j][0]-a[k][0],dy=a[j][1]-a[k][1],l=Math.hypot(dx,dy)||1,o=(wn(x/W,y/H)-.5)*130;return[x-dy/l*o,y+dx/l*o]});
@@ -1010,7 +1027,7 @@ function buildTerrain(){
   rivers.forEach(r=>r.p.forEach(([x,y],i)=>markDisc(x,y,r.wd[i]/2+2,T_WATER)));
   const hort=G.towns.find(t=>t.art==='island');
   if(hort)for(let a=0;a<6.28;a+=.3)for(let k=0;k<=1;k+=.25)markDisc(hort.x+Math.cos(a)*85*k*Math.cos(.6)-Math.sin(a)*50*k*Math.sin(.6),hort.y+Math.cos(a)*85*k*Math.sin(.6)+Math.sin(a)*50*k*Math.cos(.6),10,T_PLAIN);
-  G.towns.forEach(t=>markDisc(t.x,t.y,t.art==='island'?40:70,T_PLAIN));
+  G.towns.forEach(t=>markDisc(t.x,t.y,TR(t),T_PLAIN));
   // --- дороги, мости, броди ---
   const roads=[],done=new Set();
   G.towns.forEach(a=>{G.towns.filter(b=>b!==a).sort((p,q)=>dist(a,p)-dist(a,q)).slice(0,2).forEach(b=>{const k=[a.id,b.id].sort().join();if(done.has(k))return;done.add(k);
@@ -1024,24 +1041,23 @@ function buildTerrain(){
   rivers.forEach(r=>{for(let f=0;f<2;f++){const i=Math.floor(r.p.length*(.25+.5*R())),[x,y]=r.p[i],[x2,y2]=r.p[Math.min(r.p.length-1,i+2)];
     }});   // бродів теж немає
   // --- гори ---
-  for(let i=0;i<190;i++)PEAKS.push({x:R()*mx(.24)*W,y:H*(my(.6)+R()*(my(.93)-my(.6))),s:55+R()*55});
-  for(let i=0;i<60;i++)PEAKS.push({x:W*(mx(.76)+R()*(1-mx(.76))),y:H*R()*.06,s:40+R()*40});
-  PEAKS=PEAKS.filter(p=>!nearTown(p.x,p.y,180)&&TER[cellAt(p.x,p.y)]===T_PLAIN);
+  for(let i=0;i<420;i++)PEAKS.push({x:R()*mx(.24)*W,y:H*(my(.6)+R()*(my(.93)-my(.6))),s:55+R()*55});
+  for(let i=0;i<130;i++)PEAKS.push({x:W*(mx(.76)+R()*(1-mx(.76))),y:H*R()*.06,s:40+R()*40});
+  PEAKS=PEAKS.filter(p=>!nearTown(p.x,p.y,300)&&TER[cellAt(p.x,p.y)]===T_PLAIN);
   PEAKS.forEach(p=>markDisc(p.x,p.y,p.s*.55,T_MOUNT,v=>v===T_PLAIN));
   // --- ліси ---
-  for(let i=0;i<330;i++){const cx=R()*W,cy=R()*H;if(cx/W+cy/H>1.3&&R()<.75)continue;const n=14+R()*30,rad=80+R()*150,north=cy<H*.35;
+  for(let i=0;i<520;i++){const cx=R()*W,cy=R()*H;if(cx/W+cy/H>1.3&&R()<.75)continue;const n=10+R()*24,rad=100+R()*190,north=cy<H*.35;
     for(let j=0;j<n;j++){const a=R()*6.28,r=Math.sqrt(R())*rad,x=cx+Math.cos(a)*r,y=cy+Math.sin(a)*r;
-      if(x<20||y<20||x>W-20||y>H-20||nearTown(x,y,120))continue;const tt=TER[cellAt(x,y)];if(tt!==T_PLAIN&&tt!==T_FOREST)continue;
+      if(x<20||y<20||x>W-20||y>H-20||nearTown(x,y,TR({type:'city'})+60))continue;const tt=TER[cellAt(x,y)];if(tt!==T_PLAIN&&tt!==T_FOREST)continue;
       TREES.push({x,y,s:9+R()*10,v:(north||R()<.3)?2+(R()<.5?1:0):(R()<.5?1:0)});TER[cellAt(x,y)]=T_FOREST}}
   TREES.sort((a,b)=>a.y-b.y);
   // --- висоти: пагорби, гори без різкої межі, долини річок, морське дно, пласкі майданчики під містами ---
   const n1=makeNoise(mulberry(G.seed+11),15),n2=makeNoise(mulberry(G.seed+12),37),n3=makeNoise(mulberry(G.seed+13),71),n4=makeNoise(mulberry(G.seed+14),23);
   const hm=new Float32Array(HMW*HMH);
-  for(let j=0;j<HMH;j++)for(let i=0;i<HMW;i++){const x=i*HC,y=j*HC,u=x/W,v=y/H;let h=(n1(u,v)*1.0+n2(u,v)*.5+n3(u,v)*.18)*58+Math.pow(Math.max(0,n4(u,v)-.55)*2.2,2)*70+4;
-    for(const p of PEAKS){const d=Math.hypot(p.x-x,p.y-y),Rr=p.s*2.3;if(d<Rr){const k=1-d/Rr;h+=k*k*(3-2*k)*p.s*2.3*(.85+n3(u*3%1,v*3%1)*.3)}}
-    const tt=TER[cellAt(Math.min(x,W-1),Math.min(y,H-1))];
-    if(isSea(x,y))h=-38;
-    hm[j*HMW+i]=h}
+  for(let j=0;j<HMH;j++)for(let i=0;i<HMW;i++){const x=i*HC,y=j*HC,u=x/W,v=y/H;hm[j*HMW+i]=(n1(u,v)*1.0+n2(u,v)*.5+n3(u,v)*.18)*58+Math.pow(Math.max(0,n4(u,v)-.55)*2.2,2)*70+4}
+  for(const p of PEAKS){const Rr=p.s*2.3;for(let j=Math.max(0,Math.floor((p.y-Rr)/HC));j<=Math.min(HMH-1,Math.ceil((p.y+Rr)/HC));j++)for(let i=Math.max(0,Math.floor((p.x-Rr)/HC));i<=Math.min(HMW-1,Math.ceil((p.x+Rr)/HC));i++){
+    const x=i*HC,y=j*HC,d=Math.hypot(p.x-x,p.y-y);if(d<Rr){const u=x/W,v=y/H,k=1-d/Rr;hm[j*HMW+i]+=k*k*(3-2*k)*p.s*2.3*(.85+n3(u*3%1,v*3%1)*.3)}}}
+  for(let j=0;j<HMH;j++)for(let i=0;i<HMW;i++)if(isSea(i*HC,j*HC))hm[j*HMW+i]=-38;
   // русла й улоговини озер: глибина плавно росте від берега до середини, береги пологі
   const wet=new Uint8Array(HMW*HMH);
   const carve=(cx,cy,half,bank,deep)=>{const r=half+bank;for(let j=Math.max(0,Math.floor((cy-r)/HC));j<=Math.min(HMH-1,Math.ceil((cy+r)/HC));j++)for(let i=Math.max(0,Math.floor((cx-r)/HC));i<=Math.min(HMW-1,Math.ceil((cx+r)/HC));i++){
@@ -1053,7 +1069,7 @@ function buildTerrain(){
   lakes.forEach(l=>{for(let a=0;a<6.283;a+=.08)for(let q=0;q<=1;q+=.2){const rr=l.r*q,ca=Math.cos(l.a),sa=Math.sin(l.a),ex=Math.cos(a)*rr,ey=Math.sin(a)*rr*.75;carve(l.x+ex*ca-ey*sa,l.y+ex*sa+ey*ca,l.r*(1-q)*.75+8,50,18)}});
   // згладжуємо, щоб береги й підніжжя гір були м'якими
   for(let pass=0;pass<2;pass++){const c2=hm.slice();for(let j=1;j<HMH-1;j++)for(let i=1;i<HMW-1;i++){const k=j*HMW+i;hm[k]=(c2[k]*4+c2[k-1]+c2[k+1]+c2[k-HMW]+c2[k+HMW])/8}}
-  G.towns.forEach(t=>{const th=Math.max(6,heightAtArr(hm,t.x,t.y));for(let j=0;j<HMH;j++)for(let i=0;i<HMW;i++){const d=Math.hypot(i*HC-t.x,j*HC-t.y);if(d<110){const k=d<70?1:1-(d-70)/40;hm[j*HMW+i]=hm[j*HMW+i]*(1-k)+th*k}}});
+  G.towns.forEach(t=>{const th=Math.max(6,heightAtArr(hm,t.x,t.y)),r0=TR(t),r1=r0+70;for(let j=Math.max(0,Math.floor((t.y-r1)/HC));j<=Math.min(HMH-1,Math.ceil((t.y+r1)/HC));j++)for(let i=Math.max(0,Math.floor((t.x-r1)/HC));i<=Math.min(HMW-1,Math.ceil((t.x+r1)/HC));i++){const d=Math.hypot(i*HC-t.x,j*HC-t.y);if(d<r1){const k=d<r0?1:1-(d-r0)/70;hm[j*HMW+i]=hm[j*HMW+i]*(1-k)+th*k}}});
   for(let j=0;j<HMH;j++)for(let i=0;i<HMW;i++){const x=i*HC,y=j*HC,tt=TER[cellAt(Math.min(x,W-1),Math.min(y,H-1))],k=j*HMW+i;if(!wet[k]&&tt!==T_WATER&&tt!==T_FORD&&!isSea(x,y)&&hm[k]<1.5)hm[k]=1.5}
   HM=hm;
   WATERS={sea:true,lakes,bridges,fords,isSea};
@@ -1064,7 +1080,7 @@ function buildTerrain(){
   for(let i=0;i<1800;i++){const x=R()*W,y=R()*H,r=20+R()*120,steppe=x/W+y/H>1.25;
     g.fillStyle=steppe?SE.st[R()<.5?0:1]:SE.pa[R()<.5?0:1];g.beginPath();g.arc(x,y,r,0,7);g.fill()}
   {const R2=mulberry(G.seed+95);for(let i=0;i<16000;i++){R2();R2();R2();R2()}for(let i=0;i<900;i++){const x=-5200+R2()*(W+10400),y=-5200+R2()*(H+10400),r=200+R2()*500,c=R2()<.5?SE.pa[0]:SE.pa[1];if(x<-r||y<-r||x>W+r||y>H+r)continue;g.fillStyle=c;g.beginPath();g.arc(x,y,r,0,7);g.fill()}}
-  G.towns.forEach(t=>{const n=t.type==='village'?7:5;for(let i=0;i<n;i++){const a=R()*6.28,r=110+R()*130,x=t.x+Math.cos(a)*r,y=t.y+Math.sin(a)*r*.8,w=60+R()*70,h=34+R()*40;
+  G.towns.forEach(t=>{const n=t.type==='village'?11:8;for(let i=0;i<n;i++){const a=R()*6.28,r=TR(t)+40+R()*170,x=t.x+Math.cos(a)*r,y=t.y+Math.sin(a)*r*.8,w=80+R()*90,h=46+R()*50;
     if(TER[cellAt(x,y)]!==T_PLAIN)continue;
     g.save();g.translate(x,y);g.rotate((R()-.5)*.8);g.fillStyle=SE.fields[i%4];g.globalAlpha=.75;g.fillRect(-w/2,-h/2,w,h);
     g.strokeStyle='rgba(80,60,30,.3)';g.lineWidth=1.5;for(let k=-w/2+6;k<w/2;k+=7){g.beginPath();g.moveTo(k,-h/2);g.lineTo(k,h/2);g.stroke()}g.restore()}});
@@ -1247,7 +1263,7 @@ function healAll(){initCamp();for(const k of ORDER){const n=Math.min(G.wounded[k
 function toggleCamp(){
   if(G.camp){G.camp=null;G.waiting=false;toast('Табір знято.');updateHud();return}
   if(terAt(G.x,G.y)===T_WATER){toast('На воді табір не поставити — спершу до берега.',true);return}
-  const t=G.towns.find(t=>dist(t,G)<90);if(t){toast(t.f===0?'Поруч ваше місто: відпочити в ньому можна безкоштовно.':'Біля міста табір не ставлять — відпочити можна в корчмі.',true);return}
+  const t=G.towns.find(t=>dist(t,G)<TR(t)+40);if(t){toast(t.f===0?'Поруч ваше місто: відпочити в ньому можна безкоштовно.':'Біля міста табір не ставлять — відпочити можна в корчмі.',true);return}
   initCamp();G.camp={x:G.x,y:G.y};G.target=null;G.path=null;G.waiting=true;G.campDone=false;SFX.play('click');
   toast('Табір розбито: воїни відпочивають, лікуються й тренуються.');updateHud();
 }
@@ -1372,7 +1388,7 @@ function newDay(){
   });
   G.parties.forEach(p=>{if(p.kind==='lord'&&total(p.army)<45){fillArmy(p.army);p.army[ORDER[ri(ORDER.length)]]++;p.army.militia++}});
   G.respawn=G.respawn.filter(r=>{if(G.day>=r.day)return!spawnLord(r.f,r.name)&&G.towns.some(t=>t.f===r.f);return true});
-  if(G.parties.filter(p=>p.kind==='bandit').length<22)spawnBandit();
+  if(G.parties.filter(p=>p.kind==='bandit').length<34)spawnBandit();
   if(!G.won&&G.towns.every(t=>t.f===0)){G.won=true;toast('Усі землі під булавою Січі!')}
   save();
 }
@@ -1846,6 +1862,14 @@ function lootPanel(){
 
 /* ================= слава й дипломатія ================= */
 // слава росте від перемог і завоювань; стосунки з кожною фракцією від −100 до 100
+// старе збереження на меншій мапі: розсуваємо все пропорційно й додаємо нові поселення
+function growSave(){
+  if(G.mapW===W)return;const fx=W/(G.mapW||10400),fy=H/(G.mapH||7400),sc=o=>{if(o&&o.x!=null){o.x*=fx;o.y*=fy}};
+  G.towns.forEach(sc);G.parties.forEach(p=>{sc(p);if(p.tx!=null){p.tx*=fx;p.ty*=fy}if(p.hx!=null){p.hx*=fx;p.hy*=fy}p.path=null});
+  G.x*=fx;G.y*=fy;sc(G.camp);G.target=null;G.path=null;
+  TOWNS.forEach((T,i)=>{if(!G.towns.some(t=>t.id===i+1))G.towns.push({id:i+1,name:T.n,type:T.type,f:T.f,x:T.x*W,y:T.y*H,art:T.art,bld:initBld(T.type),garrison:initGarrison(T.type),recruits:initRecruits(T.type)})});
+  G.mapW=W;G.mapH=H;
+}
 function initCamp(){const h=G.hero;if(h.rank==null){h.rank=RANKS.reduce((i,r,k)=>h.lvl>=r.lvl?k:i,0);h.maxHp+=RANKS[h.rank].hp;h.hp=Math.min(h.hp,h.maxHp)}
   if(!h.ranks){h.ranks=[];for(let k=0;k<=h.rank;k++)h.ranks.push(k)}if(G.spirit==null)G.spirit=80;if(G.drill==null)G.drill=0;G.wounded=fillArmy(G.wounded||zero());G.healAcc=G.healAcc||{}}
 function setRank(k){const h=G.hero,d=RANKS[k].hp-RANKS[heroRank()].hp;h.maxHp+=d;h.hp=clamp(h.hp+Math.max(0,d),1,h.maxHp);h.rank=k}
@@ -2727,20 +2751,26 @@ function buildTownModels(K,SE,hf){
     const R=mulberry(t.id*7919),th=hf(t.x,t.y),rus=/Київ|Чернігів|Переяслав/.test(TOWNS[t.id-1]?.n||'')||t.f===2,sich=TOWNS[t.id-1]?.n==='Запорізька Січ'||(t.f===3&&t.type!=='village');
     const stone='#a59c89',wood='#7a5636',white='#e4dccb',roofs=[snowy('#8a3a2a'),snowy('#6e4a2e'),snowy('#9a5a34'),snowy('#b0904e')];
     const house=(x,z,s)=>{const w=s*(.9+R()*.5),d=s*(.8+R()*.4),h=s*(.65+R()*.3),ry=R()*Math.PI;K.add('box',x,th,z,w,h,d,ry,R()<.5?white:'#c9b48a');K.add('roof',x,th+h,z,w*1.12,s*(.5+R()*.25),d*1.12,ry,roofs[R()*roofs.length|0])};
-    if(t.type==='village'){for(let i=0;i<8;i++){const a=R()*6.28,r=18+R()*46;house(t.x+Math.cos(a)*r,t.y+Math.sin(a)*r,11)}
-      for(let i=0;i<14;i++){const a=i/14*6.28;K.add('cyl',t.x+Math.cos(a)*70,th,t.y+Math.sin(a)*70,1,6,1,0,wood)}}
-    else{const r=t.type==='city'?92:64,n=t.type==='city'?14:10;
-      if(sich){for(let i=0;i<64;i++){const a=i/64*6.28;K.add('cyl',t.x+Math.cos(a)*r,th,t.y+Math.sin(a)*r,1.8,15+R()*2,1.8,0,wood);K.add('cone',t.x+Math.cos(a)*r,th+16,t.y+Math.sin(a)*r,1.8,3,1.8,0,wood)}}
+    if(t.type==='village'){const vr=TR(t);
+      // село: хати по колу й у глибині, дерев'яна церква, стоги, тин довкола
+      for(let i=0;i<16;i++){const a=R()*6.28,r=24+R()*(vr-38);house(t.x+Math.cos(a)*r,t.y+Math.sin(a)*r,14)}
+      K.add('box',t.x,th,t.y,16,20,22,.3,wood);K.add('roof',t.x,th+20,t.y,19,14,25,.3,roofs[1]);K.add('cyl',t.x,th+26,t.y,3,8,3,0,wood);K.add('dome',t.x,th+34,t.y,4,6,4,0,'#3d6a4a');
+      for(let i=0;i<5;i++){const a=R()*6.28,r=vr-16+R()*10;K.add('cone',t.x+Math.cos(a)*r,th,t.y+Math.sin(a)*r,6,11,6,0,SE.snow?'#e8ecee':'#c9a85a')}
+      const np=Math.round(vr*.32);for(let i=0;i<np;i++){const a=i/np*6.28;K.add('cyl',t.x+Math.cos(a)*vr,th,t.y+Math.sin(a)*vr,1.1,7,1.1,0,wood)}}
+    else{const city=t.type==='city',r=city?128:92,n=city?18:12;
+      if(sich){const np=Math.round(r*.55);for(let i=0;i<np;i++){const a=i/np*6.28;K.add('cyl',t.x+Math.cos(a)*r,th,t.y+Math.sin(a)*r,2,19+R()*2,2,0,wood);K.add('cone',t.x+Math.cos(a)*r,th+20,t.y+Math.sin(a)*r,2,4,2,0,wood)}}
       else for(let i=0;i<n;i++){const a0=i/n*6.28,a1=(i+1)/n*6.28,mx=t.x+Math.cos((a0+a1)/2)*r,mz=t.y+Math.sin((a0+a1)/2)*r,len=2*r*Math.sin(Math.PI/n)+2;
-        K.add('box',mx,th,mz,len,15,6,-(a0+a1)/2+Math.PI/2,stone)}
-      for(let i=0;i<(sich?4:n);i++){const a=i/(sich?4:n)*6.28+(sich?.78:0),x=t.x+Math.cos(a)*r,z=t.y+Math.sin(a)*r;K.add(sich?'box':'cyl',x,th,z,sich?12:8,sich?26:26,sich?12:8,a,sich?wood:stone);K.add(sich?'roof':'cone',x,th+26,z,sich?15:10,12,sich?15:10,a,snowy(sich?'#5a3a22':'#7a3a2a'))}
-      const nh=t.type==='city'?16:8;for(let i=0;i<nh;i++){const a=R()*6.28,rr=26+R()*(r-40);house(t.x+Math.cos(a)*rr,t.y+Math.sin(a)*rr,sich?13:14)}
-      if(rus&&t.type==='city'){K.add('box',t.x,th,t.y,26,34,26,0,white);K.add('cyl',t.x,th+34,t.y,8,10,8,0,white);K.add('dome',t.x,th+44,t.y,10,14,10,0,'#e2aa3c');
-        [[-15,-15],[15,-15],[-15,15],[15,15]].forEach(([dx,dz])=>{K.add('cyl',t.x+dx,th+28,t.y+dz,4.5,8,4.5,0,white);K.add('dome',t.x+dx,th+36,t.y+dz,5,8,5,0,'#e2aa3c')})}
-      else if(sich){K.add('box',t.x,th,t.y,18,22,18,0,wood);K.add('cyl',t.x,th+22,t.y,6,8,6,0,wood);K.add('dome',t.x,th+30,t.y,7,10,7,0,'#3d6a4a')}
-      else{K.add('box',t.x,th,t.y,24,40,24,0,stone);K.add('roof',t.x,th+40,t.y,28,18,28,0,snowy('#6a3428'))}}
+        K.add('box',mx,th,mz,len,20,7,-(a0+a1)/2+Math.PI/2,stone)}
+      const nt=sich?4:n;for(let i=0;i<nt;i++){const a=i/nt*6.28+(sich?.78:0),x=t.x+Math.cos(a)*r,z=t.y+Math.sin(a)*r;K.add(sich?'box':'cyl',x,th,z,sich?14:10,34,sich?14:10,a,sich?wood:stone);K.add(sich?'roof':'cone',x,th+34,z,sich?18:12,15,sich?18:12,a,sich?roofs[1]:snowy('#7a3a2a'))}
+      // забудова всередині мурів і посад за мурами міста
+      const nh=city?34:16;for(let i=0;i<nh;i++){const a=R()*6.28,rr=30+R()*(r-48);house(t.x+Math.cos(a)*rr,t.y+Math.sin(a)*rr,sich?14:15)}
+      if(city)for(let i=0;i<14;i++){const a=R()*6.28,rr=r+14+R()*14;house(t.x+Math.cos(a)*rr,t.y+Math.sin(a)*rr,13)}
+      if(rus&&city){K.add('box',t.x,th,t.y,34,44,34,0,white);K.add('cyl',t.x,th+44,t.y,10,13,10,0,white);K.add('dome',t.x,th+57,t.y,13,18,13,0,'#e2aa3c');
+        [[-19,-19],[19,-19],[-19,19],[19,19]].forEach(([dx,dz])=>{K.add('cyl',t.x+dx,th+36,t.y+dz,6,10,6,0,white);K.add('dome',t.x+dx,th+46,t.y+dz,6.5,10,6.5,0,'#e2aa3c')})}
+      else if(sich){K.add('box',t.x,th,t.y,24,28,24,0,wood);K.add('cyl',t.x,th+28,t.y,8,10,8,0,wood);K.add('dome',t.x,th+38,t.y,9,13,9,0,'#3d6a4a')}
+      else{K.add('box',t.x,th,t.y,30,52,30,0,stone);K.add('roof',t.x,th+52,t.y,36,22,36,0,snowy('#6a3428'))}}
     // прапор власника
-    const pole=new THREE.Mesh(new THREE.CylinderGeometry(.8,.8,46,6),new THREE.MeshLambertMaterial({color:'#3a2a1a'}));pole.position.set(t.x+(t.type==='village'?0:12),th+23+(t.type==='city'?36:t.type==='castle'?26:0),t.y+8);
+    const pole=new THREE.Mesh(new THREE.CylinderGeometry(.8,.8,46,6),new THREE.MeshLambertMaterial({color:'#3a2a1a'}));pole.position.set(t.x+(t.type==='village'?14:16),th+23+(t.type==='city'?52:t.type==='castle'?40:14),t.y+12);
     const flag=new THREE.Mesh(new THREE.PlaneGeometry(22,13),new THREE.MeshLambertMaterial({color:FAC[t.f].color,side:THREE.DoubleSide}));flag.position.set(pole.position.x+11,pole.position.y+16,pole.position.z);
     pole.castShadow=flag.castShadow=true;flags.push({t,flag,pole,f:t.f});
   });
@@ -2850,12 +2880,12 @@ function build3DMap(){
   if(!GL.ok)return;
   if(GL.map){GL.map.sc.traverse(o=>{if(o.geometry)o.geometry.dispose()})}
   const SE=SEASONS[G.season||0],{sc,sun}=makeScene(SE);
-  const tm=terrainMesh(W,H,HMW-1,HMH-1,heightAt,terrain);sc.add(tm);
+  const tm=terrainMesh(W,H,HMW-1,HMH-1,heightAt,terrain);addDetail(tm.material,grassDetail(SE),[W/110,H/110]);sc.add(tm);
   const E=5200,sk=skirtFn(SE);sc.add(skirtMesh(E,sk,SE));sc.add(forestMesh(skirtTrees(E,sk),SE,(x,y)=>sk(x,y),.95));
   const water=new THREE.Mesh(new THREE.PlaneGeometry(W+E*2,H+E*2).rotateX(-Math.PI/2),new THREE.MeshPhongMaterial({color:SE.water,transparent:true,opacity:.88,shininess:28,specular:'#2e4650'}));
   water.position.set(W/2,-4,H/2);water.receiveShadow=true;sc.add(water);
   sc.add(forestMesh(TREES,SE,heightAt,.95));
-  const K=makeKit(6000);sc.add(K.group);const flags=buildTownModels(K,SE,heightAt);flags.forEach(f=>{sc.add(f.pole);sc.add(f.flag)});bridgeMeshes(K);
+  const K=makeKit(9000);sc.add(K.group);const flags=buildTownModels(K,SE,heightAt);flags.forEach(f=>{sc.add(f.pole);sc.add(f.flag)});bridgeMeshes(K);
   GL.map={sc,sun,tm,flags,figs:new Map(),K};
 }
 function drawMap3D(dt){
@@ -2895,7 +2925,7 @@ function drawMap3D(dt){
     ctx.lineJoin='round';ctx.lineWidth=3.2;ctx.strokeStyle='rgba(12,10,6,.85)';ctx.strokeText(txt,q.x+4,q.y);ctx.fillStyle=own?FAC[0].color:'#f6ecd0';ctx.fillText(txt,q.x+4,q.y);
     const fx=q.x-w/2-4,fy=q.y-fs*.82,s=fs*.62;ctx.fillStyle=col;ctx.strokeStyle='rgba(12,10,6,.85)';ctx.lineWidth=1.4;
     ctx.beginPath();ctx.moveTo(fx-s*.5,fy);ctx.lineTo(fx+s*.5,fy);ctx.lineTo(fx+s*.5,fy+s*.75);ctx.lineTo(fx,fy+s*1.05);ctx.lineTo(fx-s*.5,fy+s*.75);ctx.closePath();ctx.fill();ctx.stroke()};
-  for(const t of G.towns)lab(t.type==='city'?t.name.toUpperCase():t.name,t.x,t.y,heightAt(t.x,t.y)+(t.type==='city'?95:t.type==='castle'?70:40),FAC[t.f].color,t.type!=='village',t.f===0);
+  for(const t of G.towns)lab(t.type==='city'?t.name.toUpperCase():t.name,t.x,t.y,heightAt(t.x,t.y)+(t.type==='city'?125:t.type==='castle'?95:55),FAC[t.f].color,t.type!=='village',t.f===0);
   // здалеку підписуємо лише лордів, щоб назви не налазили
   for(const p of G.parties){if(v.d>2600&&p.kind!=='lord')continue;lab(`${p.name} · ${total(p.army)}`,p.x,p.y,terAt(p.x,p.y)===T_WATER?30:heightAt(p.x,p.y)+32,isHostile(p)?'#e65c4e':FAC[p.f].color,false)}
   lab(`Ви · ${total(G.army)}`,G.x,G.y,terAt(G.x,G.y)===T_WATER?34:heightAt(G.x,G.y)+34,FAC[0].color,false,true);
@@ -2919,7 +2949,7 @@ function buildBattleTerrain(){
   const n=GL.bn,nx=Math.ceil((BW+2*BEX)/BHS)+1,nz=Math.ceil((BH+2*BEZ)/BHS)+1,h=new Float32Array(nx*nz),wet=new Uint8Array(nx*nz);
   const h0=heightAt(B.site.x,B.site.y),VK=1.9,WL=-Math.max(0,h0)*VK-3,amp=B.siege?14:40;
   // вода — там, де вона намальована на мапі (синій колір), щоб річки й озера збігалися з малюнком
-  const SM=Math.min(.4,3800/W),a0=toMap(-BEX,-BEZ),px0=Math.floor(a0.x*SM),py0=Math.floor(a0.y*SM),pw=Math.ceil((BW+2*BEX)*BK*SM)+2,ph=Math.ceil((BH+2*BEZ)*BK*SM)+2;
+  const SM=Math.min(.4,4096/W),a0=toMap(-BEX,-BEZ),px0=Math.floor(a0.x*SM),py0=Math.floor(a0.y*SM),pw=Math.ceil((BW+2*BEX)*BK*SM)+2,ph=Math.ceil((BH+2*BEZ)*BK*SM)+2;
   let pd=null;try{pd=terrain.getContext('2d').getImageData(px0,py0,pw,ph).data}catch(e){}
   const waterAt=(mx,my)=>{const x=Math.floor(mx*SM)-px0,y=Math.floor(my*SM)-py0;if(!pd||x<0||y<0||x>=pw||y>=ph||mx<0||my<0||mx>=W||my>=H)return heightAt(clamp(mx,0,W),clamp(my,0,H))<0;
     const q=(y*pw+x)*4,r=pd[q],g=pd[q+1],b=pd[q+2];return b-r>18&&b>=g-6};
@@ -2943,7 +2973,7 @@ function buildBattleTerrain(){
 function battleGroundTex(SE){
   const PX=.4,EW=BW+2*BEX,EH=BH+2*BEZ,c=document.createElement('canvas');c.width=Math.round(EW*PX);c.height=Math.round(EH*PX);const g=c.getContext('2d');
   g.fillStyle=SE.snow?'#dfe4e6':SE.g[1];g.fillRect(0,0,c.width,c.height);
-  const S=Math.min(.4,3800/W),a=toMap(-BEX,-BEZ);
+  const S=Math.min(.4,4096/W),a=toMap(-BEX,-BEZ);
   if(terrain){g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';g.drawImage(terrain,a.x*S,a.y*S,EW*BK*S,EH*BK*S,0,0,c.width,c.height)}
   g.setTransform(PX,0,0,PX,BEX*PX,BEZ*PX);
   const R=mulberry((G.seed||1)+B.uid*7+3),T=GL.bh;
@@ -3111,7 +3141,7 @@ function drawBattle3D(dt){
 function camView(){return scene==='battle'?VIEW.battle:VIEW.map}
 function camTilt(d){const v=camView();v.pitch=clamp(v.pitch+d,.2,1.4)}
 function camRot(d){const v=camView();v.yaw+=d;if(scene==='battle')v.cyaw=v.yaw}
-function camZoom(f){const v=camView();v.d=clamp(v.d*f,scene==='battle'?380:650,scene==='battle'?3200:9500)}
+function camZoom(f){const v=camView();v.d=clamp(v.d*f,scene==='battle'?380:650,scene==='battle'?3200:13500)}
 
 /* ================= HUD ================= */
 let hudT=0;
@@ -3276,7 +3306,7 @@ function boot(data){
   showTitle();setLoad(.15,'Завантаження світу…');
   // світ будується трохи згодом, щоб меню й смужка завантаження з'явились одразу
   setTimeout(()=>{
-    if(saved){G=saved;if(!isFinite(G.gold))G.gold=300;initDiplo();initCamp();applyColor();fillArmy(G.army);G.towns.forEach(t=>{fillArmy(t.garrison);t.recruits=t.recruits||{}});G.parties.forEach(p=>fillArmy(p.army));G.oldMap=!G.towns.some(t=>t.art);if(!G.pf)G.pf=1;G.towns.forEach(t=>{if(t.name==='Вербиця')t.name='Вербовець'});buildTerrain();enterMap();
+    if(saved){G=saved;if(!isFinite(G.gold))G.gold=300;growSave();initDiplo();initCamp();applyColor();fillArmy(G.army);G.towns.forEach(t=>{fillArmy(t.garrison);t.recruits=t.recruits||{}});G.parties.forEach(p=>fillArmy(p.army));G.oldMap=!G.towns.some(t=>t.art);if(!G.pf)G.pf=1;G.towns.forEach(t=>{if(t.name==='Вербиця')t.name='Вербовець'});buildTerrain();enterMap();
     }else{newGame();buildTerrain();enterMap()}
     setLoad(.85,'Готуємо військо…');
     if(fromHot)hideTitle();
