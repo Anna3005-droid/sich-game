@@ -555,6 +555,18 @@ button,.hs{transition:transform .09s ease-out,filter .09s,box-shadow .12s}
 .chip.tax .ic{color:#e2b24a}.chip.tax b{color:#ecc77e}.chip.tax small{color:#b9b09c}
 .ecmp .epc{margin-left:auto;font-family:var(--f-body);font-size:13px;color:#cfc6b2}.ecmp .epc b{font-family:var(--f-head);font-size:17px}
 @media (orientation:landscape) and (max-height:520px){.tstrip{padding-top:4px;padding-bottom:4px}.chip{padding:2px 8px}.chip b{font-size:14px}.chip.sol b,.chip.ch b{font-size:15px}.tnote{display:none}}
+
+/* ===== легенда загальної карти ===== */
+.legend{position:fixed;z-index:11;right:max(10px,env(safe-area-inset-right,0px));top:calc(env(safe-area-inset-top,0px) + 64px);width:230px;padding:8px 10px 6px;
+  background:var(--grain),linear-gradient(#13233a,#0b1622);border:1px solid var(--ag2);border-radius:6px;box-shadow:0 0 0 1px #000,0 8px 22px rgba(0,0,0,.55)}
+.legend .lgh{display:block;font-family:var(--f-head);font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--ag);margin-bottom:4px}
+.lgr{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:8px;align-items:center;padding:4px 0;border-top:1px solid #1f2d40}
+.lgr i{width:18px;height:22px;clip-path:polygon(0 0,100% 0,100% 74%,50% 100%,0 74%);box-shadow:inset 0 -4px 0 rgba(0,0,0,.2)}
+.lgr b{display:block;font-family:var(--f-head);font-size:14px;color:#f1e8d4;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lgr small{font-size:11px;color:#a9a18f}
+.lgr.me b{color:var(--agl)}
+.lged{width:30px;height:30px;border-radius:50%;border:1px solid var(--ag);background:linear-gradient(#2c2213,#17110a);color:var(--agl);font-size:15px;line-height:1;padding:0}
+@media (orientation:landscape) and (max-height:520px){.legend{top:calc(env(safe-area-inset-top,0px) + 48px);width:196px;padding:6px 8px 4px}.lgr{padding:2px 0;gap:6px}.lgr b{font-size:12.5px}.lgr small{font-size:10px}.lged{width:26px;height:26px;font-size:13px}.legend .lgh{font-size:11px;margin-bottom:2px}}
 </style>
 
 <canvas id="gl"></canvas>
@@ -621,6 +633,7 @@ button,.hs{transition:transform .09s ease-out,filter .09s,box-shadow .12s}
   <symbol id="i-lock" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
 </svg>
 
+<aside class="legend" id="legend" hidden><b class="lgh">Хто чий</b><div id="lgRows"></div></aside>
 <div class="topbar" id="hud" hidden>
   <button class="avatar" id="heroBtn" aria-label="Спорядження героя"><img id="hFace" alt=""><b id="hLvl">1</b></button>
   <div class="tb-right">
@@ -778,7 +791,7 @@ const ORDER=['militia','sword','axe','archer','musket','knight'];
 // кольори, з яких гравець вибирає свій прапор
 const PCOLORS=[['Золотий','#e0aa3e'],['Багряний','#d0362c'],['Блакитний','#3aa0e8'],['Зелений','#3faa4e'],['Фіолетовий','#9a5ad0'],['Бірюзовий','#20b2a6'],['Помаранчевий','#ec7a1c'],['Білий','#f2eee2']];
 let pickedColor=null;
-function applyColor(){FAC[0].color=(G&&G.color)||'#e0aa3e';FAC[0].name=(G&&G.kingdom)||'Ваші землі'}
+function applyColor(){FAC[0].color=(G&&G.color)||'#e0aa3e';FAC[0].name=(G&&(G.kingdom||G.realm))||'Ваші землі'}
 const FAC=[
   {name:'Ваші землі',color:'#d8a443'},   // колір гравця, змінюється у виборі кольору
   {name:'Галицьке князівство',color:'#3f74c9',short:'Галичина',about:'',bonus:''},
@@ -1251,6 +1264,21 @@ function townStrip(t){
     <span class="tnote">${own?(g?'Жителі платять за свою безпеку: з данини утримують гарнізон.':'Місто без захисту — залиште воїнів у гарнізоні.'):'Б’ються лише солдати, мирні жителі у війні не беруть участі.'}</span></div>`;
 }
 
+/* ================= легенда загальної карти ================= */
+function renderLegend(){
+  const el=$('#legend');if(!el)return;const on=GL.overview&&scene==='map'&&!!G;el.hidden=!on;if(!on)return;
+  const n=f=>G.towns.filter(t=>t.f===f).length;
+  const row=(f,me)=>`<div class="lgr${me?' me':''}"><i style="background:${FAC[f].color}"></i><span><b>${esc(FAC[f].name)}</b><small>${me?'це ви · ':''}${f===4?'грабують дороги':n(f)+' '+((x=>x%10>=1&&x%10<=4&&!(x%100>=11&&x%100<=14))(n(f))?'володіння':'володінь')}</small></span>${me?'<button class="lged" id="lgEd" aria-label="Назвати свою державу">✎</button>':''}</div>`;
+  $('#lgRows').innerHTML=row(0,true)+[1,2,3].map(f=>row(f)).join('')+row(4);
+  $('#lgEd').onclick=realmPanel;
+}
+function realmPanel(){
+  show(`<h2>Назва вашої держави</h2><p class="muted">Назва з’явиться на загальній карті, у вікні міст і в дипломатії. Колір прапора змінюється в меню → Налаштування.</p>
+  <form id="realmForm"><input type="text" id="realmInput" maxlength="28" value="${esc(G.kingdom||G.realm||'')}" placeholder="Наприклад: Козацька держава" autocomplete="off">
+  <div class="acts"><button class="btn gold" type="submit">Зберегти</button><button class="btn ghost" type="button" data-a="close">Скасувати</button></div></form>`);
+  const i=$('#realmInput');setTimeout(()=>{i.focus();i.select()},50);
+}
+
 /* ================= похідний табір ================= */
 // у таборі герой швидко одужує, поранені стають у стрій, піднімається дух і йде вишкіл; у дорозі все це повільніше
 function campTick(dh){
@@ -1422,7 +1450,7 @@ function armyRows(a,extra){
 const fbadge=f=>`<span class="eyebrow" style="color:${FAC[f].color}">${FAC[f].name}</span>`;
 
 sheet.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b||b.disabled)return;SFX.play('click');const fn=ACT[b.dataset.a];if(fn)fn(b.dataset.v)});
-sheet.addEventListener('submit',e=>{e.preventDefault();if(e.target.id==='renameForm')ACT.renameSave(e.target.dataset.v);
+sheet.addEventListener('submit',e=>{e.preventDefault();if(e.target.id==='realmForm'){const n=$('#realmInput').value.trim().replace(/\s+/g,' ').slice(0,28);if(G.kingdom&&n)G.kingdom=n;else G.realm=n||null;applyColor();save();closeModal();renderLegend();toast(n?`Ваша держава: ${n}`:'Назву прибрано.');return}if(e.target.id==='renameForm')ACT.renameSave(e.target.dataset.v);
   if(e.target.id==='kingForm'){const n=$('#kingInput').value.trim().replace(/\s+/g,' ').slice(0,28);if(!n||!canKingdom())return;G.kingdom=n;if(G.liege){G.liege=0}applyColor();addFame(50,'нове королівство');save();toast(`Проголошено королівство «${n}»!`);SFX.play('win');diplomacyPanel()}});
 
 /* ================= town: картинка міста і вкладки, як на макеті ================= */
@@ -3157,15 +3185,15 @@ function updateHud(){
     {const c=calOf(G.day,G.hour);$('#hDay').textContent=c.m[0].toUpperCase()+c.m.slice(1)+' '+c.y;$('#hDay').parentElement.title='День походу '+G.day}$('#hHour').textContent=clockOf(G.hour);
     $('#hGold').textContent=Math.floor(G.gold).toLocaleString('uk-UA');$('#hArmy').innerHTML=`${total(G.army)}<b>/${armyLimit()}</b>`;$('#hSky').setAttribute('href',G.hour<6||G.hour>=20?'#x-moon':'#x-sun');
     $('#hHp').style.width=Math.round(G.hero.hp/G.hero.maxHp*100)+'%';
-    $('#hLvl').textContent=G.hero.lvl;{const cc=$('#campCard');cc.hidden=!G.camp;$('#waitBtn').classList.toggle('on',!!G.camp);if(G.camp){if(!$('#ccIc').src)$('#ccIc').src=UIART.ui_ic_camp;$('#ccHp').style.width=Math.round(G.hero.hp/G.hero.maxHp*100)+'%';$('#ccW').textContent=total(G.wounded||{});$('#ccSp').style.width=Math.round(G.spirit)+'%';$('#ccDr').style.width=Math.round(G.drill)+'%'}}$('#bagN').textContent=G.bag&&G.bag.length?G.bag.length:'';$('#boatBtn').classList.toggle('on',G.sail!==false);$('#hTer').textContent=(terAt(G.x,G.y)===T_WATER?'Пливемо · '+BOAT_LV[G.boatLv||0].n.toLowerCase():TER_N[terAt(G.x,G.y)])+(G.target&&G.slope>.08?' · підйом':G.target&&G.slope<-.08?' · спуск':'')+' · '+SEASONS[G.season||0].n;$('#waitBtn').classList.toggle('on',!!G.waiting);
-  }else if(B){$('#campCard').hidden=true;
+    $('#hLvl').textContent=G.hero.lvl;if(GL.overview){const k=G.towns.map(t=>t.f).join('')+FAC[0].name+FAC[0].color;if(k!==renderLegend.k){renderLegend.k=k;renderLegend()}}else if(!$('#legend').hidden)$('#legend').hidden=true;{const cc=$('#campCard');cc.hidden=!G.camp;$('#waitBtn').classList.toggle('on',!!G.camp);if(G.camp){if(!$('#ccIc').src)$('#ccIc').src=UIART.ui_ic_camp;$('#ccHp').style.width=Math.round(G.hero.hp/G.hero.maxHp*100)+'%';$('#ccW').textContent=total(G.wounded||{});$('#ccSp').style.width=Math.round(G.spirit)+'%';$('#ccDr').style.width=Math.round(G.drill)+'%'}}$('#bagN').textContent=G.bag&&G.bag.length?G.bag.length:'';$('#boatBtn').classList.toggle('on',G.sail!==false);$('#hTer').textContent=(terAt(G.x,G.y)===T_WATER?'Пливемо · '+BOAT_LV[G.boatLv||0].n.toLowerCase():TER_N[terAt(G.x,G.y)])+(G.target&&G.slope>.08?' · підйом':G.target&&G.slope<-.08?' · спуск':'')+' · '+SEASONS[G.season||0].n;$('#waitBtn').classList.toggle('on',!!G.waiting);
+  }else if(B){$('#campCard').hidden=true;$('#legend').hidden=true;
     let a=B.resA.length,b=B.resB.length;B.units.forEach(u=>{if(!u.hero)u.team?b++:a++});
     {let m=0,n=0;B.units.forEach(u=>{if(u.team===0&&!u.hero){m+=u.mor/u.morMax;n++}});const pm=n?Math.round(m/n*100):100;$('#bM').textContent=pm+'%';$('#bM').style.color=pm<35?'#e0675a':pm<60?'#e0aa3e':'#9fd17a'}
     $('#bA').textContent=a;$('#bB').textContent=b;$('#bHp').style.width=Math.max(0,Math.round(B.hero.hp/B.hero.maxHp*100))+'%';
     $('#bSt').style.width=Math.round(B.hero.sta)+'%';$('#blockBtn').classList.toggle('on',!!B.hero.blocking);renderSquads();
   }
 }
-function enterMap(){scene='map';$('#hud').hidden=false;$('#side').hidden=false;$('#corner').hidden=false;$('#bhud').hidden=true}
+function enterMap(){scene='map';$('#hud').hidden=false;$('#side').hidden=false;$('#corner').hidden=false;$('#bhud').hidden=true;renderLegend()}
 $('#hFace').src=UIART.ui_face;$('#bFace').src=UIART.ui_face;
 // картки загонів унизу бою: кількість і наказ; натиск перемикає наказ цього загону
 let sqKey='';
@@ -3232,7 +3260,7 @@ $('#bUp').onclick=()=>camTilt(.12);$('#bDn').onclick=()=>camTilt(-.12);$('#bIn')
 $('#camBtn').onclick=()=>{const v=VIEW.battle;v.hero=!v.hero;if(!v.hero)v.yaw=v.cyaw;$('#camBtn span').textContent=v.hero?' Огляд':' Від героя'};
 $('#boatBtn').onclick=()=>{G.sail=G.sail===false;G.path=null;$('#boatBtn').classList.toggle('on',G.sail);
   toast(G.sail?`Човни на воді (${BOAT_LV[G.boatLv||0].n}): перепливаємо річки й озера.`:'Човни на березі: через річки й озера не пройти.');if(!G.sail&&terAt(G.x,G.y)===T_WATER){const p=cellC(nearestPassable(cellAt(G.x,G.y)));G.x=p.x;G.y=p.y}};
-$('#ovBtn').onclick=()=>{GL.overview=!GL.overview;$('#ovBtn').classList.toggle('on',GL.overview);if(GL.overview){G.zoom=Math.max(VW/W,VH/H);cam.follow=false;cam.x=G.x;cam.y=G.y}else{cam.follow=true;G.zoom=Math.max(.35,G.zoom)}};
+$('#ovBtn').onclick=()=>{GL.overview=!GL.overview;$('#ovBtn').classList.toggle('on',GL.overview);renderLegend();if(GL.overview){G.zoom=Math.max(VW/W,VH/H);cam.follow=false;cam.x=G.x;cam.y=G.y}else{cam.follow=true;G.zoom=Math.max(.35,G.zoom)}};
 $('#zc').onclick=()=>{cam.follow=true;VIEW.map.yaw=0};
 $('#waitBtn').onclick=toggleCamp;$('#campOff').onclick=toggleCamp;
 $('#heroBtn').onclick=()=>{if(!uiOpen)equipPanel()};
