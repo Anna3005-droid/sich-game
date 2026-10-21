@@ -1055,7 +1055,7 @@ body.advon .legend{top:calc(env(safe-area-inset-top,0px) + 74px)}
     <button class="hs round" data-t="lang" style="left:86.1%;top:2.6%;width:3.4%;height:6%" aria-label="Мова"></button>
     <button class="hs round" data-t="sound" style="left:90.6%;top:2.6%;width:3.4%;height:6%" aria-label="Звук"></button>
     <button class="hs round" data-t="music" style="left:95.1%;top:2.6%;width:3.4%;height:6%" aria-label="Музика"></button>
-    <div class="tver">Версія 21.10.8</div>
+    <div class="tver">Версія 21.10.9</div>
     <div class="tload" id="tload"><span id="tloadTxt">Завантаження…</span><i><b id="tbar"></b></i></div>
   </div>
 </div>
@@ -2745,8 +2745,8 @@ const TUTS={
   arrived:{w:'map',say:'От і добре! Ніхто не загубився, усі ноги на місці. Дорогою йти швидше, а в болоті можна й постоли залишити — там рухаємося повільніше.',goal:'Глянь, якою місцевістю йдеш',ring:()=>[$('#hTer')&&$('#hTer').parentElement],next:'Далі',face:2,v:'arrived'},
   time:{w:'map',say:'Поки стоїмо на мапі — час чекає разом із нами. Рушили або стали на відпочинок — день пішов. Тож за годинником теж поглядай.',goal:'Глянь на годинник',ring:()=>[$('#hHour')&&$('#hHour').parentElement],next:'Далі',face:4,v:'time'},
   bandit:{w:'map',say:'Он розбійники біля шляху! Небагато їх, нам до снаги. Натисни на загін — підійдемо ближче.',goal:'Підійди до розбійників',ring:()=>{const p=tutParty();return p?[{pt:p,r:32}]:[]},btn:'Гаразд',face:5,v:'bandit'},
-  enc1:{w:'modal',say:'Поглянь, скільки нас і скільки їх. Та сама кількість ще не все — важливо, які воїни в загоні.',goal:'Роздивися ворога',ring:()=>['.eus','.ecmp'],next:'Далі',face:4},
-  enc2:{w:'modal',say:'Для першого разу бери шаблю сам. Покажу, як триматися в бою!',opts:[['Битися самому','керуєш героєм і даєш накази війську'],['Автобій','результат одразу, але можливі втрати'],['Відступити','відмовитися від бою, поки ще можна']],goal:'Натисни «Битися самому»',ring:()=>['.eact[data-a="fight"]'],btn:'Гаразд',face:2},
+  enc1:{w:'modal',v:'enc1',say:'Ану придивімося, хто тут такий сміливий! Поглянь, скільки їх і які воїни. Бо десяток бувалих вояків — то тобі не десяток дядьків із граблями.',goal:'Роздивися ворога',ring:()=>['.eus','.ecmp'],next:'Далі',face:4},
+  enc2:{w:'modal',v:'enc2',say:'Для першого разу обирай «Битися самому». Покажеш, як шаблю тримаєш! Не бійся, підкажу. Сам я вже набігався.',goal:'Натисни «Битися самому»',ring:()=>['.eact[data-a="fight"]'],btn:'Гаразд',face:2},
   b_intro:{w:'battle',say:'Оце добра справа! Спершу ноги розімнемо, тоді й шабля попрацює. Усе потроху, козаче!',next:'Далі',face:2,v:'fight'},
   b_move:{w:'battle',say:'Спершу розімни ноги, козаче! Пересунь героя до позначки.',keys:()=>touchUI()?'Тягни пальцем у лівій половині екрана — це джойстик.':KC('W A S D')+' — рух героя',goal:'Пересунь героя до позначки',ring:()=>[...(touchUI()?['.joybase']:[]),{bpt:B&&B.tutPt}],btn:'Спробую!'},
   b_atk:{w:'battle',say:'А тепер махни шаблею! Кнопка з мечем — твій удар.',keys:()=>touchUI()?'':KC('Пробіл')+' або клік мишею в правій половині — удар',goal:'Вдар шаблею',ring:()=>['#atkBtn'],btn:'Спробую!',face:2},
@@ -2754,7 +2754,7 @@ const TUTS={
   b_dash:{w:'battle',say:'Ривком можна наблизитися або вискочити з-під удару. Та стеж за синьою смугою — сили не безкінечні!',keys:()=>touchUI()?'':KC('Shift')+' — ривок',goal:'Зроби ривок',ring:()=>['#dashBtn','.bar.st'],btn:'Спробую!'},
   b_ord:{w:'battle',say:'Хлопці чекають твого слова! Дай наказ атакувати — й рушимо разом.',keys:()=>touchUI()?'Кнопка з людьми відкриває накази.':'Кнопка з людьми, або '+KC('1')+' атака · '+KC('2')+' стояти · '+KC('3')+' за мною',goal:'Дай наказ «Атака»',ring:()=>[$('#ordMenu').hidden?'#orderBtn':'#ordMenu [data-o="charge"]'],btn:'Спробую!',face:5},
   b_fight:{w:'battle',goal:'Розбий розбійників',silent:1},
-  v_win:{w:'modal',say:'Оце вже діло, козаче! Першу перемогу здобув. Тепер погляньмо, що лишилося після бою.',goal:'Подивися, що лишилося після бою',ring:()=>['.vhead'],next:'Далі',face:2},
+  v_win:{w:'modal',v:()=>G.tut.auto?'winauto':'win',say:()=>G.tut.auto?'Оце дали їм перцю! Тепер перевір своїх і забери здобич. Перемогу святкуватимемо, коли всі справи владнаємо.':'Ого, козаче! А ти, бачу, не з полохливих! Гарно тримався в бою. Тепер порахуймо хлопців і погляньмо, що нам лишили переможені.',goal:'Подивися, що лишилося після бою',ring:()=>['.vhead'],next:'Далі',face:2},
   v_loot:{w:'modal',say:'Спершу трофеї — зброя й одяг переможених. Забирай, на ринку згодяться!',goal:'Забери трофеї',ring:()=>['#rwLoot'],btn:'Гаразд'},
   v_pris:{w:'modal',say:'Ці здалися в полон. Тільки знай: полонений — ще не воїн у загоні. Найняти його можна задарма: «Армія → Полонені».',goal:'Забери полонених',ring:()=>['#rwPris'],btn:'Гаразд',face:4},
   v_stats:{w:'modal',say:'А тут наші втрати й поранені. Поранений не б’ється, доки не одужає — у таборі чи в місті.',goal:'Глянь на втрати й поранених',ring:()=>['.vstats .vs:nth-child(2)','.vstats .vs:nth-child(3)'],next:'Далі',face:1},
@@ -2766,7 +2766,8 @@ const TUTS={
   t_rest:{w:'modal',say:'А в «Розвитку» — відпочинок: поранені одужують, і ти сили набираєш.',goal:'Відкрий «Розвиток»',ring:()=>['.tabs [data-v="dev"]'],btn:'Гаразд'},
   t_rest2:{w:'modal',say:'Ось тут. У своєму місті — задарма, в чужому — за кілька монет.',goal:'Знайди «Відпочити»',ring:()=>['.tbody [data-a="rest"]'],next:'Далі',face:5},
   final:{w:'any',say:'Ну що ж, козаче, основи вже знаєш! Далі шлях обирай сам. А як потрібна порада — тисни на мій портрет праворуч угорі.',next:'Дякую, діду!',end:1,face:2},
-  lose:{w:'map',v:'lose',say:'Ех, буває, козаче... Важко, та ще оговтаємося. Дай пораненим одужати, зберемо військо й спробуємо знову.',goal:'Спробуй ще раз',acts:[['retry','Спробувати ще'],['end','Завершити навчання']],face:4},
+  lose:{w:'map',v:'lose',say:'Ех, буває, козаче... Важко, та ще оговтаємося. Дай пораненим одужати, зберемо військо й спробуємо знову.',next:'Далі',face:4},
+  lose2:{w:'map',v:'again',say:'Спробуємо ще раз? Тепер уже знаєш, із якого боку шаблю тримати. Можемо повторити навчальний бій або рушити далі — як скажеш.',goal:'Повторити бій чи рушити далі',acts:[['retry','Повторити бій'],['end','Рушити далі']],face:0},
   fled:{w:'map',say:'Не бійся, козаче — розбійників лише жменька! Спробуймо ще раз?',goal:'Повернися до бою',acts:[['retry','До бою'],['end','Завершити навчання']],face:5},
 };
 const tutWhere=w=>w==='any'?true:w==='battle'?scene==='battle'&&!!B&&!B.over:w==='modal'?uiOpen&&scene==='map':scene==='map'&&!uiOpen&&$('#title').hidden;
@@ -2804,7 +2805,7 @@ function tutInit(){const pt=tutSpot(G.x,G.y,260,340)||{x:G.x+200,y:G.y};G.tut={s
 function tutRestore(){const T=G.tut;if(!T||T.done)return;
   if(/^(enc|b_)/.test(T.st))T.st='bandit';
   if(/^(v_|t_)/.test(T.st))T.st='town';
-  if(['meet','start','move','arrived','time','bandit','lose','fled'].includes(T.st)&&!tutParty())tutSpawnBandits(['meet','start','move'].includes(T.st)?T.pt:{x:G.x,y:G.y},T.st==='lose'||T.st==='fled');
+  if(['meet','start','move','arrived','time','bandit','lose','lose2','fled'].includes(T.st)&&!tutParty())tutSpawnBandits(['meet','start','move'].includes(T.st)?T.pt:{x:G.x,y:G.y},T.st==='lose'||T.st==='lose2'||T.st==='fled');
   if(T.st==='town'&&!tutTown())T.town=tutPickTown();
   TUT.open=true;TUT.shown='';TUT.frame=1}
 // запам'ятати стан перед навчальним боєм: повтор не дасть ні золота, ні досвіду понад перший раз
@@ -2821,12 +2822,12 @@ function tutEnd(skipped,quiet){if(!G.tut)return;voxStop();const keepB=B&&B.tut,w
 // після бою з навчальними розбійниками
 function tutAfterBattle(c,r,nLoot,nPris){
   if(!tutOn()||!c.party||!c.party.tut)return;const T=G.tut;
-  if(r.win){T.won=1;delete T.snap;T.vl=nLoot;T.vp=nPris;T.town=tutPickTown();tutGo('v_win')}
+  if(r.win){T.won=1;T.auto=!!r.auto;delete T.snap;T.vl=nLoot;T.vp=nPris;T.town=tutPickTown();tutGo('v_win')}
   else tutGo(r.retreat?'fled':'lose')}
 const tutVNext=()=>{const T=G.tut,s=T.st;const seq=['v_win',...(T.vl?['v_loot']:[]),...(T.vp?['v_pris']:[]),'v_stats','v_close'];const i=seq.indexOf(s);tutGo(seq[i+1]||'town')};
 function tutNext(){const s=tutSt(),d=TUTS[s];if(!d)return;
   if(d.end){tutEnd(false,true);return}
-  if(s==='b_intro')tutGo('b_move');else if(s==='arrived')tutGo('time');else if(s==='start')tutGo('move');else if(s==='time')tutGo('bandit');else if(s==='enc1')tutGo('enc2');else if(s.startsWith('v_'))tutVNext();else if(s==='t_sell')tutGo('t_hire');else if(s==='t_rest2')tutGo('final')}
+  if(s==='lose')tutGo('lose2');else if(s==='b_intro')tutGo('b_move');else if(s==='arrived')tutGo('time');else if(s==='start')tutGo('move');else if(s==='time')tutGo('bandit');else if(s==='enc1')tutGo('enc2');else if(s.startsWith('v_'))tutVNext();else if(s==='t_sell')tutGo('t_hire');else if(s==='t_rest2')tutGo('final')}
 // чи виконано крок — перевіряємо щокадру за станом гри, а не за закриттям репліки
 function tutCheck(){const s=tutSt(),T=G.tut;
   if(s==='meet'){if(scene==='map'&&!uiOpen&&$('#title').hidden)tutMeet('tut');return}
@@ -2849,14 +2850,14 @@ function tutCheck(){const s=tutSt(),T=G.tut;
 // поточна репліка, ціль і підсвічування
 function tutRender(){const s=tutSt(),d=TUTS[s],box=$('#tutBox');
   const key=s+'|'+(touchUI()?1:0);if(TUT.shown===key)return;TUT.shown=key;
-  $('#tutFace').src=UIART['ui_av_f'+(d.face||0)];$('#tutTxt').textContent=d.say||'';
+  $('#tutFace').src=UIART['ui_av_f'+(d.face||0)];$('#tutTxt').textContent=(typeof d.say==='function'?d.say():d.say)||'';
   $('#tutOpts').innerHTML=(d.opts||[]).map(([a,b])=>`<li><b>${a}</b> — ${b}</li>`).join('');
   const k=d.keys?d.keys():'';$('#tutKeys').innerHTML=k;$('#tutKeys').hidden=!k;
   const g=typeof d.goal==='function'?d.goal():d.goal;$('#tutGoalIn').textContent=g||'';$('#tutGoalIn').hidden=!g;
   $('#tutGoal span').textContent=g||'';
   const acts=d.acts?d.acts.map(([a,n],i)=>`<button class="btn sm ${i?'ghost':'gold'}" data-t="${a}">${n}</button>`).join(''):d.next?`<button class="btn sm gold" data-t="next">${d.next}</button>`:`<button class="btn sm gold" data-t="ok">${d.btn||'Гаразд'}</button>`;
   $('#tutActs').innerHTML=acts+(d.end||d.acts?'':`<button class="tskip" data-t="skip">Пропустити навчання</button>`);
-  if(TUT.open&&!(d.v&&voxSay(d.v)))SFX.play('adv')}
+  const vk=typeof d.v==='function'?d.v():d.v;if(TUT.open&&!(vk&&voxSay(vk)))SFX.play('adv')}
 function tutTargets(){const s=tutSt(),d=TUTS[s];if(!d||!d.ring)return[];const out=[];
   for(const t of d.ring()){if(!t)continue;
     if(typeof t==='string'||t instanceof Element){const el=t instanceof Element?t:[...document.querySelectorAll(t)].find(e=>e.offsetParent!==null||e.getClientRects().length);if(!el||!el.getClientRects().length)continue;
@@ -2933,7 +2934,7 @@ const ACT={
   rest:()=>{const t=CUR.town,free=t&&t.f===0;if(!free&&G.gold<10){toast('Не вистачає золота.',true);return}if(!free)G.gold-=10;G.hero.hp=G.hero.maxHp;healAll();G.spirit=Math.max(G.spirit,90);G.hour+=8;while(G.hour>=24){G.hour-=24;newDay()}toast(free?'Відпочили у своєму місті безкоштовно: усі здорові.':'Відпочили в корчмі: герой і поранені здорові.');openTown(t,'dev')},
   prisoners:()=>prisonPanel(),
   xclose:()=>xClose(),
-  tutStart:()=>{SFX.play('advPick');closeModal();voxPre('start','move','arrived','time','bandit');tutGo('start')},tutSkip:()=>{SFX.play('advOk');closeModal();tutEnd(true)},advGo:()=>{SFX.play('advOk');closeModal()},
+  tutStart:()=>{SFX.play('advPick');closeModal();voxPre('start','move','arrived','time','bandit','enc1','enc2');tutGo('start')},tutSkip:()=>{SFX.play('advOk');closeModal();tutEnd(true)},advGo:()=>{SFX.play('advOk');closeModal()},
   found:()=>foundPanel(),fdType:v=>{FD.name=($('#foundName')||{}).value||FD.name;FD.type=v;foundPanel()},
   cNew:()=>campaignPanel(true),armyBack:()=>armyPanel(),
   cSel:v=>{const[k,d]=v.split(':');CAMP.sel[k]=d==='all'?(CAMP.sel[k]===G.army[k]?0:G.army[k]):clamp((CAMP.sel[k]||0)+(+d),0,G.army[k]);campaignPanel()},
