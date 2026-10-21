@@ -747,7 +747,7 @@ const UIART={
 /* ================= data ================= */
 // стара мапа 4800×3600 тепер лежить у правій нижній частині; на захід і північ додано нові землі
 // стара мапа 4800×3600 розтягнута на більший світ: міста стоять просторіше, на заході й півночі нові землі
-const W0=4800,H0=3600,W=10400,H=7400,HPS=1.6,MOVE_K=5/HPS; // годин за секунду; рух множимо, щоб загін ішов так само швидко
+const W0=4800,H0=3600,W=10400,H=7400,HPS=.6,MOVE_K=5/HPS; // годин за секунду; рух множимо, щоб загін ішов так само швидко
 const mx=f=>.1+f*.78,my=f=>.1+f*.8,umx=u=>(u-.1)/.78,umy=v=>(v-.1)/.8;
 // w — зброя; mor — бойовий дух; blk — шанс закритися щитом; ap — пробиття броні
 const TYPES={
@@ -1198,7 +1198,7 @@ function campTick(dh){
   const rate=c?.07:.008;
   for(const k of ORDER){const w=G.wounded[k];if(!w){G.healAcc[k]=0;continue}let acc=(G.healAcc[k]||0)+w*rate*dh+(c?.05*dh:0);
     while(acc>=1&&G.wounded[k]>0&&total(G.army)<armyLimit()){G.wounded[k]--;G.army[k]++;acc--}G.healAcc[k]=Math.min(acc,1.5)}
-  if(c){G.spirit=Math.min(100,G.spirit+4*dh);G.drill=Math.min(100,G.drill+.8*dh);
+  if(c){G.spirit=Math.min(100,G.spirit+4*dh);G.drill=Math.min(100,G.drill+1.5*dh);
     if(!G.campDone&&h.hp>=h.maxHp&&total(G.wounded)===0&&G.spirit>=100){G.campDone=true;toast('Загін відпочив і рветься в бій. Вишкіл триває, доки стоїте табором.')}}
   else if(G.target)G.spirit=Math.max(35,G.spirit-.12*dh);
 }
@@ -3220,7 +3220,7 @@ function frame(now){
     const want3d=GL.ok&&(scene==='battle'?!!GL.bat:!GL.overview&&!!GL.map);if(GL.on!==want3d){GL.on=want3d;$('#gl').style.display=want3d?'block':'none'}
     if(scene==='battle'&&B){if(!B.over)bUpdate(dt);if(B)GL.bat?drawBattle3D(dt):drawBattle()}
     else{
-      if(!uiOpen&&(G.target||G.waiting||G.camp)){const dh=dt*HPS*(G.waiting||G.camp?2.5:1);const steps=Math.ceil(dh/.25);for(let i=0;i<steps&&!uiOpen;i++)worldStep(dh/steps)}
+      if(!uiOpen&&(G.target||G.waiting||G.camp)){const dh=dt*HPS*(G.waiting||G.camp?2:1);const steps=Math.ceil(dh/.25);for(let i=0;i<steps&&!uiOpen;i++)worldStep(dh/steps)}
       GL.on?drawMap3D(dt):drawMap();
     }
     hudT-=dt;if(hudT<=0){hudT=.15;updateHud()}
