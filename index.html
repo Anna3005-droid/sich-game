@@ -604,6 +604,8 @@ button,.hs{transition:transform .09s ease-out,filter .09s,box-shadow .12s}
 @keyframes bobw{50%{transform:translateY(3px)}}@keyframes bobb{0%,100%{transform:translateY(6px)}50%{transform:translateY(14px) scaleY(.6)}}
 .fmsg{text-align:center;font-family:var(--f-head);font-size:17px;color:#f1e8d4;min-height:24px}
 .flog{font-size:12.5px;text-align:center}
+.fbite{margin:4px 0 0;text-align:center;font-size:13px;font-weight:600}.fbite.bite{color:#8fc87f}.fbite.calm{color:#a9a18f}.fbite.empty{color:#e0a080}
+.fishbtn.bite{border-color:#8fc87f;box-shadow:0 0 0 1px #000,0 0 14px rgba(143,200,127,.45),0 6px 16px rgba(0,0,0,.5)}
 .fhint{margin:4px 0 0;text-align:center;font-size:11.5px;line-height:1.35;color:#9d9583}.fhint b{color:#cfc6b2;font-weight:600}
 @media (orientation:landscape) and (max-height:520px){.pond{height:96px}.fmsg{font-size:15px;margin:4px 0}.fishbtn{font-size:13px;padding:6px 12px 6px 10px}}
 </style>
@@ -1500,17 +1502,31 @@ const REEDS=(()=>{let s='';const R=mulberry(77);for(const side of[0,1])for(let i
 function fishStopTimers(){clearTimeout(FS.tm);FS.tm=null;if(FS.st!=='idle'){FS.st='idle';fishView('Вудку згорнуто.')}}
 function fishPassMin(min){G.hour+=min/60;while(G.hour>=24){G.hour-=24;newDay()}}
 // чи добре клює: на світанку й увечері — краще, вдень і вночі — гірше
-const biteMul=()=>{const h=G.hour;return h>=4&&h<8||h>=18&&h<21?1.35:h>=22||h<4?.7:1};
+// клює лише зранку й увечері; решту часу — штиль
+const BITE=[[5,9,'ранкове клювання'],[18,21.5,'вечірнє клювання']];
+const biteNow=()=>BITE.find(([a,b])=>G.hour>=a&&G.hour<b);
+const hm=h=>{h=((h%24)+24)%24;return String(Math.floor(h)).padStart(2,'0')+':'+String(Math.round((h%1)*60)).padStart(2,'0')};
+function nextBite(){const h=G.hour;for(const[a]of BITE)if(h<a)return a;return BITE[0][0]+24}
+const biteMul=()=>{const w=biteNow();if(!w)return 0;const mid=(w[0]+w[1])/2,k=1-Math.abs(G.hour-mid)/((w[1]-w[0])/2);return .8+.5*k};   // найкраще — посередині клювання
+// у кожній водоймі риби обмаль: за день відновлюється лише трохи
+const SPOT_MAX=6;
+function fishSpot(){const S=G.fishSpots||(G.fishSpots={}),k=Math.floor(G.x/700)+':'+Math.floor(G.y/700);let s=S[k];if(!s)s=S[k]={n:SPOT_MAX,d:G.day};
+  if(s.d!==G.day){s.n=Math.min(SPOT_MAX,s.n+(G.day-s.d)*3);s.d=G.day}return s}
+function biteStatus(){const w=biteNow(),sp=fishSpot();
+  if(!sp.n)return['empty','Тут рибу виловили — спробуйте іншу водойму або приходьте завтра.'];
+  if(!w)return['calm',`Штиль, риба не клює. Клювання з ${hm(nextBite())}.`];
+  return['bite',`Клює: ${w[2]} до ${hm(w[1])} · риби тут ${sp.n>=4?'багато':sp.n>=2?'є':'мало'}.`];}
 function rollFish(){const k=RODS[G.rod].k,ws=FISHES.map(f=>f.p*(f.big?1+(k-1)*1.3:1)),tot=ws.reduce((a,b)=>a+b,0);let r=Math.random()*tot,i=0;while(r>ws[i]){r-=ws[i];i++}
   const f=FISHES[Math.min(i,FISHES.length-1)],w=f.w[0]+Math.pow(Math.random(),1.6)*(f.w[1]-f.w[0]);return{n:f.n,w:Math.round(w*10)/10,u:Math.max(1,Math.round(w/1.5))}}
 const FISH_IC='<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M3 12c3-4 7-5 11-4 2 .5 4 2 5 4-1 2-3 3.5-5 4-4 1-8 0-11-4z"/><path d="M19 12l3-3v6z"/><circle cx="7" cy="11" r=".8" fill="currentColor"/></svg>';
-function landFish(f){const st=bag().find(o=>o.fish===f.n),kg=String(f.w).replace('.',',');
+function landFish(f){const st=bag().find(o=>o.fish===f.n),kg=String(f.w).replace('.',',');fishSpot().n=Math.max(0,fishSpot().n-1);
   if(!st&&!bagFree())return `${f.n}, ${kg} кг — але рюкзак повний, рибу відпущено.`;
   if(st){st.n++;st.kg=Math.round((st.kg+f.w)*10)/10}else bag().push({fish:f.n,n:1,kg:f.w});G.spirit=Math.min(100,(G.spirit??80)+1);
   FS.log.unshift(`${f.n} · ${kg} кг`);FS.log=FS.log.slice(0,6);return `Спіймали: ${f.n}, ${kg} кг! Поклали в рюкзак.`}
 function fishView(msg){
   const pond=$('#pond'),m=$('#fMsg'),b=$('#fAct');if(!pond)return;pond.className='pond '+FS.st+(G.season===2?' ice':'');if(msg!=null)m.textContent=msg;
   b.textContent=FS.st==='idle'?'Закинути вудку':FS.st==='bite'?'Підсікти!':'Чекаємо…';b.classList.toggle('red',FS.st==='bite');
+  {const[k,t]=biteStatus(),e=$('#fBite');if(e){e.className='fbite '+k;e.textContent=t}const wb=$('#fWait');if(wb)wb.hidden=k!=='calm'||FS.st!=='idle'}
   $('#fLog').innerHTML=FS.log.length?'Улов: '+FS.log.map(esc).join(' · '):'Улов поки порожній.';$('#fCargo').textContent=`риби в рюкзаку ${bag().filter(o=>o.fish).reduce((a,o)=>a+o.n,0)} · рюкзак ${bag().length} з ${BAG_CAP}`;
 }
 function fishPanel(){
@@ -1520,21 +1536,23 @@ function fishPanel(){
   const boat=terAt(G.x,G.y)===T_WATER;
   show(`<span class="eyebrow" style="color:var(--gold)">Риболовля · ${RODS[G.rod].n}</span><h2>${boat?'З човна':'Біля води'}</h2>
   <div class="pond" id="pond">${REEDS}<i class="rp r1"></i><i class="rp r2"></i><i class="rp r3"></i><span class="ln"></span><span class="bob"><i></i></span><span class="splash"></span></div>
+  <p class="fbite" id="fBite"></p>
   <p class="fmsg" id="fMsg">Закиньте вудку й чекайте. Коли поплавок пірне — швидко підсікайте!</p>
-  <div class="acts"><button class="btn gold" id="fAct" data-a="fishAct">Закинути вудку</button><button class="btn" data-a="fishHour">Сидіти годину</button><button class="btn ghost" data-a="fishStop">Згорнути вудку</button></div>
-  <p class="fhint"><b>Закинути вудку</b> — чекаєте самі й підсікаєте, коли поплавок пірне (минає 10 хв). <b>Сидіти годину</b> — ловить і підсікає саме, минає година.</p>
+  <div class="acts"><button class="btn gold" id="fAct" data-a="fishAct">Закинути вудку</button><button class="btn" data-a="fishHour">Сидіти годину</button><button class="btn" id="fWait" data-a="fishWait" hidden>Чекати клювання</button><button class="btn ghost" data-a="fishStop">Згорнути вудку</button></div>
+  <p class="fhint"><b>Закинути вудку</b> — чекаєте самі й підсікаєте, коли поплавок пірне (минає 10 хв). <b>Сидіти годину</b> — ловить і підсікає саме, минає година. Клює лише зранку (05:00–09:00) та ввечері (18:00–21:30), у водоймі риби обмаль.</p>
   <p class="muted flog"><span id="fLog"></span><br><span id="fCargo"></span></p>`,'fish');fishView();
 }
 function fishAct(){
-  if(FS.st==='idle'){FS.st='wait';SFX.play('swing');fishPassMin(10);const k=RODS[G.rod].k,ice=G.season===2;
+  if(FS.st==='idle'){const[bs,bt]=biteStatus();if(bs!=='bite'){SFX.play('swing');fishPassMin(10);fishView(bs==='calm'?'Поплавок стоїть нерухомо — штиль, не клює.':bt);return}
+    FS.st='wait';SFX.play('swing');fishPassMin(10);const k=RODS[G.rod].k,ice=G.season===2;
     fishView(ice?'Закинули в ополонку. Тихо…':'Поплавок гойдається на воді…');
     FS.tm=setTimeout(()=>{FS.st='bite';SFX.play('click');fishView('Клює! Підсікайте!');
       FS.tm=setTimeout(()=>{FS.st='idle';fishView('Не встигли — риба зірвалась з гачка.')},Math.round(900*(.8+.25*k)))},Math.round((1500+Math.random()*3800)/(k*.7+.3)/biteMul()*(ice?1.4:1)));return}
   if(FS.st==='wait'){clearTimeout(FS.tm);FS.st='idle';fishView('Зарано! Риба злякалась.');return}
   if(FS.st==='bite'){clearTimeout(FS.tm);FS.st='idle';const msg=landFish(rollFish());SFX.play('loot');fishView(msg);save()}
 }
-function fishHour(){clearTimeout(FS.tm);FS.st='idle';fishPassMin(60);const k=RODS[G.rod].k,n=[0,1,2,3].filter(()=>Math.random()<.32*k*biteMul()*(G.season===2?.7:1)).length;
-  if(!n){fishView('За годину — жодної поклювки.');return}let last='';for(let i=0;i<n;i++)last=landFish(rollFish());SFX.play('loot');fishView(n>1?`За годину спіймали ${n} рибин. ${last}`:last);save()}
+function fishHour(){clearTimeout(FS.tm);FS.st='idle';const bm=biteMul(),sp=fishSpot().n;fishPassMin(60);const k=RODS[G.rod].k,n=Math.min(sp,[0,1,2,3].filter(()=>Math.random()<.3*k*bm*(G.season===2?.7:1)).length);
+  if(!n){fishView(!sp?'Тут рибу виловили — за годину нічого.':!bm?'Штиль — за годину жодної поклювки.':'За годину — жодної поклювки.');return}let last='';for(let i=0;i<n;i++)last=landFish(rollFish());SFX.play('loot');fishView(n>1?`За годину спіймали ${n} ${n<5?'рибини':'рибин'}. ${last}`:last);save()}
 
 /* ================= похідний табір ================= */
 // у таборі герой швидко одужує, поранені стають у стрій, піднімається дух і йде вишкіл; у дорозі все це повільніше
@@ -1947,7 +1965,7 @@ const ACT={
   upg:v=>{const[w,k,b,n0]=v.split(':'),t=CUR.town,src=w==='g'?t.garrison:G.army,c=upgCost(k,b);if(!t||t.f!==0||upgNeed(t,b))return;const n=Math.min(+n0,src[k],Math.floor(G.gold/c));if(n<=0)return;
     src[k]-=n;src[b]=(src[b]||0)+n;G.gold-=n*c;SFX.play('coin');toast(`Вишколено: ${TYPES[k].n.toLowerCase()} → ${TYPES[b].n.toLowerCase()} ×${n}`);save();openTown(t,'train')},
   buyRod:()=>{const nx=RODS[(G.rod??-1)+1];if(!nx||G.gold<nx.cost)return;G.gold-=nx.cost;G.rod=(G.rod??-1)+1;SFX.play('coin');toast(`Куплено: ${nx.n}. Рибальте біля річки чи озера.`);save();openTown(CUR.town,'market')},
-  fishAct:()=>fishAct(),fishHour:()=>fishHour(),fishStop:()=>{clearTimeout(FS.tm);FS.st='idle';closeModal()},
+  fishAct:()=>fishAct(),fishHour:()=>fishHour(),fishWait:()=>{clearTimeout(FS.tm);FS.st='idle';const to=nextBite();fishPassMin(Math.round((to-G.hour)*60));fishView(`Дочекались: ${biteNow()?biteNow()[2]:'клювання'}. Закидайте!`)},fishStop:()=>{clearTimeout(FS.tm);FS.st='idle';closeModal()},
   rank:v=>{const k=+v,h=G.hero;initCamp();if(!h.ranks.includes(k)){if(G.gold<RANKS[k].cost)return;G.gold-=RANKS[k].cost;h.ranks.push(k);SFX.play('win')}else SFX.play('click');setRank(k);toast(`Ранг: ${RANKS[k].n}`);save();armyPanel()},
   trainHero:()=>{const c=trainCost(),h=G.hero;if(G.gold<c)return;G.gold-=c;h.lvl++;h.maxHp+=15;h.hp=Math.min(h.maxHp,h.hp+15);SFX.play('win');toast(`Наставник вишколив героя: рівень ${h.lvl}`);save();armyPanel()},
   gar:v=>{const[k,d]=v.split(':'),t=CUR.town;if(d==='in'&&G.army[k]>0){G.army[k]--;t.garrison[k]++}else if(d==='out'&&t.garrison[k]>0&&total(G.army)<armyLimit()){t.garrison[k]--;G.army[k]++}openTown(t,'garrison')},
@@ -2056,7 +2074,7 @@ function helpPanel(){
   <p><b>Ранги й тренування.</b> У вікні «Армія» можна купити будь-який ранг героя — досвідченого, отамана чи елітного воїна — і перемикатися між купленими. Наставник за золото підвищує рівень героя.</p>
   <p><b>Данина.</b> Мирні жителі ваших міст, замків і сіл щомісяця платять по 1 монеті. З цих грошей утримують гарнізон (1 монета на солдата), а решта йде у вашу казну. Що більший гарнізон, то менше лишається вам, але місто краще захищене.</p>
   <p><b>Полонені й вишкіл.</b> Після перемоги частина переможених здається в полон, найчастіше слабкі ополченці й лучники. Полонених можна безкоштовно взяти на службу (вікно «Армія» чи результат бою) або залишити в гарнізоні свого міста. У своїх містах на вкладці «Вишкіл» воїнів за золото переводять у сильніші: ополченців — у шаблюки, сокирники чи лучники, лучників — у пищальники (потрібна кузня), шаблюк і сокирників — у кінноту (потрібна стайня).</p>
-  <p><b>Риболовля.</b> На ринку будь-якого міста купіть вудку (80 золотих), а згодом — кращу. Біля річки чи озера, а також на воді з човна, з'являється кнопка «Рибалити»; якщо торкнутися води й допливти туди, вікно риболовлі відкриється само: закиньте вудку, а коли поплавок пірне — швидко підсікайте. Найкраще клює на світанку й увечері. Риба йде в рюкзак (однакова риба — в одну стопку), а продати її можна на ринку будь-якого міста, у блоці «Речі з рюкзака».</p>
+  <p><b>Риболовля.</b> На ринку будь-якого міста купіть вудку (80 золотих), а згодом — кращу. Біля річки чи озера, а також на воді з човна, з'являється кнопка «Рибалити»; якщо торкнутися води й допливти туди, вікно риболовлі відкриється само: закиньте вудку, а коли поплавок пірне — швидко підсікайте. Клює лише зранку (05:00–09:00) та ввечері (18:00–21:30), решту часу — штиль; найкраще посередині клювання. У кожній водоймі риби обмаль: виловили — шукайте іншу водойму або приходьте наступного дня. Риба йде в рюкзак (однакова риба — в одну стопку), а продати її можна на ринку будь-якого міста, у блоці «Речі з рюкзака».</p>
   <p><b>Торгівля.</b> На ринку міста купуйте товари там, де їх виробляють, і везіть туди, де їх потребують. Обоз більший, коли більше війська.</p>
   <p><b>Військо.</b> Ополченці зі списами б'ють далеко й вузько, шаблюки — широким махом і можуть зачепити двох, сокирники пробивають броню, лучники стріляють дугою, пищальники — рідко, але влучно й боляче, кіннота таранить з розгону. Щитоносці самі закриваються від ударів. У кожного воїна є <b>бойовий дух</b>: він падає від ран і смертей товаришів і росте поруч із героєм. Зламаний дух — воїн тікає з поля з білим прапорцем. Перемагає той, хто знищив або розігнав усе вороже військо.</p>
   <p><b>Міста.</b> У своїх містах будуйте житло, кузню, ринок і стайню у вкладці «Будівлі». Спорядження героя — кнопка зі шоломом ліворуч.</p>
@@ -3475,7 +3493,7 @@ function updateHud(){
     {const c=calOf(G.day,G.hour);$('#hDay').textContent=c.m[0].toUpperCase()+c.m.slice(1)+' '+c.y;$('#hDay').parentElement.title='День походу '+G.day}$('#hHour').textContent=clockOf(G.hour);
     $('#hGold').textContent=Math.floor(G.gold).toLocaleString('uk-UA');$('#hArmy').innerHTML=`${total(G.army)}<b>/${armyLimit()}</b>`;$('#hSky').setAttribute('href',G.hour<6||G.hour>=20?'#x-moon':'#x-sun');
     $('#hHp').style.width=Math.round(G.hero.hp/G.hero.maxHp*100)+'%';
-    $('#hLvl').textContent=G.hero.lvl;{const fb=$('#fishBtn'),on=!uiOpen&&nearWater();fb.hidden=!on;if(on)fb.style.bottom=G.camp?'calc(env(safe-area-inset-bottom,0px) + 74px)':''}if(GL.overview){const k=G.towns.map(t=>t.f).join('')+FAC[0].name+FAC[0].color;if(k!==renderLegend.k){renderLegend.k=k;renderLegend()}}else if(!$('#legend').hidden)$('#legend').hidden=true;{const cc=$('#campCard');cc.hidden=!G.camp;$('#waitBtn').classList.toggle('on',!!G.camp);if(G.camp){if(!$('#ccIc').src)$('#ccIc').src=UIART.ui_ic_camp;$('#ccHp').style.width=Math.round(G.hero.hp/G.hero.maxHp*100)+'%';$('#ccW').textContent=total(G.wounded||{});$('#ccSp').style.width=Math.round(G.spirit)+'%';$('#ccDr').style.width=Math.round(G.drill)+'%'}}$('#bagN').textContent=G.bag&&G.bag.length?G.bag.length:'';$('#boatBtn').classList.toggle('on',G.sail!==false);$('#hTer').textContent=(terAt(G.x,G.y)===T_WATER?'Пливемо · '+BOAT_LV[G.boatLv||0].n.toLowerCase():TER_N[terAt(G.x,G.y)])+(G.target&&G.slope>.08?' · підйом':G.target&&G.slope<-.08?' · спуск':'')+' · '+SEASONS[G.season||0].n;$('#waitBtn').classList.toggle('on',!!G.waiting);
+    $('#hLvl').textContent=G.hero.lvl;{const fb=$('#fishBtn'),on=!uiOpen&&nearWater();fb.hidden=!on;if(on){const t=biteNow()?'Рибалити · клює':'Рибалити';const sp=fb.querySelector('span');if(sp.textContent!==t)sp.textContent=t;fb.classList.toggle('bite',!!biteNow())}if(on)fb.style.bottom=G.camp?'calc(env(safe-area-inset-bottom,0px) + 74px)':''}if(GL.overview){const k=G.towns.map(t=>t.f).join('')+FAC[0].name+FAC[0].color;if(k!==renderLegend.k){renderLegend.k=k;renderLegend()}}else if(!$('#legend').hidden)$('#legend').hidden=true;{const cc=$('#campCard');cc.hidden=!G.camp;$('#waitBtn').classList.toggle('on',!!G.camp);if(G.camp){if(!$('#ccIc').src)$('#ccIc').src=UIART.ui_ic_camp;$('#ccHp').style.width=Math.round(G.hero.hp/G.hero.maxHp*100)+'%';$('#ccW').textContent=total(G.wounded||{});$('#ccSp').style.width=Math.round(G.spirit)+'%';$('#ccDr').style.width=Math.round(G.drill)+'%'}}$('#bagN').textContent=G.bag&&G.bag.length?G.bag.length:'';$('#boatBtn').classList.toggle('on',G.sail!==false);$('#hTer').textContent=(terAt(G.x,G.y)===T_WATER?'Пливемо · '+BOAT_LV[G.boatLv||0].n.toLowerCase():TER_N[terAt(G.x,G.y)])+(G.target&&G.slope>.08?' · підйом':G.target&&G.slope<-.08?' · спуск':'')+' · '+SEASONS[G.season||0].n;$('#waitBtn').classList.toggle('on',!!G.waiting);
   }else if(B){$('#campCard').hidden=true;$('#fishBtn').hidden=true;$('#legend').hidden=true;
     let a=B.resA.length,b=B.resB.length;B.units.forEach(u=>{if(!u.hero)u.team?b++:a++});
     {let m=0,n=0;B.units.forEach(u=>{if(u.team===0&&!u.hero){m+=u.mor/u.morMax;n++}});const pm=n?Math.round(m/n*100):100;$('#bM').textContent=pm+'%';$('#bM').style.color=pm<35?'#e0675a':pm<60?'#e0aa3e':'#9fd17a'}
