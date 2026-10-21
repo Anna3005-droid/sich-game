@@ -950,6 +950,8 @@ const SEASONS=[
   {n:'Весна',g:['#58803a','#6c8c42','#8f9452'],pa:['rgba(150,185,90,.18)','rgba(60,95,35,.16)'],st:['rgba(170,170,90,.16)','rgba(120,140,70,.15)'],fields:['#7a8a40','#8e9a45','#a0a85a','#6f7f3a'],
     leaf:[['#3f6a2a','#6a9a48'],['#4a7a32','#88b860']],pine:[['#1f3d24','#33583a'],['#2c5232','#46704a']],snow:0,sky:'#a2b6c2',water:'#1f5470'},
 ];
+// годинник з півгодинами: 20:00, 20:30, 21:00
+const clockOf=h=>{const hh=Math.floor(h)%24,mm=Math.floor((h-Math.floor(h))*2)*30;return String(hh).padStart(2,'0')+':'+(mm?'30':'00')};
 const seasonOf=d=>Math.floor((d-1)/10)%4;
 // календар: гра починається в червні 1648 року; пора року триває 10 днів, тож місяць — близько 3 днів
 const START_YEAR=1648,MONTHS=['червень','липень','серпень','вересень','жовтень','листопад','грудень','січень','лютий','березень','квітень','травень'];
@@ -3075,7 +3077,7 @@ function camZoom(f){const v=camView();v.d=clamp(v.d*f,scene==='battle'?380:650,s
 let hudT=0;
 function updateHud(){
   if(scene==='map'){
-    {const c=calOf(G.day,G.hour);$('#hDay').textContent=c.m[0].toUpperCase()+c.m.slice(1)+' '+c.y;$('#hDay').parentElement.title='День походу '+G.day}$('#hHour').textContent=String(Math.floor(G.hour)).padStart(2,'0')+':00';
+    {const c=calOf(G.day,G.hour);$('#hDay').textContent=c.m[0].toUpperCase()+c.m.slice(1)+' '+c.y;$('#hDay').parentElement.title='День походу '+G.day}$('#hHour').textContent=clockOf(G.hour);
     $('#hGold').textContent=Math.floor(G.gold).toLocaleString('uk-UA');$('#hArmy').innerHTML=`${total(G.army)}<b>/${armyLimit()}</b>`;$('#hSky').setAttribute('href',G.hour<6||G.hour>=20?'#x-moon':'#x-sun');
     $('#hHp').style.width=Math.round(G.hero.hp/G.hero.maxHp*100)+'%';
     $('#hLvl').textContent=G.hero.lvl;{const cc=$('#campCard');cc.hidden=!G.camp;$('#waitBtn').classList.toggle('on',!!G.camp);if(G.camp){if(!$('#ccIc').src)$('#ccIc').src=UIART.ui_ic_camp;$('#ccHp').style.width=Math.round(G.hero.hp/G.hero.maxHp*100)+'%';$('#ccW').textContent=total(G.wounded||{});$('#ccSp').style.width=Math.round(G.spirit)+'%';$('#ccDr').style.width=Math.round(G.drill)+'%'}}$('#bagN').textContent=G.bag&&G.bag.length?G.bag.length:'';$('#boatBtn').classList.toggle('on',G.sail!==false);$('#hTer').textContent=(terAt(G.x,G.y)===T_WATER?'Пливемо · '+BOAT_LV[G.boatLv||0].n.toLowerCase():TER_N[terAt(G.x,G.y)])+(G.target&&G.slope>.08?' · підйом':G.target&&G.slope<-.08?' · спуск':'')+' · '+SEASONS[G.season||0].n;$('#waitBtn').classList.toggle('on',!!G.waiting);
