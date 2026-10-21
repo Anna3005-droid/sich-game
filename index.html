@@ -576,6 +576,35 @@ button,.hs{transition:transform .09s ease-out,filter .09s,box-shadow .12s}
 .uto{font-family:var(--f-head);font-size:13px;color:#e8dcc0;white-space:nowrap}.uto em{font-style:normal;font-family:var(--f-body);font-size:11px;color:#e0675a}
 .upc .qb{height:30px;font-size:12.5px;min-width:0;padding:0 8px}
 @media (max-width:700px){.up{grid-template-columns:1fr}.upb{justify-content:flex-start}}
+
+/* ===== пауза ===== */
+.pauseov{position:fixed;inset:0;z-index:60;display:grid;place-items:center;background:rgba(5,9,14,.78);backdrop-filter:blur(3px)}
+.pbox{text-align:center;padding:22px 30px;border:1px solid var(--ag2);border-radius:6px;background:var(--grain),linear-gradient(#13233a,#0b1622);box-shadow:0 0 0 1px #000,0 10px 30px rgba(0,0,0,.6)}
+.pbox h2{font-family:var(--f-head);font-size:30px;margin:2px 0 6px;color:var(--agl)}.pbox p{color:#d7cdb6;margin:0 0 14px}.pbox .eyebrow{color:var(--ag)}
+/* ===== риболовля ===== */
+.fishbtn{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 14px);z-index:12;display:flex;align-items:center;gap:8px;padding:8px 16px 8px 12px;
+  border:1px solid var(--ag);border-radius:999px;background:linear-gradient(#1d3a5e,#10233a);color:var(--agl);font-family:var(--f-head);font-weight:700;font-size:15px;letter-spacing:.05em;box-shadow:0 0 0 1px #000,0 6px 16px rgba(0,0,0,.5)}
+.fishbtn svg{width:22px;height:22px}
+.rodrow .ic{width:18px;height:18px;vertical-align:-3px;color:var(--ag)}
+.pond{position:relative;height:150px;margin:8px 0;border-radius:6px;overflow:hidden;border:1px solid #2a4a5a;
+  background:radial-gradient(120% 90% at 50% 120%,#0d3a4c,#1c5a6c 55%,#3b7d84 90%),#1c5a6c;box-shadow:inset 0 10px 30px rgba(0,0,0,.35)}
+.pond::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(170deg,rgba(255,255,255,.05) 0 2px,transparent 2px 18px);animation:pondflow 6s linear infinite}
+@keyframes pondflow{to{background-position:0 180px}}
+.pond.ice{background:radial-gradient(120% 90% at 50% 120%,#6d8a98,#a9c2cc 60%,#d8e6ec)}
+.pond .reeds{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.pond .rp{position:absolute;left:50%;top:58%;width:30px;height:10px;margin:-5px 0 0 -15px;border:1.5px solid rgba(220,240,240,.55);border-radius:50%;opacity:0}
+.pond.wait .rp,.pond.bite .rp{animation:ripple 2.4s ease-out infinite}.pond .r2{animation-delay:.8s!important}.pond .r3{animation-delay:1.6s!important}
+.pond.bite .rp{animation-duration:.7s}
+@keyframes ripple{0%{transform:scale(.4);opacity:.9}100%{transform:scale(3.2);opacity:0}}
+.pond .ln{position:absolute;right:-10px;top:-20px;width:2px;height:120px;transform-origin:top right;background:linear-gradient(rgba(240,240,230,.0),rgba(240,240,230,.5));transform:rotate(38deg);opacity:0;transition:opacity .3s}
+.pond.wait .ln,.pond.bite .ln{opacity:1}
+.pond .bob{position:absolute;left:50%;top:58%;width:12px;height:22px;margin:-18px 0 0 -6px;opacity:0;transition:opacity .2s}
+.pond .bob i{display:block;width:12px;height:22px;border-radius:6px 6px 5px 5px;background:linear-gradient(#e8e4d8 0 45%,#c4382c 45% 100%);box-shadow:0 2px 3px rgba(0,0,0,.4)}
+.pond.wait .bob,.pond.bite .bob{opacity:1}.pond.wait .bob i{animation:bobw 1.6s ease-in-out infinite}.pond.bite .bob i{animation:bobb .35s ease-in-out infinite}
+@keyframes bobw{50%{transform:translateY(3px)}}@keyframes bobb{0%,100%{transform:translateY(6px)}50%{transform:translateY(14px) scaleY(.6)}}
+.fmsg{text-align:center;font-family:var(--f-head);font-size:17px;color:#f1e8d4;min-height:24px}
+.flog{font-size:12.5px;text-align:center}
+@media (orientation:landscape) and (max-height:520px){.pond{height:96px}.fmsg{font-size:15px;margin:4px 0}.fishbtn{font-size:13px;padding:6px 12px 6px 10px}}
 </style>
 
 <canvas id="gl"></canvas>
@@ -668,6 +697,8 @@ button,.hs{transition:transform .09s ease-out,filter .09s,box-shadow .12s}
 <div class="campcard" id="campCard" hidden><img class="ccic" id="ccIc" alt=""><div class="ccb"><b>Табір</b><div class="ccr">
   <span><i>Здоров’я</i><em><s id="ccHp"></s></em></span><span><i>Поранені</i><em class="n" id="ccW">0</em></span><span><i>Дух</i><em><s id="ccSp"></s></em></span><span><i>Вишкіл</i><em><s id="ccDr"></s></em></span></div></div>
   <button class="btn sm gold" id="campOff">Рушати</button></div>
+<div class="pauseov" id="pauseOv" hidden><div class="pbox"><span class="eyebrow">Гру збережено</span><h2>Пауза</h2><p>Гра зупинилась, поки екран був вимкнений.</p><button class="btn gold" id="pauseGo">Продовжити</button></div></div>
+<button class="fishbtn" id="fishBtn" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 21 17 4M17 4c2 3 3 7 2 11"/><path d="M19 15c0 2-1 3-2 3s-2-1-2-2" /><circle cx="19" cy="15" r=".6" fill="currentColor"/></svg><span>Рибалити</span></button>
 <div class="corner" id="corner" hidden>
   <div class="camctl">
     <button class="zb" id="tUp" aria-label="Підняти камеру">⤒</button>
@@ -1134,7 +1165,7 @@ function buildTerrain(){
     t.beginPath();t.moveTo(W*mx(.4),H+50);for(let u=.4;u<=.92;u+=.004)t.lineTo(W*mx(u),Math.min(H+50,H*my(coastV(u))-grow/2));t.lineTo(W*mx(.92),H+50);t.closePath();t.fill()};
   [[56,SE.snow?'#c8c4b4':'#a59c6c',.22],[34,SE.snow?'#d4d2c8':'#b5aa78',.35],[16,SE.snow?'#a8a89c':'#6e7448',.5],[6,'#486f78',.75],[0,SE.water,1],[-14,SE.snow?'#8aa6b6':'#245470',.7]].forEach(([grow,col,al])=>layer(al,t=>{t.strokeStyle=col;t.fillStyle=col;waterShape(t,grow)}));
   layer(.22,t=>{t.strokeStyle=t.fillStyle='#9fd0e4';waterShape(t,-30)});
-  WATERS.mask=waterMask(W,H,g2=>waterShape(g2,0));
+  WATERS.mask=waterMask(W,H,g2=>waterShape(g2,0));WATERS.flow=flowMap(rivers);
   if(hort){g.fillStyle=SE.snow?'#e6eaec':'#5f7a3a';g.beginPath();g.ellipse(hort.x,hort.y,82,46,.6,0,7);g.fill()}
   // броди: мілина з камінням
   fords.forEach(f=>{g.save();g.translate(f.x,f.y);g.rotate(f.a+Math.PI/2);g.fillStyle='rgba(205,190,140,.55)';g.fillRect(-46,-14,92,28);
@@ -1293,10 +1324,10 @@ function realmPanel(){
 // маска: червоний — сама вода (трохи розмита, щоб береги були округлі), зелений — сильно розмита (глибина від берега)
 function soften(c,k){const w=Math.max(2,Math.round(c.width/k)),h=Math.max(2,Math.round(c.height/k)),s=document.createElement('canvas');s.width=w;s.height=h;const sg=s.getContext('2d');sg.imageSmoothingEnabled=true;sg.imageSmoothingQuality='high';sg.drawImage(c,0,0,w,h);
   const o=document.createElement('canvas');o.width=c.width;o.height=c.height;const og=o.getContext('2d');og.imageSmoothingEnabled=true;og.imageSmoothingQuality='high';og.drawImage(s,0,0,o.width,o.height);return o}
-function waterMask(w,h,draw,px){
+function waterMask(w,h,draw,px,sa){
   const MW=px||2048,MH=Math.round(MW*h/w),c=document.createElement('canvas');c.width=MW;c.height=MH;const g=c.getContext('2d');g.fillStyle='#000';g.fillRect(0,0,MW,MH);
   g.save();g.scale(MW/w,MH/h);g.fillStyle=g.strokeStyle='#fff';draw(g);g.restore();
-  const a=soften(c,2),b=soften(soften(c,12),3),A=a.getContext('2d').getImageData(0,0,MW,MH),Bd=b.getContext('2d').getImageData(0,0,MW,MH).data,d=A.data;
+  const a=soften(c,sa||2),b=soften(soften(c,12),3),A=a.getContext('2d').getImageData(0,0,MW,MH),Bd=b.getContext('2d').getImageData(0,0,MW,MH).data,d=A.data;
   for(let i=0;i<d.length;i+=4){d[i+1]=Math.min(d[i],Bd[i]);d[i+2]=0;d[i+3]=255}
   a.getContext('2d').putImageData(A,0,0);return a;
 }
@@ -1305,14 +1336,19 @@ const WATER_VS=`varying vec2 vUv;varying vec3 vW;uniform vec2 uOrig,uSize;
 void main(){vec4 wp=modelMatrix*vec4(position,1.);vW=wp.xyz;vUv=(wp.xz-uOrig)/uSize;vec4 mvPosition=viewMatrix*wp;gl_Position=projectionMatrix*mvPosition;
 #include <fog_vertex>
 }`;
-const WATER_FS=`uniform sampler2D uMask;uniform float uTime,uWave,uScale,uIce;uniform vec3 uDeep,uShallow,uFoam;uniform vec2 uSunUv;varying vec2 vUv;varying vec3 vW;
+const WATER_FS=`uniform sampler2D uMask,uFlow;uniform float uTime,uWave,uScale,uIce;uniform vec3 uDeep,uShallow,uFoam;uniform vec2 uSunUv;varying vec2 vUv;varying vec3 vW;
 #include <fog_pars_fragment>
 float wh(vec2 p){float t=uTime*.8;return sin(p.x*.11+t*1.1+sin(p.y*.05)*1.8)*.45+sin(p.y*.14-t*.9+p.x*.04)*.35+sin((p.x-p.y)*.21+t*1.5)*.2;}
+// течія: два шари хвиль зсуваються за водою по черзі, щоб на закрутах не розтягувались
+float whF(vec2 p,vec2 fd){float T=uTime*.18,a=fract(T),b=fract(T+.5),w=1.-abs(1.-2.*a);return mix(wh(p-fd*b*34.+vec2(7.3,3.1)),wh(p-fd*a*34.),w);}
+float stF(vec2 p,vec2 fd){vec2 pr=vec2(-fd.y,fd.x);float T=uTime*.18,a=fract(T),b=fract(T+.5),w=1.-abs(1.-2.*a);
+  vec2 qa=p-fd*a*34.,qb=p-fd*b*34.+vec2(11.,5.);float sa=sin(dot(qa,pr)*.55)*sin(dot(qa,fd)*.12),sb=sin(dot(qb,pr)*.55)*sin(dot(qb,fd)*.12);return mix(sb,sa,w);}
 void main(){
   vec4 m=texture2D(uMask,vUv);float a=smoothstep(.38,.62,m.r);if(a<.01)discard;
+  vec4 fl=texture2D(uFlow,vUv);vec2 fd=(fl.rg-.5)*2.;float fr=fl.b;
   float deep=smoothstep(.15,.85,m.g);vec2 p=vW.xz/uScale;
   float dist=length(vW-cameraPosition),wk=uWave*(1.-smoothstep(900.,4200.,dist))*(1.-uIce);
-  float e=.6,h0=wh(p);vec3 n=normalize(vec3(-(wh(p+vec2(e,0.))-h0)/e*wk*.35,1.,-(wh(p+vec2(0.,e))-h0)/e*wk*.35));
+  wk*=1.+fr*.5;float e=.6,h0=whF(p,fd);vec3 n=normalize(vec3(-(whF(p+vec2(e,0.),fd)-h0)/e*wk*.35,1.,-(whF(p+vec2(0.,e),fd)-h0)/e*wk*.35));
   vec3 L=normalize(vec3(-.55,1.3,-.75)),V=normalize(cameraPosition-vW);
   vec3 col=mix(uShallow,uDeep,deep);
   col*=.82+.18*max(dot(n,L),0.)+h0*.04*wk;
@@ -1320,21 +1356,103 @@ void main(){
   float bank=texture2D(uMask,vUv+uSunUv).r;col*=1.-(1.-smoothstep(.3,.7,bank))*.32;
   // світлі відблиски хвиль і легка піна біля берега
   float sp=pow(max(dot(reflect(-L,n),V),0.),24.)*(.5+.5*deep);col+=vec3(1.,.97,.88)*sp*.22*(1.-uIce);
+  col+=vec3(.85,.93,.95)*smoothstep(.55,.95,stF(p,fd))*fr*length(fd)*.09*(1.-uIce)*(1.-smoothstep(900.,3200.,dist));
   float rim=smoothstep(.40,.52,m.r)*(1.-smoothstep(.52,.7,m.r));col=mix(col,uFoam,rim*(.28+.12*sin(uTime*1.7+vW.x*.05+vW.z*.04))*(1.-uIce*.5));
   float alpha=a*mix(.62,.93,deep);if(uIce>.5){col=mix(col,vec3(.86,.92,.96),.55);alpha=a*.96;}
   gl_FragColor=vec4(col,alpha);
 #include <fog_fragment>
 }`;
-function makeWater(mask,ox,oz,sw,sh,y,SE,scale,sun,big){
+// карта течії: колір — напрям (до моря, на південь), синій канал — що тут річка
+function flowMap(rivers){const FW=1024,FH=Math.round(FW*H/W),c=document.createElement('canvas');c.width=FW;c.height=FH;const g=c.getContext('2d');g.fillStyle='rgb(128,128,0)';g.fillRect(0,0,FW,FH);
+  g.save();g.scale(FW/W,FH/H);g.lineCap='round';
+  for(const r of rivers){const p=r.p[0][1]>r.p[r.p.length-1][1]?r.p.slice().reverse():r.p,wd=r.p[0][1]>r.p[r.p.length-1][1]?r.wd.slice().reverse():r.wd;
+    for(let i=1;i<p.length;i++){const dx=p[i][0]-p[i-1][0],dy=p[i][1]-p[i-1][1],l=Math.hypot(dx,dy)||1;g.strokeStyle=`rgb(${Math.round((dx/l*.5+.5)*255)},${Math.round((dy/l*.5+.5)*255)},255)`;g.lineWidth=wd[i]+50;g.beginPath();g.moveTo(p[i-1][0],p[i-1][1]);g.lineTo(p[i][0],p[i][1]);g.stroke()}}
+  g.restore();return soften(c,3)}
+// той самий шматок карти течії для поля бою
+function battleFlow(){const F=WATERS.flow;if(!F)return null;const k=F.width/W,a=toMap(-BEX,-BEZ),EW=BW+2*BEX,EH=BH+2*BEZ,c=document.createElement('canvas');c.width=256;c.height=Math.round(256*EH/EW);const g=c.getContext('2d');g.fillStyle='rgb(128,128,0)';g.fillRect(0,0,c.width,c.height);
+  g.imageSmoothingEnabled=true;g.drawImage(F,a.x*k,a.y*k,EW*BK*k,EH*BK*k,0,0,c.width,c.height);return c}
+function makeWater(mask,ox,oz,sw,sh,y,SE,scale,sun,big,flow){
   const tex=new THREE.CanvasTexture(mask);tex.flipY=false;tex.wrapS=tex.wrapT=THREE.ClampToEdgeWrapping;tex.anisotropy=Math.min(8,GL.r.capabilities.getMaxAnisotropy());
   const deep=new THREE.Color(SE.water).multiplyScalar(.78),sh2=new THREE.Color(SE.water).lerp(new THREE.Color('#5fa7a8'),.45).lerp(new THREE.Color('#c9b98a'),.12);
   const mat=new THREE.ShaderMaterial({uniforms:THREE.UniformsUtils.merge([THREE.UniformsLib.fog,{uMask:{value:null},uTime:{value:0},uWave:{value:1},uScale:{value:scale},uIce:{value:SE.snow?1:0},
     uDeep:{value:deep},uShallow:{value:sh2},uFoam:{value:new THREE.Color('#eef4f2')},uSunUv:{value:new THREE.Vector2(-.55*sun/sw,-.75*sun/sh)},uOrig:{value:new THREE.Vector2(ox,oz)},uSize:{value:new THREE.Vector2(sw,sh)}}]),
     vertexShader:WATER_VS,fragmentShader:WATER_FS,transparent:true,depthWrite:false,fog:true});
   mat.uniforms.uMask.value=tex;
+  {let fc=flow;if(!fc){fc=document.createElement('canvas');fc.width=fc.height=2;const fg=fc.getContext('2d');fg.fillStyle='rgb(128,128,0)';fg.fillRect(0,0,2,2)}const ft=new THREE.CanvasTexture(fc);ft.flipY=false;mat.uniforms.uFlow={value:ft}}
   const bw=big||sw,bh=big||sh,m=new THREE.Mesh(new THREE.PlaneGeometry(bw,bh,Math.ceil(bw/600),Math.ceil(bh/600)).rotateX(-Math.PI/2),mat);m.position.set(ox+sw/2,y,oz+sh/2);m.renderOrder=2;(GL.waterMats||(GL.waterMats=[])).push(mat);return m;
 }
-function tickWater(){const t=performance.now()/1000;if(GL.waterMats)GL.waterMats.forEach(m=>m.uniforms.uTime.value=t)}
+function tickWater(){const t=performance.now()/1000;WIND.t.value=t;if(GL.waterMats)GL.waterMats.forEach(m=>m.uniforms.uTime.value=t)}
+
+// рівнина довкола прямокутника (рамкою), а не під ним — інакше просвічує крізь воду
+function ringPlane(x0,z0,x1,z1,y,mat){const R=130000,cx=(x0+x1)/2,cz=(z0+z1)/2,g=new THREE.Group();
+  [[cx-R,cz-R,cx+R,z0],[cx-R,z1,cx+R,cz+R],[cx-R,z0,x0,z1],[x1,z0,cx+R,z1]].forEach(([a,b,c,d])=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(c-a,d-b).rotateX(-Math.PI/2),mat);m.position.set((a+c)/2,y,(b+d)/2);m.receiveShadow=true;g.add(m)});return g}
+/* ================= вітер, кущі, різнотрав'я, очерет ================= */
+const WIND={t:{value:0},c:{value:null}};
+// гойдання на вітрі: верхівки хиляться в один бік, з поривами; 'tree' — дерева лісу, 'inst' — пучки трави, 'cover' — трава біля камери (з плавною появою по краю)
+function addWind(mat,amp,mode){
+  if(!WIND.c.value)WIND.c.value=new THREE.Vector3();
+  const prev=mat.onBeforeCompile,inst=mode!=='tree';
+  mat.onBeforeCompile=(sh,r)=>{if(prev)prev.call(mat,sh,r);sh.uniforms.uWind=WIND.t;sh.uniforms.uCen=WIND.c;sh.uniforms.uWAmp={value:amp};
+    sh.vertexShader='uniform float uWind,uWAmp;uniform vec3 uCen;\n'+(inst?'':'attribute vec2 wc;\n')+sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\n'+
+      `{vec3 wp=${inst?'instanceMatrix[3].xyz':'vec3(wc.x,0.,wc.y)'};float k=${inst?'transformed.y':'uv.y*uv.y'};`+
+      (mode==='cover'?'transformed*=1.-smoothstep(760.,1100.,distance(wp.xz,uCen.xz));':'')+
+      'float s=sin(uWind*1.6+wp.x*.023+wp.z*.019)*.55+sin(uWind*2.7+wp.x*.051-wp.z*.03)*.2+(sin(uWind*.45+wp.x*.0035+wp.z*.002)*.5+.5)*.45;'+
+      (inst?'vec3 c0=instanceMatrix[0].xyz,c2=instanceMatrix[2].xyz,dw=vec3(1.,0.,.45)*s*k*uWAmp*length(instanceMatrix[1].xyz);transformed.x+=dot(c0,dw)/dot(c0,c0);transformed.z+=dot(c2,dw)/dot(c2,c2);}'
+           :'transformed.x+=s*k*uWAmp;transformed.z+=s*k*uWAmp*.45;}'))};
+  const key='wind-'+mode+(prev?'-d':'');mat.customProgramCacheKey=()=>key;
+}
+// три схрещені площинки з двома боками — пучок, видно з будь-якого боку
+function crossGeo(){const geo=new THREE.BufferGeometry(),P=[],U=[],N=[],I=[];
+  for(const a of[0,Math.PI/3,Math.PI*2/3])for(const sd of[1,-1]){const dx=Math.cos(a)*.5,dz=Math.sin(a)*.5,b=P.length/3;P.push(-dx,0,-dz,dx,0,dz,dx,1,dz,-dx,1,-dz);U.push(0,0,1,0,1,1,0,1);N.push(0,1,0,0,1,0,0,1,0,0,1,0);sd>0?I.push(b,b+1,b+2,b,b+2,b+3):I.push(b,b+2,b+1,b,b+3,b+2)}
+  geo.setAttribute('position',new THREE.Float32BufferAttribute(P,3));geo.setAttribute('uv',new THREE.Float32BufferAttribute(U,2));geo.setAttribute('normal',new THREE.Float32BufferAttribute(N,3));geo.setIndex(I);return geo}
+function coverTex(kind,SE){
+  const c=document.createElement('canvas'),g=c.getContext('2d'),R=mulberry(kind.length*31+7),aut=SE.n==='Осінь',win=!!SE.snow,spr=SE.n==='Весна';
+  const blade=(x,b,h,col,w)=>{g.strokeStyle=col;g.lineWidth=w;g.lineCap='round';g.beginPath();g.moveTo(x,b);g.quadraticCurveTo(x+(R()-.5)*6,b-h*.55,x+(R()-.5)*14,b-h);g.stroke()};
+  const gc=win?['#8a8468','#a49c7c','#6e6650']:aut?['#8a7a3a','#a08848','#6e6a30','#b49a52']:[SE.g[0],SE.g[1],'#7a9a48','#3e5a26','#93ad55'];
+  if(kind==='grass'){c.width=64;c.height=48;for(let i=0;i<(win?26:64);i++)blade(4+R()*56,48,14+R()*32,gc[Math.floor(R()*gc.length)],1.4+R()*1.2)}
+  else if(kind==='flower'){c.width=64;c.height=48;for(let i=0;i<34;i++)blade(4+R()*56,48,10+R()*24,gc[Math.floor(R()*gc.length)],1.3+R());
+    const fc=aut?['#d8a440','#c8742a','#e6d48a']:spr?['#f4eef6','#e8d36a','#b98ad8','#ffffff','#f0b0c8']:['#e8d36a','#d65c4a','#8fa8e0','#f4f4f4','#c77a9a','#e89a3a'];
+    for(let i=0;i<16;i++){const x=6+R()*52,y=6+R()*22,col=fc[Math.floor(R()*fc.length)];g.strokeStyle='#4a6a2a';g.lineWidth=1;g.beginPath();g.moveTo(x,y);g.lineTo(x+(R()-.5)*4,48);g.stroke();
+      g.fillStyle=col;for(let p=0;p<5;p++){const a=p/5*6.28;g.beginPath();g.arc(x+Math.cos(a)*2.2,y+Math.sin(a)*2.2,1.8,0,7);g.fill()}g.fillStyle='#f0c840';g.beginPath();g.arc(x,y,1.3,0,7);g.fill()}}
+  else if(kind==='bush'){c.width=c.height=64;
+    if(win){g.strokeStyle='#5a4632';g.lineCap='round';for(let i=0;i<14;i++){const a=-Math.PI/2+(R()-.5)*2.2,l=18+R()*24;g.lineWidth=1.5+R()*1.5;g.beginPath();g.moveTo(32,64);g.lineTo(32+Math.cos(a)*l,64+Math.sin(a)*l);g.stroke()}
+      g.fillStyle='rgba(255,255,255,.85)';for(let i=0;i<20;i++){g.beginPath();g.arc(10+R()*44,20+R()*30,1.5+R()*2,0,7);g.fill()}}
+    else{const bc=aut?['#6a2e14','#93451e','#b8682a','#d09038']:spr?['#3a6a2a','#5a8a3a','#7aaa4a','#9cc860']:['#26401c','#3a5a28','#527a34','#6e9644'];
+      g.fillStyle='#3a2a1a';g.fillRect(29,46,6,18);
+      for(let l=0;l<4;l++)for(let i=0;i<12-l*2;i++){const a=R()*6.28,r=R()*(22-l*4),x=32+Math.cos(a)*r-l*2,y=36+Math.sin(a)*r*.7-l*3,rr=7+R()*7-l;g.fillStyle=bc[l];g.beginPath();g.arc(x,y,rr,0,7);g.fill()}
+      if(!aut){g.fillStyle=spr?'#f6eef6':'#e8e0c0';for(let i=0;i<(spr?14:4);i++){g.beginPath();g.arc(12+R()*40,14+R()*30,1.6,0,7);g.fill()}}}}
+  else{c.width=48;c.height=64;const rc=win||aut?['#a8955e','#8c7a48','#bba872']:['#6a8a3a','#87a24a','#5a7430','#9cae5a'];
+    for(let i=0;i<22;i++){const x=6+R()*36;g.strokeStyle=rc[Math.floor(R()*rc.length)];g.lineWidth=1.3+R();g.beginPath();g.moveTo(x,64);g.quadraticCurveTo(x+(R()-.5)*4,40,x+(R()-.5)*8,10+R()*20);g.stroke()}
+    for(let i=0;i<5;i++){const x=10+R()*28,y=8+R()*14;g.strokeStyle='#6a5030';g.lineWidth=1;g.beginPath();g.moveTo(x,y+8);g.lineTo(x,64);g.stroke();g.fillStyle='#5a3a1e';g.beginPath();g.ellipse(x,y+4,2.2,5,0,0,7);g.fill()}}
+  const t=new THREE.CanvasTexture(c);t.anisotropy=4;return t;
+}
+// рослинність біля камери на мапі: видно, коли наблизити; перебудовується, коли камера відходить
+function makeCover(SE){
+  const geo=crossGeo(),g=new THREE.Group(),sm=GL.small;
+  const mk=(kind,cap,amp)=>{const mat=new THREE.MeshLambertMaterial({map:coverTex(kind,SE),alphaTest:.42});addWind(mat,amp,'cover');
+    const m=new THREE.InstancedMesh(geo,mat,cap);m.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(cap*3),3);m.count=0;m.frustumCulled=false;m.receiveShadow=true;g.add(m);return m};
+  return{g,grass:mk('grass',sm?7000:12000,.2),flower:SE.snow?null:mk('flower',sm?1500:2800,.24),bush:mk('bush',sm?900:1600,.06),reed:mk('reed',sm?1200:2000,.16),c:null};
+}
+function fillCover(C,cx,cy){
+  C.c={x:cx,y:cy};const RB=1320,st=GL.small?40:34,M=new THREE.Matrix4(),Q=new THREE.Quaternion(),E=new THREE.Euler(),Sv=new THREE.Vector3(),Pv=new THREE.Vector3(),col=new THREE.Color();
+  const nt=G.towns.filter(t=>Math.abs(t.x-cx)<RB+260&&Math.abs(t.y-cy)<RB+260),inTown=(x,y)=>nt.some(t=>Math.hypot(t.x-x,t.y-y)<TR(t)+8);
+  const cnt={grass:0,flower:0,bush:0,reed:0};let rnd=Math.random;
+  const put=(key,x,y,h,w,hh,tint)=>{const m=C[key];if(!m||cnt[key]>=m.instanceMatrix.count)return;E.set(0,rnd()*6.28,0);Q.setFromEuler(E);M.compose(Pv.set(x,h,y),Q,Sv.set(w,hh,w));m.setMatrixAt(cnt[key],M);col.setScalar(tint);m.setColorAt(cnt[key],col);cnt[key]++};
+  const i0=Math.floor((cx-RB)/st),i1=Math.ceil((cx+RB)/st),j0=Math.floor((cy-RB)/st),j1=Math.ceil((cy+RB)/st),cells=[];
+  for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const x0=i*st,y0=j*st,d=(x0-cx)**2+(y0-cy)**2;if(x0<0||y0<0||x0>=W||y0>=H||d>RB*RB)continue;cells.push([d,i,j])}
+  cells.sort((a,b)=>a[0]-b[0]);   // спершу найближче — якщо місця забракне, бракуватиме лише на далекому краю
+  for(const[,i,j]of cells){const x0=i*st,y0=j*st;
+    rnd=mulberry(((i*73856093)^(j*19349663)^(G.seed|0))>>>0);
+    for(let n=0;n<3;n++){const x=x0+rnd()*st,y=y0+rnd()*st,h=heightAt(x,y),tt=terAt(x,y);
+      if(tt===T_MOUNT||h>120||inTown(x,y)||WATERS.isSea(x,y))continue;
+      // очерет у мілкій воді й на самому березі
+      if(h>-.9&&h<1.25){if(rnd()<.55)put('reed',x,y,h-1,7+rnd()*5,11+rnd()*9,.85+rnd()*.3);continue}
+      if(tt===T_WATER||h<1.25||(tt===T_ROAD&&rnd()<.85))continue;
+      put('grass',x,y,h-.4,6+rnd()*5,5+rnd()*4.5,.8+rnd()*.35);
+      if(n===0&&rnd()<.3)put('flower',x+rnd()*8-4,y+rnd()*8-4,h-.4,6+rnd()*3,5+rnd()*3,.9+rnd()*.2);
+      if(n===0&&tt!==T_ROAD&&rnd()<(tt===T_FOREST?.28:.07)){const bh=8+rnd()*6;put('bush',x,y,h-.6,bh*1.35,bh,.8+rnd()*.3)}}}
+  for(const k in cnt){const m=C[k];if(!m)continue;m.count=cnt[k];m.instanceMatrix.needsUpdate=true;if(m.instanceColor)m.instanceColor.needsUpdate=true}
+}
 
 /* ================= полонені й вишкіл воїнів ================= */
 const PRIS_CAP=()=>Math.max(10,Math.floor(armyLimit()/2));
@@ -1365,6 +1483,55 @@ function prisonPanel(){
   <div class="rows">${rows||'<p class="muted">Полонених немає.</p>'}</div>
   <div class="acts">${total(P)?'<button class="btn ghost" data-a="prFree">Відпустити всіх</button>':''}<button class="btn gold" data-a="${CUR&&CUR.town&&CUR.tab?'backTown':'close'}">${CUR&&CUR.town&&CUR.tab?'До міста':'Закрити'}</button></div>`);
 }
+
+/* ================= риболовля ================= */
+const RODS=[{n:'Проста вудка',cost:80,k:1},{n:'Добра вудка',cost:220,k:1.5},{n:'Майстерна вудка',cost:520,k:2.2}];
+const FISHES=[{n:'Плітка',w:[.1,.4],p:30},{n:'Карась',w:[.2,.8],p:28},{n:'Окунь',w:[.2,1],p:22},{n:'Лящ',w:[.5,2.2],p:14},{n:'Щука',w:[1,5],p:9,big:1},{n:'Короп',w:[1.5,7],p:7,big:1},{n:'Сом',w:[6,30],p:1.5,big:1}];
+const hasRod=()=>G&&G.rod!=null&&G.rod>=0;
+function nearWater(){if(!G||terAt(G.x,G.y)===T_WATER)return false;for(const r of[35,70,110])for(let a=0;a<8;a++)if(terAt(G.x+Math.cos(a*.785)*r,G.y+Math.sin(a*.785)*r)===T_WATER)return true;return false}
+function rodSection(){const cur=G.rod??-1,nx=RODS[cur+1];
+  return `<div class="trainrow rodrow"><span><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 21 17 4M17 4c2 3 3 7 2 11"/></svg> <b>${cur>=0?RODS[cur].n:'Вудка'}</b> · ${cur>=0?'рибальте біля будь-якої річки чи озера':'купіть, щоб ловити рибу біля води'}</span>${nx?`<button class="btn sm gold" data-a="buyRod" ${G.gold>=nx.cost?'':'disabled'}>${cur>=0?'Краща — ':'Купити — '}${nx.n} · ${nx.cost}</button>`:'<small class="muted">найкраща вудка</small>'}</div>`}
+var FS={st:'idle',tm:null,log:[]};
+// очерет по краях водойми у вікні риболовлі
+const REEDS=(()=>{let s='';const R=mulberry(77);for(const side of[0,1])for(let i=0;i<16;i++){const x=side?100-R()*9:R()*9,h=40+R()*45,b=R()*6,c=['#5a7430','#6a8a3a','#87a24a','#4a6028'][i%4];
+  const tx=x+(R()-.5)*3;s+=`<path d="M${x} 100 Q${x+(R()-.5)*1.5} ${100-h*.6} ${tx} ${100-h}" stroke="${c}" stroke-width="${1.4+R()*1.2}" fill="none" vector-effect="non-scaling-stroke"/>`;if(R()<.35)s+=`<path d="M${tx} ${100-h+3} L${tx} ${100-h+11}" stroke="#5a3a1e" stroke-width="5" stroke-linecap="round" vector-effect="non-scaling-stroke"/>`}
+  return `<svg class="reeds" viewBox="0 0 100 100" preserveAspectRatio="none">${s}</svg>`})();
+function fishStopTimers(){clearTimeout(FS.tm);FS.tm=null;if(FS.st!=='idle'){FS.st='idle';fishView('Вудку згорнуто.')}}
+function fishPassMin(min){G.hour+=min/60;while(G.hour>=24){G.hour-=24;newDay()}}
+// чи добре клює: на світанку й увечері — краще, вдень і вночі — гірше
+const biteMul=()=>{const h=G.hour;return h>=4&&h<8||h>=18&&h<21?1.35:h>=22||h<4?.7:1};
+function rollFish(){const k=RODS[G.rod].k,ws=FISHES.map(f=>f.p*(f.big?1+(k-1)*1.3:1)),tot=ws.reduce((a,b)=>a+b,0);let r=Math.random()*tot,i=0;while(r>ws[i]){r-=ws[i];i++}
+  const f=FISHES[Math.min(i,FISHES.length-1)],w=f.w[0]+Math.pow(Math.random(),1.6)*(f.w[1]-f.w[0]);return{n:f.n,w:Math.round(w*10)/10,u:Math.max(1,Math.round(w/1.5))}}
+const FISH_IC='<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M3 12c3-4 7-5 11-4 2 .5 4 2 5 4-1 2-3 3.5-5 4-4 1-8 0-11-4z"/><path d="M19 12l3-3v6z"/><circle cx="7" cy="11" r=".8" fill="currentColor"/></svg>';
+function landFish(f){const st=bag().find(o=>o.fish===f.n),kg=String(f.w).replace('.',',');
+  if(!st&&!bagFree())return `${f.n}, ${kg} кг — але рюкзак повний, рибу відпущено.`;
+  if(st){st.n++;st.kg=Math.round((st.kg+f.w)*10)/10}else bag().push({fish:f.n,n:1,kg:f.w});G.spirit=Math.min(100,(G.spirit??80)+1);
+  FS.log.unshift(`${f.n} · ${kg} кг`);FS.log=FS.log.slice(0,6);return `Спіймали: ${f.n}, ${kg} кг! Поклали в рюкзак.`}
+function fishView(msg){
+  const pond=$('#pond'),m=$('#fMsg'),b=$('#fAct');if(!pond)return;pond.className='pond '+FS.st+(G.season===2?' ice':'');if(msg!=null)m.textContent=msg;
+  b.textContent=FS.st==='idle'?'Закинути вудку':FS.st==='bite'?'Підсікти!':'Чекаємо…';b.classList.toggle('red',FS.st==='bite');
+  $('#fLog').innerHTML=FS.log.length?'Улов: '+FS.log.map(esc).join(' · '):'Улов поки порожній.';$('#fCargo').textContent=`риби в рюкзаку ${bag().filter(o=>o.fish).reduce((a,o)=>a+o.n,0)} · рюкзак ${bag().length} з ${BAG_CAP}`;
+}
+function fishPanel(){
+  if(!hasRod()){toast('Потрібна вудка — купіть на ринку в місті.',true);return}
+  if(!nearWater()){toast('Підійдіть ближче до річки чи озера.',true);return}
+  FS.st='idle';CUR=null;G.target=null;G.path=null;
+  show(`<span class="eyebrow" style="color:var(--gold)">Риболовля · ${RODS[G.rod].n}</span><h2>Біля води</h2>
+  <div class="pond" id="pond">${REEDS}<i class="rp r1"></i><i class="rp r2"></i><i class="rp r3"></i><span class="ln"></span><span class="bob"><i></i></span><span class="splash"></span></div>
+  <p class="fmsg" id="fMsg">Закиньте вудку й чекайте. Коли поплавок пірне — швидко підсікайте!</p>
+  <div class="acts"><button class="btn gold" id="fAct" data-a="fishAct">Закинути вудку</button><button class="btn" data-a="fishHour">Сидіти годину</button><button class="btn ghost" data-a="fishStop">Згорнути вудку</button></div>
+  <p class="muted flog"><span id="fLog"></span><br><span id="fCargo"></span></p>`,'fish');fishView();
+}
+function fishAct(){
+  if(FS.st==='idle'){FS.st='wait';SFX.play('swing');fishPassMin(10);const k=RODS[G.rod].k,ice=G.season===2;
+    fishView(ice?'Закинули в ополонку. Тихо…':'Поплавок гойдається на воді…');
+    FS.tm=setTimeout(()=>{FS.st='bite';SFX.play('click');fishView('Клює! Підсікайте!');
+      FS.tm=setTimeout(()=>{FS.st='idle';fishView('Не встигли — риба зірвалась з гачка.')},Math.round(900*(.8+.25*k)))},Math.round((1500+Math.random()*3800)/(k*.7+.3)/biteMul()*(ice?1.4:1)));return}
+  if(FS.st==='wait'){clearTimeout(FS.tm);FS.st='idle';fishView('Зарано! Риба злякалась.');return}
+  if(FS.st==='bite'){clearTimeout(FS.tm);FS.st='idle';const msg=landFish(rollFish());SFX.play('loot');fishView(msg);save()}
+}
+function fishHour(){clearTimeout(FS.tm);FS.st='idle';fishPassMin(60);const k=RODS[G.rod].k,n=[0,1,2,3].filter(()=>Math.random()<.32*k*biteMul()*(G.season===2?.7:1)).length;
+  if(!n){fishView('За годину — жодної поклювки.');return}let last='';for(let i=0;i<n;i++)last=landFish(rollFish());SFX.play('loot');fishView(n>1?`За годину спіймали ${n} рибин. ${last}`:last);save()}
 
 /* ================= похідний табір ================= */
 // у таборі герой швидко одужує, поранені стають у стрій, піднімається дух і йде вишкіл; у дорозі все це повільніше
@@ -1524,7 +1691,7 @@ document.querySelectorAll('img.sbi[data-ic]').forEach(i=>i.src=UIART['ui_ic_'+i.
  document.addEventListener('pointerdown',e=>{const b=e.target.closest&&e.target.closest(P);if(!b||b.disabled)return;cur=b;t0=performance.now();b.classList.add('pressed')},true);
  ['pointerup','pointercancel','pointerleave'].forEach(n=>document.addEventListener(n,up,true));}
 function show(html,cls){sheet.className='sheet'+(cls?' '+cls:'');sheet.innerHTML=html;modal.hidden=false;uiOpen=true;sheet.scrollTop=0}
-function closeModal(){modal.hidden=true;uiOpen=false;CUR=null}
+function closeModal(){modal.hidden=true;uiOpen=false;CUR=null;if(typeof FS!=='undefined'&&FS.tm){clearTimeout(FS.tm);FS.tm=null;FS.st='idle'}}
 const TQ=[];let tBusy=false;
 function toast(msg,bad){if(TQ.some(q=>q[0]===msg))return;if(TQ.length>=5)TQ.splice(bad?0:0,1);TQ.push([msg,bad]);if(!tBusy)nextToast()}
 function nextToast(){const it=TQ.shift(),box=$('#toasts');if(!it){tBusy=false;return}tBusy=true;
@@ -1617,7 +1784,7 @@ function garrisonTab(t){
 }
 function marketTab(t){
   const m=bldOf(t).market||0,n=bag().length,sum=bag().reduce((a,o)=>a+marketPrice(o,t),0);
-  return goodsSection(t)+`<section class="mkbag frm"><div class="pic l" style="background-image:url(${UIART.ui_bag_l})"></div>
+  return rodSection()+goodsSection(t)+`<section class="mkbag frm"><div class="pic l" style="background-image:url(${UIART.ui_bag_l})"></div>
   <div class="mid"><h4><svg class="ic"><use href="#i-bag"/></svg>Речі з рюкзака <small>· ${n} з ${BAG_CAP}</small></h4>
   <p>Купці беруть речі з вашого рюкзака${m?`, ринок ${m}-го рівня платить на ${m*15}% більше`:''}.</p>
   ${n?`<div class="lrows">${bagRows(t)}</div><div class="bagall"><button class="btn gold" data-a="bagSellAll">Продати все · ${sum}</button></div>`:'<p class="empty">Рюкзак порожній. Трофеї з перемог кладіть у рюкзак, а тут продавайте.</p>'}</div>
@@ -1776,6 +1943,8 @@ const ACT={
   prFree:()=>{G.prisoners=zero();addFame(2);toast('Полонених відпущено. Про вашу милість говорять.');save();prisonPanel()},
   upg:v=>{const[w,k,b,n0]=v.split(':'),t=CUR.town,src=w==='g'?t.garrison:G.army,c=upgCost(k,b);if(!t||t.f!==0||upgNeed(t,b))return;const n=Math.min(+n0,src[k],Math.floor(G.gold/c));if(n<=0)return;
     src[k]-=n;src[b]=(src[b]||0)+n;G.gold-=n*c;SFX.play('coin');toast(`Вишколено: ${TYPES[k].n.toLowerCase()} → ${TYPES[b].n.toLowerCase()} ×${n}`);save();openTown(t,'train')},
+  buyRod:()=>{const nx=RODS[(G.rod??-1)+1];if(!nx||G.gold<nx.cost)return;G.gold-=nx.cost;G.rod=(G.rod??-1)+1;SFX.play('coin');toast(`Куплено: ${nx.n}. Рибальте біля річки чи озера.`);save();openTown(CUR.town,'market')},
+  fishAct:()=>fishAct(),fishHour:()=>fishHour(),fishStop:()=>{clearTimeout(FS.tm);FS.st='idle';closeModal()},
   rank:v=>{const k=+v,h=G.hero;initCamp();if(!h.ranks.includes(k)){if(G.gold<RANKS[k].cost)return;G.gold-=RANKS[k].cost;h.ranks.push(k);SFX.play('win')}else SFX.play('click');setRank(k);toast(`Ранг: ${RANKS[k].n}`);save();armyPanel()},
   trainHero:()=>{const c=trainCost(),h=G.hero;if(G.gold<c)return;G.gold-=c;h.lvl++;h.maxHp+=15;h.hp=Math.min(h.maxHp,h.hp+15);SFX.play('win');toast(`Наставник вишколив героя: рівень ${h.lvl}`);save();armyPanel()},
   gar:v=>{const[k,d]=v.split(':'),t=CUR.town;if(d==='in'&&G.army[k]>0){G.army[k]--;t.garrison[k]++}else if(d==='out'&&t.garrison[k]>0&&total(G.army)<armyLimit()){t.garrison[k]--;G.army[k]++}openTown(t,'garrison')},
@@ -1831,8 +2000,8 @@ const ACT={
   // що не влізло в рюкзак, лишається на полі бою
   lootDone:()=>{const L=CUR.loot||[];let n=0;while(L.length&&bagFree()){bag().push(L.shift());n++}if(n)toast(`У рюкзак покладено: ${n}`);if(L.length)toast(`Рюкзак повний: ${L.length} ${L.length>1?'речі лишились':'річ лишилась'} на полі бою.`,true);CUR.loot=[];save();closeModal()},
   bag:()=>bagPanel(),
-  bagWear:i=>{const o=bag()[+i];if(!o)return;bag().splice(+i,1);wear(o);save();CUR&&CUR.tab==='market'?openTown(CUR.town,'market'):bagPanel()},
-  bagDrop:i=>{bag().splice(+i,1);save();bagPanel()},
+  bagWear:i=>{const o=bag()[+i];if(!o||o.fish)return;bag().splice(+i,1);wear(o);save();CUR&&CUR.tab==='market'?openTown(CUR.town,'market'):bagPanel()},
+  bagDrop:i=>{bag().splice(+i,1);save();CUR&&CUR.tab==='market'?openTown(CUR.town,'market'):bagPanel()},
   bagSell:i=>{const o=bag()[+i],t=CUR.town;if(!o||!t)return;const pr=marketPrice(o,t);G.gold+=pr;bag().splice(+i,1);SFX.play('coin');toast(`Продано за ${pr}`);save();CUR.tab==='market'?openTown(t,'market'):bagPanel()},
   bagSellAll:()=>{const t=CUR.town;if(!t)return;const g=bag().reduce((s,o)=>s+marketPrice(o,t),0);G.gold+=g;G.bag=[];SFX.play('coin');toast(`Усе продано: +${g}`);save();CUR.tab==='market'?openTown(t,'market'):bagPanel()},
   help:()=>helpPanel(),
@@ -1884,6 +2053,7 @@ function helpPanel(){
   <p><b>Ранги й тренування.</b> У вікні «Армія» можна купити будь-який ранг героя — досвідченого, отамана чи елітного воїна — і перемикатися між купленими. Наставник за золото підвищує рівень героя.</p>
   <p><b>Данина.</b> Мирні жителі ваших міст, замків і сіл щомісяця платять по 1 монеті. З цих грошей утримують гарнізон (1 монета на солдата), а решта йде у вашу казну. Що більший гарнізон, то менше лишається вам, але місто краще захищене.</p>
   <p><b>Полонені й вишкіл.</b> Після перемоги частина переможених здається в полон, найчастіше слабкі ополченці й лучники. Полонених можна безкоштовно взяти на службу (вікно «Армія» чи результат бою) або залишити в гарнізоні свого міста. У своїх містах на вкладці «Вишкіл» воїнів за золото переводять у сильніші: ополченців — у шаблюки, сокирники чи лучники, лучників — у пищальники (потрібна кузня), шаблюк і сокирників — у кінноту (потрібна стайня).</p>
+  <p><b>Риболовля.</b> На ринку будь-якого міста купіть вудку (80 золотих), а згодом — кращу. Біля річки чи озера з'являється кнопка «Рибалити»: закиньте вудку, а коли поплавок пірне — швидко підсікайте. Найкраще клює на світанку й увечері. Риба йде в рюкзак (однакова риба — в одну стопку), а продати її можна на ринку будь-якого міста, у блоці «Речі з рюкзака».</p>
   <p><b>Торгівля.</b> На ринку міста купуйте товари там, де їх виробляють, і везіть туди, де їх потребують. Обоз більший, коли більше війська.</p>
   <p><b>Військо.</b> Ополченці зі списами б'ють далеко й вузько, шаблюки — широким махом і можуть зачепити двох, сокирники пробивають броню, лучники стріляють дугою, пищальники — рідко, але влучно й боляче, кіннота таранить з розгону. Щитоносці самі закриваються від ударів. У кожного воїна є <b>бойовий дух</b>: він падає від ран і смертей товаришів і росте поруч із героєм. Зламаний дух — воїн тікає з поля з білим прапорцем. Перемагає той, хто знищив або розігнав усе вороже військо.</p>
   <p><b>Міста.</b> У своїх містах будуйте житло, кузню, ринок і стайню у вкладці «Будівлі». Спорядження героя — кнопка зі шоломом ліворуч.</p>
@@ -1961,7 +2131,8 @@ function rollLoot(killed,c){
     if(!out.some(o=>o.slot===slot&&o.tier===tier))out.push({slot,tier})}
   return out;
 }
-const lootPrice=o=>Math.round(GEAR[o.slot].items[o.tier].cost*.4);
+const FISH_KG={'Плітка':6,'Карась':7,'Окунь':8,'Лящ':9,'Щука':12,'Короп':11,'Сом':10};
+const lootPrice=o=>o.fish?Math.round((FISH_KG[o.fish]||7)*o.kg+o.n):Math.round(GEAR[o.slot].items[o.tier].cost*.4);
 /* ================= рюкзак ================= */
 // речі з бою носимо з собою; продати можна на ринку в будь-якому місті, вдягнути — будь-коли
 const BAG_CAP=16;
@@ -1970,7 +2141,9 @@ const bagFree=()=>bag().length<BAG_CAP;
 // ринок у місті: що більше рівень ринку, то краща ціна
 const marketPrice=(o,t)=>Math.round(lootPrice(o)*(t?1+.15*(bldOf(t).market||0):1));
 function bagRows(sell){
-  return bag().map((o,i)=>{const S=GEAR[o.slot],it=S.items[o.tier],cur=gearLv(o.slot),better=o.tier>cur;
+  return bag().map((o,i)=>{if(o.fish)return `<div class="lr"><span class="lt" style="color:#9fd0e4">${FISH_IC}</span><span><b>${esc(o.fish)}${o.n>1?' × '+o.n:''}</b><span class="sub">Риба · ${String(Math.round(o.kg*10)/10).replace('.',',')} кг${sell?'':' · продайте на ринку'}</span></span>
+    <span class="lb">${sell?`<button class="qb all" data-a="bagSell" data-v="${i}">Продати · ${marketPrice(o,sell)}</button>`:`<button class="qb" data-a="bagDrop" data-v="${i}">Викинути</button>`}</span></div>`;
+    const S=GEAR[o.slot],it=S.items[o.tier],cur=gearLv(o.slot),better=o.tier>cur;
     return `<div class="lr"><span class="lt" style="color:${better?'var(--agl)':'var(--ash)'}"><svg class="ic"><use href="#i-${S.icon}"/></svg></span><span><b>${it.n}</b><span class="sub">${S.n} · ${S.fx(it)} · ${better?'<span style="color:var(--good)">краще за ваше</span>':o.tier===cur?'таке саме':'гірше за ваше'}</span></span>
     <span class="lb"><button class="qb ${better?'all':''}" data-a="bagWear" data-v="${i}">Вдягнути</button>${sell?`<button class="qb" data-a="bagSell" data-v="${i}">Продати · ${marketPrice(o,sell)}</button>`:`<button class="qb" data-a="bagDrop" data-v="${i}">Викинути</button>`}</span></div>`}).join('');
 }
@@ -2853,15 +3026,15 @@ function terrainMesh(w,h,cols,rows,hf,canvas,ox=0,oz=0){
 // ліс: кожне дерево — дві схрещені площини; весь ліс одним мешем
 function forestMesh(trees,SE,hf,scale=1){
   const imgs=makeTreeImgs(SE,false),atlas=document.createElement('canvas');atlas.width=256;atlas.height=84;const ag=atlas.getContext('2d');imgs.forEach((c,i)=>ag.drawImage(c,i*64,0));
-  const n=trees.length*8,P=new Float32Array(n*3),N=new Float32Array(n*3),U=new Float32Array(n*2),I=[];let v=0;
+  const n=trees.length*8,P=new Float32Array(n*3),N=new Float32Array(n*3),U=new Float32Array(n*2),WC=new Float32Array(n*2),I=[];let v=0;
   for(const t of trees){const w=t.s*3.4*scale,h=w*84/64,y0=hf(t.x,t.y)-2,u0=t.v/4+.002,u1=(t.v+1)/4-.002;
     for(const a of[.4,.4+Math.PI/2]){const dx=Math.cos(a)*w/2,dz=Math.sin(a)*w/2,b=v;
-      [[t.x-dx,y0,t.y-dz,u0,0],[t.x+dx,y0,t.y+dz,u1,0],[t.x+dx,y0+h,t.y+dz,u1,1],[t.x-dx,y0+h,t.y-dz,u0,1]].forEach(([x,y,z,uu,vv])=>{P.set([x,y,z],v*3);N.set([0,1,0],v*3);U.set([uu,vv],v*2);v++});
+      [[t.x-dx,y0,t.y-dz,u0,0],[t.x+dx,y0,t.y+dz,u1,0],[t.x+dx,y0+h,t.y+dz,u1,1],[t.x-dx,y0+h,t.y-dz,u0,1]].forEach(([x,y,z,uu,vv])=>{P.set([x,y,z],v*3);N.set([0,1,0],v*3);U.set([uu,vv],v*2);WC.set([t.x,t.y],v*2);v++});
       I.push(b,b+1,b+2,b,b+2,b+3)}}
-  const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.BufferAttribute(P,3));geo.setAttribute('normal',new THREE.BufferAttribute(N,3));geo.setAttribute('uv',new THREE.BufferAttribute(U,2));geo.setIndex(I);
+  const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.BufferAttribute(P,3));geo.setAttribute('normal',new THREE.BufferAttribute(N,3));geo.setAttribute('uv',new THREE.BufferAttribute(U,2));geo.setAttribute('wc',new THREE.BufferAttribute(WC,2));geo.setIndex(I);
   const tx=new THREE.CanvasTexture(atlas);
   const m=new THREE.Mesh(geo,new THREE.MeshLambertMaterial({map:tx,alphaTest:.5,side:THREE.DoubleSide}));m.castShadow=true;m.receiveShadow=true;
-  m.customDepthMaterial=new THREE.MeshDepthMaterial({depthPacking:THREE.RGBADepthPacking,map:tx,alphaTest:.5});return m;
+  m.customDepthMaterial=new THREE.MeshDepthMaterial({depthPacking:THREE.RGBADepthPacking,map:tx,alphaTest:.5});addWind(m.material,1.7*scale,'tree');addWind(m.customDepthMaterial,1.7*scale,'tree');return m;
 }
 // маленькі 3D-моделі міст: будинки, дахи, стіни, вежі, бані — усе з кількох інстансованих фігур
 function makeKit(cap){
@@ -3018,12 +3191,13 @@ function build3DMap(){
   const tm=terrainMesh(W,H,HMW-1,HMH-1,heightAt,terrain);addDetail(tm.material,grassDetail(SE),[W/110,H/110]);sc.add(tm);
   {const haze=new THREE.Color(SE.snow?'#dfe4e6':SE.g[1]).lerp(new THREE.Color(SE.sky),.35);sc.fog.color.copy(haze);sc.background=haze;
    // нескінченна рівнина за краєм світу, щоб у кадрі ніде не було порожнечі
-   const far=new THREE.Mesh(new THREE.PlaneGeometry(260000,260000,40,40).rotateX(-Math.PI/2),new THREE.MeshLambertMaterial({color:SE.snow?'#dfe4e6':SE.g[1]}));far.position.set(W/2,-10,H/2);sc.add(far)}
+   sc.add(ringPlane(-7800,-7800,W+7800,H+7800,-10,new THREE.MeshLambertMaterial({color:SE.snow?'#dfe4e6':SE.g[1]})))}
   const E=8000,sk=skirtFn(SE);sc.add(skirtMesh(E,sk,SE));sc.add(forestMesh(skirtTrees(E,sk),SE,(x,y)=>sk(x,y),.95));
-  GL.waterMats=[];const water=makeWater(WATERS.mask,0,0,W,H,-1.2,SE,1,14,W+2*8000);sc.add(water);
+  GL.waterMats=[];const water=makeWater(WATERS.mask,0,0,W,H,-1.2,SE,1,14,W+2*8000,WATERS.flow);sc.add(water);
   sc.add(forestMesh(TREES,SE,heightAt,.95));
+  const cover=makeCover(SE);sc.add(cover.g);
   const K=makeKit(9000);sc.add(K.group);const flags=buildTownModels(K,SE,heightAt);flags.forEach(f=>{sc.add(f.pole);sc.add(f.flag)});bridgeMeshes(K);
-  GL.map={sc,sun,tm,flags,figs:new Map(),K};
+  GL.map={sc,sun,tm,flags,figs:new Map(),K,cover};
 }
 function drawMap3D(dt){
   const M=GL.map;if(!M)return;
@@ -3050,6 +3224,7 @@ function drawMap3D(dt){
     const nx=G.path&&G.path[0];put('me',G.x,G.y,Math.min(heroRank(),2),'p',!!targetPos()&&!uiOpen,nx?nx.x-G.x:0,nx?nx.y-G.y:0,13);
   }
   for(const[k,F]of M.figs)if(!seen.has(k)){M.sc.remove(F.s);M.sc.remove(F.sh);M.figs.delete(k);const bt=M.boats&&M.boats.get(k);if(bt){M.sc.remove(bt);M.boats.delete(k)}}
+  if(M.cover){const on=v.d<2400;M.cover.g.visible=on;if(on&&(!M.cover.c||Math.hypot(cam.x-M.cover.c.x,cam.y-M.cover.c.y)>200))fillCover(M.cover,cam.x,cam.y);WIND.c.value.set(cam.x,0,cam.y)}
   syncCamp3D(M);tickWater();
   GL.r.render(M.sc,GL.cam);
   // накладка: маршрут, підписи міст і загонів з кольором фракції, ніч
@@ -3162,7 +3337,7 @@ function grassTufts(SE,count){
   const m=new THREE.InstancedMesh(geo,new THREE.MeshLambertMaterial({map:tx,alphaTest:.45}),count),M=new THREE.Matrix4(),Q=new THREE.Quaternion(),E=new THREE.Euler(),Sv=new THREE.Vector3(),Pv=new THREE.Vector3(),RR=mulberry(B.uid+31);
   let k=0;for(let i=0;i<count*2&&k<count;i++){const x=-250+RR()*(BW+500),y=-250+RR()*(BH+500);if(B.wall&&x>WALLX-20)continue;if(battleHeight(x,y)<GL.bh.WL+.6)continue;const sz=7+RR()*8;
     E.set(0,RR()*3,0);Q.setFromEuler(E);M.compose(Pv.set(x,battleHeight(x,y)-.5,y),Q,Sv.set(sz*1.5,sz,sz*1.5));m.setMatrixAt(k++,M)}
-  m.count=k;m.receiveShadow=true;return m;
+  m.count=k;m.receiveShadow=true;addWind(m.material,.18,'inst');return m;
 }
 // дерева з мапи навколо місця бою; поле лишаємо вільним
 function battleTrees(){
@@ -3180,10 +3355,10 @@ function build3DBattle(){
   const EW=BW+2*BEX,EH=BH+2*BEZ,T=GL.bh;
   const gm=terrainMesh(EW,EH,T.nx-1,T.nz-1,battleHeight,battleGroundTex(SE),-BEX,-BEZ);addDetail(gm.material,grassDetail(SE),[EW/70,EH/70]);sc.add(gm);
   // земля за краєм ділянки й вода — як на мапі
-  const outer=new THREE.Mesh(new THREE.PlaneGeometry(EW+9000,EH+9000).rotateX(-Math.PI/2),new THREE.MeshLambertMaterial({color:SE.snow?'#dfe4e6':SE.g[1]}));
-  const edgeH=(battleHeight(-BEX,BH/2)+battleHeight(BW+BEX,BH/2)+battleHeight(BW/2,-BEZ)+battleHeight(BW/2,BH+BEZ))/4;outer.position.set(BW/2,Math.min(edgeH,T.WL+1)-3,BH/2);outer.receiveShadow=true;sc.add(outer);
-  GL.waterMats=[];if(T.wet.some(v=>v)){const mk=waterMask(EW,EH,g=>{for(let j=0;j<T.nz;j++)for(let i=0;i<T.nx;i++)if(T.wet[j*T.nx+i]){g.beginPath();g.arc(i*BHS,j*BHS,BHS*.78,0,7);g.fill()}},1024);
-    sc.add(makeWater(mk,-BEX,-BEZ,EW,EH,T.WL+.35,SE,1.6,30))}
+  const edgeH=(battleHeight(-BEX,BH/2)+battleHeight(BW+BEX,BH/2)+battleHeight(BW/2,-BEZ)+battleHeight(BW/2,BH+BEZ))/4;
+  sc.add(ringPlane(-BEX+60,-BEZ+60,BW+BEX-60,BH+BEZ-60,Math.min(edgeH,T.WL+1)-3,new THREE.MeshLambertMaterial({color:SE.snow?'#dfe4e6':SE.g[1]})));
+  GL.waterMats=[];if(T.wet.some(v=>v)){const mk=waterMask(EW,EH,g=>{for(let j=0;j<T.nz;j++)for(let i=0;i<T.nx;i++)if(T.wet[j*T.nx+i]){g.beginPath();g.arc(i*BHS,j*BHS,BHS*.9,0,7);g.fill()}},1024,5);
+    sc.add(makeWater(mk,-BEX,-BEZ,EW,EH,T.WL+.35,SE,1.6,30,0,battleFlow()))}
   sc.add(forestMesh(battleTrees(),SE,battleHeight,1.6));
   if(!SE.snow)sc.add(grassTufts(SE,GL.small?1600:3200));
   // бій біля табору: частокіл довкола ваших воїнів (широкий прохід до ворога), намети й вогнище
@@ -3288,7 +3463,7 @@ function camTilt(d){const v=camView();v.pitch=clamp(v.pitch+d,scene==='battle'?.
 // верхній край кадру завжди дивиться в землю (кут огляду 40°), а здалеку камера ще більше нахиляється вниз
 const mapPitchMin=d=>.56+clamp((d-2500)/9000,0,1)*.32;
 function camRot(d){const v=camView();v.yaw+=d;if(scene==='battle')v.cyaw=v.yaw}
-function camZoom(f){const v=camView();v.d=clamp(v.d*f,scene==='battle'?380:650,scene==='battle'?3200:13500)}
+function camZoom(f){const v=camView();v.d=clamp(v.d*f,scene==='battle'?380:400,scene==='battle'?3200:13500)}
 
 /* ================= HUD ================= */
 let hudT=0;
@@ -3297,8 +3472,8 @@ function updateHud(){
     {const c=calOf(G.day,G.hour);$('#hDay').textContent=c.m[0].toUpperCase()+c.m.slice(1)+' '+c.y;$('#hDay').parentElement.title='День походу '+G.day}$('#hHour').textContent=clockOf(G.hour);
     $('#hGold').textContent=Math.floor(G.gold).toLocaleString('uk-UA');$('#hArmy').innerHTML=`${total(G.army)}<b>/${armyLimit()}</b>`;$('#hSky').setAttribute('href',G.hour<6||G.hour>=20?'#x-moon':'#x-sun');
     $('#hHp').style.width=Math.round(G.hero.hp/G.hero.maxHp*100)+'%';
-    $('#hLvl').textContent=G.hero.lvl;if(GL.overview){const k=G.towns.map(t=>t.f).join('')+FAC[0].name+FAC[0].color;if(k!==renderLegend.k){renderLegend.k=k;renderLegend()}}else if(!$('#legend').hidden)$('#legend').hidden=true;{const cc=$('#campCard');cc.hidden=!G.camp;$('#waitBtn').classList.toggle('on',!!G.camp);if(G.camp){if(!$('#ccIc').src)$('#ccIc').src=UIART.ui_ic_camp;$('#ccHp').style.width=Math.round(G.hero.hp/G.hero.maxHp*100)+'%';$('#ccW').textContent=total(G.wounded||{});$('#ccSp').style.width=Math.round(G.spirit)+'%';$('#ccDr').style.width=Math.round(G.drill)+'%'}}$('#bagN').textContent=G.bag&&G.bag.length?G.bag.length:'';$('#boatBtn').classList.toggle('on',G.sail!==false);$('#hTer').textContent=(terAt(G.x,G.y)===T_WATER?'Пливемо · '+BOAT_LV[G.boatLv||0].n.toLowerCase():TER_N[terAt(G.x,G.y)])+(G.target&&G.slope>.08?' · підйом':G.target&&G.slope<-.08?' · спуск':'')+' · '+SEASONS[G.season||0].n;$('#waitBtn').classList.toggle('on',!!G.waiting);
-  }else if(B){$('#campCard').hidden=true;$('#legend').hidden=true;
+    $('#hLvl').textContent=G.hero.lvl;{const fb=$('#fishBtn'),on=hasRod()&&!uiOpen&&nearWater();fb.hidden=!on;if(on)fb.style.bottom=G.camp?'calc(env(safe-area-inset-bottom,0px) + 74px)':''}if(GL.overview){const k=G.towns.map(t=>t.f).join('')+FAC[0].name+FAC[0].color;if(k!==renderLegend.k){renderLegend.k=k;renderLegend()}}else if(!$('#legend').hidden)$('#legend').hidden=true;{const cc=$('#campCard');cc.hidden=!G.camp;$('#waitBtn').classList.toggle('on',!!G.camp);if(G.camp){if(!$('#ccIc').src)$('#ccIc').src=UIART.ui_ic_camp;$('#ccHp').style.width=Math.round(G.hero.hp/G.hero.maxHp*100)+'%';$('#ccW').textContent=total(G.wounded||{});$('#ccSp').style.width=Math.round(G.spirit)+'%';$('#ccDr').style.width=Math.round(G.drill)+'%'}}$('#bagN').textContent=G.bag&&G.bag.length?G.bag.length:'';$('#boatBtn').classList.toggle('on',G.sail!==false);$('#hTer').textContent=(terAt(G.x,G.y)===T_WATER?'Пливемо · '+BOAT_LV[G.boatLv||0].n.toLowerCase():TER_N[terAt(G.x,G.y)])+(G.target&&G.slope>.08?' · підйом':G.target&&G.slope<-.08?' · спуск':'')+' · '+SEASONS[G.season||0].n;$('#waitBtn').classList.toggle('on',!!G.waiting);
+  }else if(B){$('#campCard').hidden=true;$('#fishBtn').hidden=true;$('#legend').hidden=true;
     let a=B.resA.length,b=B.resB.length;B.units.forEach(u=>{if(!u.hero)u.team?b++:a++});
     {let m=0,n=0;B.units.forEach(u=>{if(u.team===0&&!u.hero){m+=u.mor/u.morMax;n++}});const pm=n?Math.round(m/n*100):100;$('#bM').textContent=pm+'%';$('#bM').style.color=pm<35?'#e0675a':pm<60?'#e0aa3e':'#9fd17a'}
     $('#bA').textContent=a;$('#bB').textContent=b;$('#bHp').style.width=Math.max(0,Math.round(B.hero.hp/B.hero.maxHp*100))+'%';
@@ -3374,7 +3549,7 @@ $('#boatBtn').onclick=()=>{G.sail=G.sail===false;G.path=null;$('#boatBtn').class
   toast(G.sail?`Човни на воді (${BOAT_LV[G.boatLv||0].n}): перепливаємо річки й озера.`:'Човни на березі: через річки й озера не пройти.');if(!G.sail&&terAt(G.x,G.y)===T_WATER){const p=cellC(nearestPassable(cellAt(G.x,G.y)));G.x=p.x;G.y=p.y}};
 $('#ovBtn').onclick=()=>{GL.overview=!GL.overview;$('#ovBtn').classList.toggle('on',GL.overview);renderLegend();if(GL.overview){G.zoom=Math.max(VW/W,VH/H);cam.follow=false;cam.x=G.x;cam.y=G.y}else{cam.follow=true;G.zoom=Math.max(.35,G.zoom)}};
 $('#zc').onclick=()=>{cam.follow=true;VIEW.map.yaw=0};
-$('#waitBtn').onclick=toggleCamp;$('#campOff').onclick=toggleCamp;
+$('#waitBtn').onclick=toggleCamp;$('#fishBtn').onclick=()=>{SFX.init();fishPanel()};$('#campOff').onclick=toggleCamp;
 $('#heroBtn').onclick=()=>{if(!uiOpen)equipPanel()};
 $('#eqBtn').onclick=()=>equipPanel();
 $('#bagBtn').onclick=()=>{CUR={};bagPanel()};
@@ -3432,9 +3607,16 @@ function settingsPanel(){
 /* ================= save / loop / boot ================= */
 function save(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(G))}catch(e){}}
 function loadSave(){try{const s=localStorage.getItem(SAVE_KEY);if(s){const g=JSON.parse(s);if(g&&g.v===3&&g.towns)return g}}catch(e){}return null}
-let last=performance.now();
+let last=performance.now(),paused=false,wasMusic=false;
+// телефон заблоковано чи гру згорнуто: зберігаємо й зупиняємо все — час, бій, звук, музику
+function pauseGame(){if(paused||!G)return;paused=true;save();wasMusic=!BGM.paused;BGM.pause();try{SFX.ctx&&SFX.ctx.suspend()}catch(e){}fishStopTimers();$('#pauseOv').hidden=false}
+function resumeGame(){if(!paused)return;paused=false;last=performance.now();$('#pauseOv').hidden=true;try{SFX.ctx&&SFX.ctx.resume()}catch(e){}if(wasMusic&&musicOn)music(true)}
+document.addEventListener('visibilitychange',()=>{if(document.hidden)pauseGame()});
+addEventListener('pagehide',()=>{if(G){save();pauseGame()}});
+$('#pauseGo').onclick=resumeGame;
 function frame(now){
   const dt=Math.min(.05,(now-last)/1000);last=now;
+  if(paused){requestAnimationFrame(frame);return}
   if(G){
     const want3d=GL.ok&&(scene==='battle'?!!GL.bat:!GL.overview&&!!GL.map);if(GL.on!==want3d){GL.on=want3d;$('#gl').style.display=want3d?'block':'none'}
     if(scene==='battle'&&B){if(!B.over)bUpdate(dt);if(B)GL.bat?drawBattle3D(dt):drawBattle()}
