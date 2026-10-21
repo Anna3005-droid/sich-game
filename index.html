@@ -1098,7 +1098,7 @@ body.qlow .avv>video{display:none}
     <button class="hs round" data-t="lang" style="left:86.1%;top:2.6%;width:3.4%;height:6%" aria-label="Мова"></button>
     <button class="hs round" data-t="sound" style="left:90.6%;top:2.6%;width:3.4%;height:6%" aria-label="Звук"></button>
     <button class="hs round" data-t="music" style="left:95.1%;top:2.6%;width:3.4%;height:6%" aria-label="Музика"></button>
-    <div class="tver">Версія 21.10.14</div>
+    <div class="tver">Версія 21.10.15</div>
     <div class="tload" id="tload"><span id="tloadTxt">Завантаження…</span><i><b id="tbar"></b></i></div>
   </div>
 </div>
@@ -3199,7 +3199,7 @@ function helpPanel(){
   <p><b>Міста.</b> Наймайте воїнів, купуйте зброю в коваля, відпочивайте в таверні. Перейменувати можна лише місто, яке ви завоювали.</p>
   <p><b>Бої.</b> На початку бою військо <b>чекає наказу</b>. Кнопка з людьми дає наказ усім (атака, стоять, за мною), картки загонів унизу — кожному загону окремо. Ви керуєте героєм: ліва половина екрана — джойстик, меч — удар, щит — блок, ривок — кидок уперед; усе це витрачає витривалість (синя смуга). Клавіатура: WASD, пробіл, Q, Shift.</p>
   <p><b>Облоги.</b> Біля ворожого міста чи замку ставте табір: збийте драбини (проходи на мур), збудуйте таран (виламує ворота), або моріть гарнізон голодом. Що краще підготовлений штурм, то слабші захисники на стінах.</p>
-  <p><b>Слава й дипломатія.</b> Перемоги додають славу і звання. Дарами покращуйте стосунки з князівствами, укладайте союзи (союзні лорди допомагають у бою), ідіть на службу за щоденну платню або проголосіть власне королівство.</p>
+  <p><b>Слава й дипломатія.</b> Перемоги додають славу, а звання героя росте з рівнем. Дарами покращуйте стосунки з князівствами, укладайте союзи (союзні лорди допомагають у бою), ідіть на службу за щоденну платню або проголосіть власне королівство.</p>
   <p><b>Табір.</b> Кнопка з наметом ліворуч ставить табір будь-де на мапі (не на воді й не біля міста). У таборі час іде сам: герой одужує, поранені стають у стрій, піднімається бойовий дух і йде вишкіл. Якщо нападуть — б'єтеся за частоколом, вороги слабші. Торкніться мапи, щоб рушити далі. У своїх містах відпочинок безкоштовний, у чужих — 10 золотих.</p>
   <p><b>Звання й сила героя.</b> Герой росте сам: з рівнем 4 стає досвідченим воїном, з рівнем 10 — гетьманом. За кожен рівень — ${PTS_LV} очки: у вікні «Армія» кладіть їх у життя, силу, швидкість чи лідерство (більший загін і бойовий дух). Наставник за золото дає ще рівень.</p>
   <p><b>Данина.</b> Мирні жителі ваших міст, замків і сіл щомісяця платять по 1 монеті. З цих грошей утримують гарнізон (1 монета на солдата), а решта йде у вашу казну. Що більший гарнізон, то менше лишається вам, але місто краще захищене.</p>
@@ -3353,7 +3353,6 @@ const relCol=r=>r<-10?'var(--blood)':r<20?'var(--ash)':'var(--good)';
 function addFame(n,why){initDiplo();G.fame=Math.max(0,G.fame+n);if(n>=5&&why)toast(`Слава +${n}: ${why}`)}
 function addRel(f,n){initDiplo();if(!AIF.includes(f))return;G.rel[f]=clamp(G.rel[f]+n,-100,100)}
 const isFriend=f=>AIF.includes(f)&&(G.ally&&G.ally[f]||G.liege===f);
-const fameTitle=()=>{const f=G.fame||0;return f>=400?'Гетьман':f>=200?'Полковник':f>=100?'Сотник':f>=40?'Курінний':'Козак'};
 function canKingdom(){const own=G.towns.filter(t=>t.f===0);return !G.kingdom&&(G.fame||0)>=200&&own.length>=3&&own.some(t=>t.type!=='village')}
 function diplomacyPanel(){
   initDiplo();
@@ -3373,8 +3372,8 @@ function diplomacyPanel(){
       <span class="pill" style="color:${stc}">${st}</span><div class="dacts">${acts}</div></div>`}).join('');
   const own=G.towns.filter(t=>t.f===0);
   show(`<span class="eyebrow" style="color:var(--gold)">${G.kingdom?esc(G.kingdom):'Козак-одинак'}${G.liege?' · на службі: '+FAC[G.liege].name:''}</span><h2>Дипломатія</h2>
-  <div class="stats"><div class="stat"><small>Слава</small><b>${G.fame}</b></div><div class="stat"><small>Звання</small><b style="font-size:16px">${fameTitle()}</b></div><div class="stat"><small>Володіння</small><b>${own.length}</b></div></div>
-  <p class="muted">Слава росте від перемог і завоювань. Дари покращують стосунки. Союзники приєднуються до ваших боїв, якщо їхній лорд поруч. На службі вам платять щодня, але ви воюєте з ворогами сюзерена.</p>
+  <div class="stats"><div class="stat"><small>Слава</small><b>${G.fame}</b></div><div class="stat"><small>Звання</small><b style="font-size:16px">${RANKS[heroRank()].n}</b></div><div class="stat"><small>Володіння</small><b>${own.length}</b></div></div>
+  <p class="muted">Слава росте від перемог і завоювань, а звання — з рівнем героя. Дари покращують стосунки. Союзники приєднуються до ваших боїв, якщо їхній лорд поруч. На службі вам платять щодня, але ви воюєте з ворогами сюзерена.</p>
   <div class="rows">${rows}</div>
   ${G.kingdom?'':`<div class="kbox"><div><b>Власне королівство</b><span class="sub">Потрібно: слава 200+, 3 володіння, серед них місто чи замок. Дає +20% доходу, +10 до загону і свій прапор.</span></div><button class="btn gold" data-a="kingdom" ${canKingdom()?'':'disabled'}>Проголосити</button></div>`}
   <h3>Ваші володіння · ${own.length}</h3><div class="rows">${own.map(t=>`<div class="row"><span><b>${esc(t.name)}</b><span class="sub">${TYPE_N[t.type]} · гарнізон ${total(t.garrison)}</span></span><span>+${townIncome(t)}</span><button class="btn sm" data-a="renameT" data-v="${t.id}">Перейменувати</button></div>`).join('')||'<p class="muted">Поки немає. Захопіть місто, замок чи село, щоб отримувати дохід.</p>'}</div>
