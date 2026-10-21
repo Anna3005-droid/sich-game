@@ -887,6 +887,7 @@ body.advon .legend{top:calc(env(safe-area-inset-top,0px) + 74px)}
 .tutgoal.onmap{top:calc(env(safe-area-inset-top,0px) + 74px);right:max(10px,env(safe-area-inset-right,0px))}
 .tutgoal.bat,.tutgoal.mod{top:calc(env(safe-area-inset-top,0px) + 6px);left:50%;transform:translateX(-50%)}
 #tutRings{position:fixed;inset:0;z-index:47;pointer-events:none}
+#advRing{z-index:47;pointer-events:none}#advRing[hidden]{display:none}
 .tring{position:fixed;display:block;border:3px solid var(--agl);border-radius:12px;box-shadow:0 0 0 2px rgba(0,0,0,.5),0 0 18px 4px rgba(236,199,126,.6);animation:tring 1.1s ease-in-out infinite}
 .tring.round{border-radius:50%}
 .tring.pt{border-width:3px;background:radial-gradient(closest-side,rgba(236,199,126,.22),transparent)}
@@ -1006,6 +1007,7 @@ body.advon .legend{top:calc(env(safe-area-inset-top,0px) + 74px)}
 <button class="advbtn" id="advBtn" hidden aria-label="Радник" title="Радник"><img alt=""></button>
 <div class="advtip hide" id="advTip" hidden role="status" aria-live="polite"><img class="atf" id="advFace" alt="Радник"><div class="atb"><b class="atn">Радник</b><p id="advTxt"></p><div class="ata"><button class="btn sm gold" id="advOk">Зрозуміло</button></div></div><button class="atx" id="advX" aria-label="Закрити">✕</button></div>
 <div class="advdlg" id="advDlg" hidden></div>
+<i class="tring round" id="advRing" hidden></i>
 <div class="tutbox" id="tutBox" hidden role="status" aria-live="polite"><img class="tf" id="tutFace" alt=""><div class="tbd"><b class="tn">Радник</b><p id="tutTxt"></p><ul class="topts" id="tutOpts"></ul><div class="tkeys" id="tutKeys"></div><div class="tgoal" id="tutGoalIn"></div><div class="tacts" id="tutActs"></div></div><button class="atx" id="tutX" aria-label="Згорнути">✕</button></div>
 <button class="tutgoal" id="tutGoal" hidden><img alt=""><span></span></button>
 <div id="tutRings"></div>
@@ -1053,7 +1055,7 @@ body.advon .legend{top:calc(env(safe-area-inset-top,0px) + 74px)}
     <button class="hs round" data-t="lang" style="left:86.1%;top:2.6%;width:3.4%;height:6%" aria-label="Мова"></button>
     <button class="hs round" data-t="sound" style="left:90.6%;top:2.6%;width:3.4%;height:6%" aria-label="Звук"></button>
     <button class="hs round" data-t="music" style="left:95.1%;top:2.6%;width:3.4%;height:6%" aria-label="Музика"></button>
-    <div class="tver">Версія 21.10.7 · Голос Радника</div>
+    <div class="tver">Версія 21.10.8</div>
     <div class="tload" id="tload"><span id="tloadTxt">Завантаження…</span><i><b id="tbar"></b></i></div>
   </div>
 </div>
@@ -2593,6 +2595,7 @@ const ADVT={
   listen:'Слухаю, козаче. Що підказати?',
   gold:'Є кілька шляхів, козаче. Бий посильні загони розбійників, забирай трофеї та продавай їх на ринку. Купуй товари там, де дешевше, а вези туди, де дорожче. Можна й риби наловити. Та платню війську завжди тримай у голові — великий загін потребує чимало золота.',
   defeat:'Нуу... не падай духом. Зараз головне — відновити сили й зрозуміти, де помилилися. Наступного разу підготуємося краще.',
+  lost:'Загубив себе на мапі? Буває! Натисни кнопку повернення камери до загону. Бо шукати тебе по всіх лісах я вже трохи застарий.',
   joke:'Ну що, козаче, знову по пораду? Та ти й сам уже непогано даєш собі раду!',
 };
 // обличчя: 0 усмішка · 1 серйозний · 2 сміється · 3 здивування · 4 думає · 5 підморгує
@@ -2644,7 +2647,9 @@ function advCheck(){const A=advSt();
 function advTick(now){if(!G)return;const A=advSt(),onMap=scene==='map'&&!$('#hud').hidden&&$('#title').hidden;if(uiOpen&&!$('#advDlg').hidden)advDlgClose();
   const bt=$('#advBtn'),btOn=onMap&&A.met&&!(ADV.cur&&ADV.cur.id==='meet');if(bt.hidden===btOn){bt.hidden=!btOn;document.body.classList.toggle('advon',btOn);if(btOn&&!bt.firstChild.src)bt.firstChild.src=UIART.ui_av_ic}
   if(ADV.ring&&btOn&&!uiOpen){ADV.ring=false;bt.classList.remove('fresh');void bt.offsetWidth;bt.classList.add('fresh')}
-  if(tutOn()){ADV.q.length=0;if(ADV.cur)advHide();return}
+  advRingDraw();advLost(now,onMap,A);
+  if(ADV.cur&&ADV.cur.id==='lost'&&cam.follow)advHide();   // повернув камеру — порада вже не потрібна
+  if(tutOn()){ADV.q.length=0;if(ADV.cur&&(!ADV.cur.tut||!onMap||now>ADV.until))advHide();return}
   if(!onMap){if(ADV.cur)advHide();if(!$('#advDlg').hidden)advDlgClose();return}
   if(ADV.cur){if(now>ADV.until||(AL.cur&&!ADV.cur.keep))advHide();return}   // воєнна тривога важливіша за пораду
   if(now<ADV.next)return;
@@ -2654,6 +2659,15 @@ function advTick(now){if(!G)return;const A=advSt(),onMap=scene==='map'&&!$('#hud
   ADV.q=ADV.q.filter(t=>!t.exp||now<t.exp);
   const i=ADV.q.findIndex(t=>(t.when?t.when():!uiOpen)&&(t.ev||advNow()-A.any>=6));if(i<0)return;
   const t=ADV.q.splice(i,1)[0];if(t.ok&&!t.ok())return;advShow(t)}
+// загубив загін з очей (мапу відтягнули далеко) — підказати кнопку повернення камери; і під час навчання теж
+function advLost(now,onMap,A){if(!onMap||uiOpen||cam.follow||!A.met||(A.lostN||0)>=3||ADV.cur||!$('#advDlg').hidden){ADV.offT=0;return}
+  const q=GL.on?proj(G.x,G.y,heightAt(G.x,G.y)+10):{x:(G.x-cam.x)*G.zoom+VW/2,y:(G.y-cam.y)*G.zoom+VH/2,ok:true};
+  if(q.ok&&q.x>=0&&q.x<=VW&&q.y>=0&&q.y<=VH){ADV.offT=0;return}
+  if(!ADV.offT)ADV.offT=now;if(now-ADV.offT<4000||now<(ADV.lostAt||0))return;
+  ADV.offT=0;ADV.lostAt=now+180000;A.lostN=(A.lostN||0)+1;advShow({id:'lost',txt:ADVT.lost,face:5,rep:true,tut:true,v:'lost',ring:'#zc'})}
+// кільце довкола кнопки, про яку говорить порада
+function advRingDraw(){const r=$('#advRing'),t=ADV.cur&&ADV.cur.ring&&document.querySelector(ADV.cur.ring);if(!t||!t.getClientRects().length){if(!r.hidden)r.hidden=true;return}
+  const b=t.getBoundingClientRect();r.hidden=false;r.style.cssText=`left:${b.left-6}px;top:${b.top-6}px;width:${b.width+12}px;height:${b.height+12}px`}
 // що радник сказав би просто зараз — для кнопки виклику
 function advCurrent(){const N=total(G.army),Wd=total(G.wounded||{});
   {const t=G.towns.find(t=>t.f===0&&dist(t,G)<TR(t)+900&&garWeak(t));if(t)return ADVT.weak(t)}
@@ -2728,6 +2742,7 @@ const tutSafe=t=>!(t.f>0&&G.war[t.f]);
 const TUTS={
   start:{w:'map',say:'Оце по-нашому! Почнемо потроху. Спершу роздивимось землю, а тоді й шаблі знайдеться робота.',next:'Далі',face:2,v:'start'},
   move:{w:'map',say:'Ось наші землі: поселення, дороги, ліси та річки. Натисни на вільне місце — загін рушить туди. А тепер спробуй дійти до позначки.',goal:'Дійди до позначеного місця',ring:()=>[{pt:G.tut.pt}],btn:'Гаразд',v:'move'},
+  arrived:{w:'map',say:'От і добре! Ніхто не загубився, усі ноги на місці. Дорогою йти швидше, а в болоті можна й постоли залишити — там рухаємося повільніше.',goal:'Глянь, якою місцевістю йдеш',ring:()=>[$('#hTer')&&$('#hTer').parentElement],next:'Далі',face:2,v:'arrived'},
   time:{w:'map',say:'Поки стоїмо на мапі — час чекає разом із нами. Рушили або стали на відпочинок — день пішов. Тож за годинником теж поглядай.',goal:'Глянь на годинник',ring:()=>[$('#hHour')&&$('#hHour').parentElement],next:'Далі',face:4,v:'time'},
   bandit:{w:'map',say:'Он розбійники біля шляху! Небагато їх, нам до снаги. Натисни на загін — підійдемо ближче.',goal:'Підійди до розбійників',ring:()=>{const p=tutParty();return p?[{pt:p,r:32}]:[]},btn:'Гаразд',face:5,v:'bandit'},
   enc1:{w:'modal',say:'Поглянь, скільки нас і скільки їх. Та сама кількість ще не все — важливо, які воїни в загоні.',goal:'Роздивися ворога',ring:()=>['.eus','.ecmp'],next:'Далі',face:4},
@@ -2789,7 +2804,7 @@ function tutInit(){const pt=tutSpot(G.x,G.y,260,340)||{x:G.x+200,y:G.y};G.tut={s
 function tutRestore(){const T=G.tut;if(!T||T.done)return;
   if(/^(enc|b_)/.test(T.st))T.st='bandit';
   if(/^(v_|t_)/.test(T.st))T.st='town';
-  if(['meet','start','move','time','bandit','lose','fled'].includes(T.st)&&!tutParty())tutSpawnBandits(['meet','start','move'].includes(T.st)?T.pt:{x:G.x,y:G.y},T.st==='lose'||T.st==='fled');
+  if(['meet','start','move','arrived','time','bandit','lose','fled'].includes(T.st)&&!tutParty())tutSpawnBandits(['meet','start','move'].includes(T.st)?T.pt:{x:G.x,y:G.y},T.st==='lose'||T.st==='fled');
   if(T.st==='town'&&!tutTown())T.town=tutPickTown();
   TUT.open=true;TUT.shown='';TUT.frame=1}
 // запам'ятати стан перед навчальним боєм: повтор не дасть ні золота, ні досвіду понад перший раз
@@ -2811,11 +2826,11 @@ function tutAfterBattle(c,r,nLoot,nPris){
 const tutVNext=()=>{const T=G.tut,s=T.st;const seq=['v_win',...(T.vl?['v_loot']:[]),...(T.vp?['v_pris']:[]),'v_stats','v_close'];const i=seq.indexOf(s);tutGo(seq[i+1]||'town')};
 function tutNext(){const s=tutSt(),d=TUTS[s];if(!d)return;
   if(d.end){tutEnd(false,true);return}
-  if(s==='b_intro')tutGo('b_move');else if(s==='start')tutGo('move');else if(s==='time')tutGo('bandit');else if(s==='enc1')tutGo('enc2');else if(s.startsWith('v_'))tutVNext();else if(s==='t_sell')tutGo('t_hire');else if(s==='t_rest2')tutGo('final')}
+  if(s==='b_intro')tutGo('b_move');else if(s==='arrived')tutGo('time');else if(s==='start')tutGo('move');else if(s==='time')tutGo('bandit');else if(s==='enc1')tutGo('enc2');else if(s.startsWith('v_'))tutVNext();else if(s==='t_sell')tutGo('t_hire');else if(s==='t_rest2')tutGo('final')}
 // чи виконано крок — перевіряємо щокадру за станом гри, а не за закриттям репліки
 function tutCheck(){const s=tutSt(),T=G.tut;
   if(s==='meet'){if(scene==='map'&&!uiOpen&&$('#title').hidden)tutMeet('tut');return}
-  if(s==='move'){if(Math.hypot(G.x-T.pt.x,G.y-T.pt.y)<55){G.target=null;G.path=null;tutGo('time')}return}
+  if(s==='move'){if(Math.hypot(G.x-T.pt.x,G.y-T.pt.y)<55){G.target=null;G.path=null;tutGo('arrived')}return}
   if(s==='bandit'&&!tutParty()){tutSpawnBandits({x:G.x,y:G.y});return}
   if((s==='enc1'||s==='enc2')&&!uiOpen&&scene==='map'){tutGo('bandit');return}
   if(B&&B.tut){const h=B.hero;
@@ -2859,7 +2874,7 @@ function tutTargets(){const s=tutSt(),d=TUTS[s];if(!d||!d.ring)return[];const ou
       if(!q.ok)continue;out.push({x:q.x-30,y:q.y-18,w:60,h:36,round:true,pt:true})}}
   return out}
 function tutDraw(off){const box=$('#tutBox'),chip=$('#tutGoal'),RG=$('#tutRings');
-  const s=off?'':tutSt(),d=TUTS[s],here=!!d&&tutWhere(d.w)&&!(scene==='map'&&!$('#advDlg').hidden);
+  const s=off?'':tutSt(),d=TUTS[s],here=!!d&&tutWhere(d.w)&&!(scene==='map'&&!$('#advDlg').hidden)&&!(ADV.cur&&ADV.cur.tut);
   if(!here){box.hidden=true;chip.hidden=true;RG.replaceChildren();return}
   tutRender();
   const tg=tutTargets();
@@ -2918,7 +2933,7 @@ const ACT={
   rest:()=>{const t=CUR.town,free=t&&t.f===0;if(!free&&G.gold<10){toast('Не вистачає золота.',true);return}if(!free)G.gold-=10;G.hero.hp=G.hero.maxHp;healAll();G.spirit=Math.max(G.spirit,90);G.hour+=8;while(G.hour>=24){G.hour-=24;newDay()}toast(free?'Відпочили у своєму місті безкоштовно: усі здорові.':'Відпочили в корчмі: герой і поранені здорові.');openTown(t,'dev')},
   prisoners:()=>prisonPanel(),
   xclose:()=>xClose(),
-  tutStart:()=>{SFX.play('advPick');closeModal();voxPre('start','move','time','bandit');tutGo('start')},tutSkip:()=>{SFX.play('advOk');closeModal();tutEnd(true)},advGo:()=>{SFX.play('advOk');closeModal()},
+  tutStart:()=>{SFX.play('advPick');closeModal();voxPre('start','move','arrived','time','bandit');tutGo('start')},tutSkip:()=>{SFX.play('advOk');closeModal();tutEnd(true)},advGo:()=>{SFX.play('advOk');closeModal()},
   found:()=>foundPanel(),fdType:v=>{FD.name=($('#foundName')||{}).value||FD.name;FD.type=v;foundPanel()},
   cNew:()=>campaignPanel(true),armyBack:()=>armyPanel(),
   cSel:v=>{const[k,d]=v.split(':');CAMP.sel[k]=d==='all'?(CAMP.sel[k]===G.army[k]?0:G.army[k]):clamp((CAMP.sel[k]||0)+(+d),0,G.army[k]);campaignPanel()},
