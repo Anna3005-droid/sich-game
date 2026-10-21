@@ -999,7 +999,7 @@ body.advon .legend{top:calc(env(safe-area-inset-top,0px) + 74px)}
     <button class="hs round" data-t="lang" style="left:86.1%;top:2.6%;width:3.4%;height:6%" aria-label="Мова"></button>
     <button class="hs round" data-t="sound" style="left:90.6%;top:2.6%;width:3.4%;height:6%" aria-label="Звук"></button>
     <button class="hs round" data-t="music" style="left:95.1%;top:2.6%;width:3.4%;height:6%" aria-label="Музика"></button>
-    <div class="tver">Версія 21.10.2 · Радник</div>
+    <div class="tver">Версія 21.10.3 · Радник</div>
     <div class="tload" id="tload"><span id="tloadTxt">Завантаження…</span><i><b id="tbar"></b></i></div>
   </div>
 </div>
@@ -2530,7 +2530,7 @@ const ADVT={
   rank:'Оце так! Ростеш, козаче! Скоро вже сам старих отаманів учитимеш. Тільки дивись, щоб від слави голова не закрутилася!',
   campaign:'Тепер ти не лише сам воюєш, а й інших у похід посилаєш! Добре це діло. Тільки отамана обирай розумного, бо не кожен доведе хлопців до перемоги.',
   found:'Ого, козаче! Власне поселення заснував! Колись тут вітер гуляв, а тепер люди житимуть. Дивись, може, ще й велике місто виросте!',
-  meet2:'Звати мене дід Охрім, а хлопці кличуть просто Радником. Сорок літ у сідлі — від Січі до самого Криму! Тепер буду при тобі: побачу, що щось не так, — підкажу. А захочеш поради сам — клич мене й питай про золото, військо, міста, рибу чи нові землі.',
+  meet2:'Звати мене дід Петро, а хлопці кличуть просто Радником. Сорок літ у сідлі — від Січі до самого Криму! Тепер буду при тобі: побачу, що щось не так, — підкажу. А захочеш поради сам — клич мене й питай про золото, військо, міста, рибу чи нові землі.',
   joke:'Ну що, козаче, знову по пораду? Та ти й сам уже непогано даєш собі раду!',
 };
 // обличчя: 0 усмішка · 1 серйозний · 2 сміється · 3 здивування · 4 думає · 5 підморгує
@@ -2638,7 +2638,7 @@ function advDlg(sel){const el=$('#advDlg');ADV.sel=sel;if(ADV.cur)advHide();
 function advDlgClose(){const el=$('#advDlg');el.hidden=true;el.innerHTML='';ADV.greet=null}
 // перша зустріч після бою: велике вікно посередині, радник говорить (відео), дві сторінки — привітання й хто він такий
 function advMeet(pg){ADV.ring=true;
-  show(`<div class="amw"><div class="amv" style="background-image:url(${UIART.ui_av_vt})"><video poster="${UIART.ui_av_vt}" autoplay muted loop playsinline preload="auto"><source src="assets/adv_talk.webm" type="video/webm"><source src="assets/adv_talk.mp4" type="video/mp4"></video><i class="amc tl"></i><i class="amc tr"></i><i class="amc bl"></i><i class="amc br"></i><span class="amn">${pg?'Дід Охрім':'Радник'}</span></div>
+  show(`<div class="amw"><div class="amv" style="background-image:url(${UIART.ui_av_vt})"><video poster="${UIART.ui_av_vt}" autoplay muted loop playsinline preload="auto"><source src="assets/adv_talk.webm" type="video/webm"><source src="assets/adv_talk.mp4" type="video/mp4"></video><i class="amc tl"></i><i class="amc tr"></i><i class="amc bl"></i><i class="amc br"></i><span class="amn">${pg?'Дід Петро':'Радник'}</span></div>
   <div class="amm"><div class="vhead"><img class="vl" src="${UIART.ui_w_laur}" alt=""><h2>Радник</h2><img class="vl r" src="${UIART.ui_w_laur}" alt=""></div>
   <p class="amsub">${pg?'Старий запорожець, тепер — ваш порадник':'Після бою до вас підходить старий козак'}</p>
   <div class="amt"><p id="amTxt"></p>${pg?`<div class="amhint"><img src="${UIART.ui_av_ic}" alt=""><span>Мій портрет — праворуч угорі на мапі. Натисни, коли потрібна допомога.</span></div>`:''}</div>
