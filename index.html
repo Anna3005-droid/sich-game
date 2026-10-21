@@ -2471,8 +2471,7 @@ function drawMap(){
   if(terrainShade)ctx.drawImage(terrainShade,0,0,W,H);
   // маршрут, прокладений в обхід перешкод
   const tp=targetPos();
-  if(tp){const pts=G.path&&G.path.length?G.path:[tp];ctx.strokeStyle='rgba(255,243,209,.75)';ctx.lineWidth=2.5/z;ctx.setLineDash([8/z,8/z]);ctx.beginPath();ctx.moveTo(G.x,G.y);pts.forEach(q=>ctx.lineTo(q.x,q.y));ctx.stroke();ctx.setLineDash([]);
-    if(G.target.kind==='pt'){const e=pts[pts.length-1];ctx.strokeStyle='#fff3d1';ctx.beginPath();ctx.arc(e.x,e.y,8,0,7);ctx.stroke()}}
+  if(tp&&G.target.kind==='pt'){ctx.save();ctx.translate(tp.x,tp.y);ctx.scale(1/z,1/z);destMark(0,0);ctx.restore()}
   // усе, що має висоту, малюємо від дальнього до ближнього: загін ховається за деревами й горами
   const hw=VW/2/z,hh=VH/2/z,x0=cam.x-hw-90,x1=cam.x+hw+90,y0=cam.y-hh-60,y1=cam.y+hh+160,vis=o=>o.x>x0&&o.x<x1&&o.y>y0&&o.y<y1,objs=[];
   for(const t of TREES)if(vis(t))objs.push([t.y,0,t]);
@@ -3009,10 +3008,8 @@ function drawMap3D(dt){
   // накладка: маршрут, підписи міст і загонів з кольором фракції, ніч
   ctx.setTransform(DPR,0,0,DPR,0,0);ctx.clearRect(0,0,VW,VH);
   const tp=targetPos();
-  if(tp){const pts=[{x:G.x,y:G.y},...(G.path&&G.path.length?G.path:[tp])];ctx.strokeStyle='rgba(255,243,209,.85)';ctx.lineWidth=2.5;ctx.setLineDash([7,7]);ctx.beginPath();
-    let first=true;for(let i=0;i<pts.length-1;i++){const a=pts[i],b=pts[i+1],n=Math.max(1,Math.ceil(Math.hypot(b.x-a.x,b.y-a.y)/40));
-      for(let k=0;k<=n;k++){const x=a.x+(b.x-a.x)*k/n,y=a.y+(b.y-a.y)*k/n,q=proj(x,y,Math.max(-3,heightAt(x,y))+3);if(!q.ok)continue;first?ctx.moveTo(q.x,q.y):ctx.lineTo(q.x,q.y);first=false}}
-    ctx.stroke();ctx.setLineDash([])}
+  // лише точка там, куди йде загін — без лінії шляху
+  if(tp&&G.target.kind==='pt'){const q=proj(tp.x,tp.y,Math.max(-3,heightAt(tp.x,tp.y))+1);if(q.ok)destMark(q.x,q.y)}
   const lab=(txt,x,y,h,col,big,own)=>{const q=proj(x,y,h);if(!q.ok||q.x<-100||q.x>VW+100||q.y<-40||q.y>VH+40)return;
     const fs=big?16:12;ctx.font=`700 ${fs}px 'Alegreya SC',Georgia,serif`;ctx.textAlign='center';const w=ctx.measureText(txt).width;
     ctx.lineJoin='round';ctx.lineWidth=3.2;ctx.strokeStyle='rgba(12,10,6,.85)';ctx.strokeText(txt,q.x+4,q.y);ctx.fillStyle=own?FAC[0].color:'#f6ecd0';ctx.fillText(txt,q.x+4,q.y);
@@ -3025,6 +3022,11 @@ function drawMap3D(dt){
   const na=nightA(G.hour);if(na>0){ctx.fillStyle=`rgba(12,18,45,${na})`;ctx.fillRect(0,0,VW,VH)}
   const cmp=$('#zc svg');if(cmp)cmp.style.transform=`rotate(${v.yaw}rad)`;
 }
+// позначка місця призначення: золота точка з легкою пульсацією
+function destMark(x,y){const t=performance.now()/600,r=7+Math.sin(t)*1.5;
+  ctx.fillStyle='rgba(0,0,0,.35)';ctx.beginPath();ctx.ellipse(x,y+1.5,r+3,(r+3)*.45,0,0,7);ctx.fill();
+  ctx.strokeStyle='rgba(255,233,170,.9)';ctx.lineWidth=1.6;ctx.beginPath();ctx.ellipse(x,y,r+3,(r+3)*.45,0,0,7);ctx.stroke();
+  ctx.fillStyle='#ecc77e';ctx.strokeStyle='#3a2a10';ctx.lineWidth=1.4;ctx.beginPath();ctx.arc(x,y,4,0,7);ctx.fill();ctx.stroke()}
 function pick3D(sx,sy){
   for(const t of G.towns){const q=proj(t.x,t.y,heightAt(t.x,t.y)+20);if(q.ok&&Math.hypot(q.x-sx,q.y-sy)<(t.type==='village'?36:52))return{town:t}}
   for(const p of G.parties){const q=proj(p.x,p.y,heightAt(p.x,p.y)+10);if(q.ok&&Math.hypot(q.x-sx,q.y-sy)<32)return{party:p}}
