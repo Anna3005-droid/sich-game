@@ -539,6 +539,21 @@ button,.hs{transition:transform .09s ease-out,filter .09s,box-shadow .12s}
 .trainrow{display:flex;align-items:center;gap:10px;justify-content:space-between;margin-top:10px;padding:8px 10px;border:1px solid var(--ag2);border-radius:4px;background:linear-gradient(90deg,#14243a,#0c1622)}
 .trainrow span{font-size:13px;color:#d7cdb6}.trainrow b{color:var(--agl);font-family:var(--f-head)}
 .campnote{margin:8px 0 0;padding:6px 10px;border-left:3px solid var(--ag);background:rgba(201,154,75,.1);font-size:13px;color:#e8dcc0}
+
+/* ===== солдати й мирні жителі в місті ===== */
+.tstrip{flex:none;display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;padding:6px max(12px,env(safe-area-inset-right,0px)) 6px max(12px,env(safe-area-inset-left,0px));background:linear-gradient(#0d1825,#0a131d);border-bottom:1px solid var(--ag2)}
+.chip{display:flex;align-items:center;gap:6px;padding:3px 10px;border:1px solid #2f3e52;border-radius:3px;background:#0b141f;color:inherit;font:inherit}
+.chip i{font-style:normal;font-size:11.5px;color:#b9b09c}
+.chip b{font-family:var(--f-head);font-size:16px;color:#f1e8d4;font-variant-numeric:tabular-nums}
+.chip small{font-size:11px;color:var(--c)}
+.chip .ic{width:16px;height:16px;color:var(--ag)}
+.chip.sol{border-color:var(--ag);background:linear-gradient(#2c2213,#17110a);cursor:pointer}
+.chip.sol b{color:var(--agl);font-size:19px}
+.chip.civ .ic{color:#9aa6b4}.chip.civ b{color:#cfd6de}
+.chip.ch{border-color:color-mix(in srgb,var(--c) 60%,#000)}.chip.ch b{color:var(--c);font-size:18px}
+.tnote{font-size:11.5px;color:#8f887a;margin-left:auto}
+.ecmp .epc{margin-left:auto;font-family:var(--f-body);font-size:13px;color:#cfc6b2}.ecmp .epc b{font-family:var(--f-head);font-size:17px}
+@media (orientation:landscape) and (max-height:520px){.tstrip{padding-top:4px;padding-bottom:4px}.chip{padding:2px 8px}.chip b{font-size:14px}.chip.sol b,.chip.ch b{font-size:15px}.tnote{display:none}}
 </style>
 
 <canvas id="gl"></canvas>
@@ -950,8 +965,8 @@ const SEASONS=[
   {n:'Весна',g:['#58803a','#6c8c42','#8f9452'],pa:['rgba(150,185,90,.18)','rgba(60,95,35,.16)'],st:['rgba(170,170,90,.16)','rgba(120,140,70,.15)'],fields:['#7a8a40','#8e9a45','#a0a85a','#6f7f3a'],
     leaf:[['#3f6a2a','#6a9a48'],['#4a7a32','#88b860']],pine:[['#1f3d24','#33583a'],['#2c5232','#46704a']],snow:0,sky:'#a2b6c2',water:'#1f5470'},
 ];
-// годинник з півгодинами: 20:00, 20:30, 21:00
-const clockOf=h=>{const hh=Math.floor(h)%24,mm=Math.floor((h-Math.floor(h))*2)*30;return String(hh).padStart(2,'0')+':'+(mm?'30':'00')};
+// годинник крокує по 10 хвилин: 20:00, 20:10, 20:20
+const clockOf=h=>{const hh=Math.floor(h)%24,mm=Math.floor((h-Math.floor(h))*6)*10;return String(hh).padStart(2,'0')+':'+String(mm).padStart(2,'0')};
 const seasonOf=d=>Math.floor((d-1)/10)%4;
 // календар: гра починається в червні 1648 року; пора року триває 10 днів, тож місяць — близько 3 днів
 const START_YEAR=1648,MONTHS=['червень','липень','серпень','вересень','жовтень','листопад','грудень','січень','лютий','березень','квітень','травень'];
@@ -1192,6 +1207,30 @@ function simulate(A,Bk,o={}){
   return{aWin:b.length===0&&a.length>0,aSurv:aS,bSurv:bS,heroHp:hero?Math.max(0,hero.hp):0};
 }
 
+/* ================= жителі й шанси ================= */
+// мирні жителі не воюють: їх просто видно в місті; кількість залежить від типу поселення й житла
+function popOf(t){if(!t.pop){const R=mulberry((G.seed||1)+t.id*13),base=t.type==='city'?6000:t.type==='castle'?600:300;t.pop=Math.round(base*(.7+R()*.8)/10)*10}return Math.round(t.pop*(1+.12*(bldOf(t).house||0))/10)*10}
+// шанс на перемогу: кілька прорахунків автобою з тими самими правилами, що й у грі
+const CH_CACHE=new Map();
+function winChance(enemy,bonusB){
+  const key=JSON.stringify([G.army,enemy,Math.round(G.hero.hp),G.hero.lvl,G.hero.rank,G.hero.weapon,G.hero.armor,Math.round(G.drill||0),Math.round(G.spirit??80),bonusB]);
+  if(CH_CACHE.has(key))return CH_CACHE.get(key);
+  if(!total(G.army)&&G.hero.hp<=0)return 0;let w=0;const N=24;
+  for(let i=0;i<N;i++){const r=simulate({...G.army},{...enemy},{hero:true,heroHp:G.hero.hp,bonusB,bonusA:pBonus()});if(r.aWin)w++}
+  const p=Math.round(w/N*100);if(CH_CACHE.size>200)CH_CACHE.clear();CH_CACHE.set(key,p);return p;
+}
+const townDefBonus=t=>t.type==='village'?.1:siegeBonus(siegeOf(t));
+const chanceCol=p=>p>=70?'var(--good)':p>=40?'var(--gold)':'var(--blood)';
+const chanceTxt=p=>p>=90?'майже певна перемога':p>=70?'добрі шанси':p>=40?'непевно':p>=15?'скоріше поразка':'майже певна поразка';
+// смужка під шапкою міста: солдати окремо від мирних жителів
+function townStrip(t){
+  const own=t.f===0,g=total(t.garrison);let ch='';
+  if(!own){const p=winChance(t.garrison,townDefBonus(t));ch=`<span class="chip ch" style="--c:${chanceCol(p)}"><i>Шанс на перемогу</i><b>${p}%</b><small>${chanceTxt(p)}</small></span>`}
+  return `<div class="tstrip"><button class="chip sol" data-a="tab" data-v="garrison"><svg class="ic"><use href="#i-swords"/></svg><i>${own?'Ваш гарнізон':'Солдати'}</i><b>${g}</b></button>
+    <span class="chip civ"><svg class="ic"><use href="#i-people"/></svg><i>Мирні жителі</i><b>${popOf(t).toLocaleString('uk-UA')}</b></span>${ch}
+    <span class="tnote">${own?(g?'Гарнізон боронить місто, коли вас немає.':'Місто без захисту — залиште воїнів у гарнізоні.'):'Б’ються лише солдати, мирні жителі у війні не беруть участі.'}</span></div>`;
+}
+
 /* ================= похідний табір ================= */
 // у таборі герой швидко одужує, поранені стають у стрій, піднімається дух і йде вишкіл; у дорозі все це повільніше
 function campTick(dh){
@@ -1403,10 +1442,11 @@ function openTown(t,tab){
   CUR={town:t,tab:tab||same&&CUR.tab||'hire'};G.waiting=false;tab=CUR.tab;
   const own=t.f===0,enemy=t.f>0&&G.war[t.f];
   const head=`<div class="cityhead" style="background-image:url(${tab==='market'?UIART.ui_hd_market:UIART.ui_hd_fort})"><button class="xbtn" data-a="close" aria-label="Закрити">✕</button><div class="nm"><span class="cbanner" style="border-color:${FAC[t.f].color}"><svg class="ic"><use href="#i-banner"/></svg></span><span>${fbadge(t.f)}<h2>${esc(t.name)}</h2>
-    <span class="muted">${TYPE_N[t.type]} · гарнізон ${total(t.garrison)}${own?` · дохід +${townIncome(t)} на день`:''}</span></span></div></div>`;
-  if(enemy){const[txt,col]=cmpText(armyPower(t.garrison)*1.15/playerPower());
-    show(`${head}<div class="tbody"><p style="margin-top:4px"><span style="color:var(--blood)">Ви у війні з ними.</span> Ворота зачинені.</p><p class="cmp" style="--c:${col}">${txt}</p>
-    <div class="acts"><button class="btn red" data-a="siege">Штурмувати</button><button class="btn ghost" data-a="close">Піти геть</button></div></div>`,'town');return}
+    <span class="muted">${TYPE_N[t.type]}${own?` · дохід +${townIncome(t)} на день`:''}</span></span></div></div>${townStrip(t)}`;
+  if(enemy){const[txt,col]=cmpText(armyPower(t.garrison)*1.15/playerPower()),pc=winChance(t.garrison,townDefBonus(t));
+    show(`${head}<div class="tbody"><p style="margin-top:4px"><span style="color:var(--blood)">Ви у війні з ними.</span> Ворота зачинені. На мурах ${total(t.garrison)} солдатів.</p><p class="cmp" style="--c:${chanceCol(pc)}">${txt} · шанс на перемогу ${pc}%</p>
+    <div class="acts"><button class="btn red" data-a="siege">Штурмувати</button><button class="btn ghost" data-a="close">Піти геть</button></div>
+    <h3>Хто на мурах</h3>${armyRows(t.garrison)}</div>`,'town');return}
   const T=[['build','Будівлі'],['hire','Найм'],['market','Ринок'],['garrison','Гарнізон'],['dev','Розвиток']];
   const body=tab==='market'?marketTab(t):tab==='build'?buildTab(t):tab==='garrison'?garrisonTab(t):tab==='dev'?devTab(t):hireTab(t);
   show(`${head}<div class="tabs" role="tablist">${T.map(([k,n])=>`<button role="tab" aria-selected="${k===tab}" class="${k===tab?'on':''}" data-a="tab" data-v="${k}"><svg class="ic"><use href="#i-${TAB_IC[k]}"/></svg><span class="t">${n}</span></button>`).join('')}</div>
@@ -1504,7 +1544,7 @@ function encUnits(a){
 }
 function openEncounter(p){
   CUR={party:p};G.target=null;G.waiting=false;
-  const hostile=isHostile(p),[txt,col]=cmpText(armyPower(p.army)/playerPower()),lord=p.kind==='lord',bandit=p.kind==='bandit';
+  const hostile=isHostile(p),[txt,col]=cmpText(armyPower(p.army)/playerPower()),lord=p.kind==='lord',bandit=p.kind==='bandit',pcE=winChance(p.army,G.camp?-.15:0);
   const art=lord?`<div class="enr lord" style="background-image:url(${portrait(p.f,p.name.startsWith('Князь')||p.name.startsWith('Кошовий')||p.name.startsWith('Воєвода Тарас')?3:2)})"></div>`:`<div class="enr" style="background-image:url(${UIART.ui_en_art})"></div>`;
   const ban=bandit?`<span class="eban" style="background-image:url(${UIART.ui_en_skull})"></span>`:`<span class="eban c" style="border-top-color:${FAC[p.f].color}"><svg class="ic"><use href="#i-banner"/></svg></span>`;
   const acts=hostile
@@ -1513,7 +1553,7 @@ function openEncounter(p){
   show(`<div class="encw"><button class="xbtn" data-a="${hostile?'flee':'pass'}" aria-label="Закрити">✕</button><div class="enc"><div class="enl">
     <div class="ehead">${ban}<div>${bandit?'<span class="eyebrow" style="color:var(--ag)">Розбійники</span>':fbadge(p.f)}<h2>${esc(p.name)}</h2><p>${hostile?(bandit?'Розбійники перекрили дорогу.':'Ворожий загін іде на вас.'):'Вони не ворожі до вас. Напад означає війну з усім королівством.'}</p></div></div>
     ${G.camp&&hostile?'<p class="campnote">Ви в таборі за частоколом: вороги слабші на 15%.</p>':''}<div class="esub"><svg class="ic"><use href="#i-people"/></svg>Їхній загін · ${total(p.army)}</div><div class="eus${ORDER.filter(t=>p.army[t]>0).length>2?' many':''}">${encUnits(p.army)}</div></div>${art}</div>
-    <div class="ecmp" style="--c:${col}">${SKULL}${txt}</div>${acts}</div>`,'wide');
+    <div class="ecmp" style="--c:${col}">${SKULL}${txt}<span class="epc">шанс на перемогу <b style="color:${chanceCol(pcE)}">${pcE}%</b></span></div>${acts}</div>`,'wide');
 }
 function declareWar(f){if(f>=1&&f<=3&&!G.war[f]){initDiplo();G.war[f]=true;addRel(f,-40);if(G.ally[f]){delete G.ally[f]}if(G.liege===f){G.liege=0;addFame(-20)}toast(`Війна з ${FAC[f].name}!`,true)}}
 function enemyArmyOf(c){return c.party?c.party.army:c.town.garrison}
@@ -1955,7 +1995,7 @@ function siegePanel(t){
   <p class="muted">${walls?`Табір під стінами, день облоги ${s.days}. Захисники на стінах сильніші на ${Math.round(siegeBonus(s)*100)}%. Що довше облога, то голодніший гарнізон.`:'Село без мурів: можна атакувати одразу.'}</p>
   ${walls?`<div class="stats"><div class="stat"><small>Драбини</small><b>${s.ladders}</b></div><div class="stat"><small>Таран</small><b>${s.ram?'готовий':'немає'}</b></div><div class="stat"><small>Гарнізон</small><b>${total(t.garrison)}</b></div></div>
   <div class="acts"><button class="btn" data-a="sLadder" ${men>=6&&s.ladders<6?'':'disabled'}>Збити 2 драбини · 6 год</button><button class="btn" data-a="sRam" ${men>=12&&!s.ram?'':'disabled'}>Збудувати таран · 1 день</button><button class="btn" data-a="sWait">Морити голодом · 1 день</button></div>`:''}
-  <p class="cmp" style="--c:${col}">${txt}</p>
+  <p class="cmp" style="--c:${chanceCol(winChance(t.garrison,siegeBonus(s)))}">${txt} · шанс на перемогу ${winChance(t.garrison,siegeBonus(s))}%</p>
   ${walls&&!s.ladders&&!s.ram?'<p class="muted">Без драбин і тарана воїни лізтимуть по наспіх зв’язаній драбині — великі втрати.</p>':''}
   <div class="acts"><button class="btn red" data-a="assault">Штурм: битися самому</button><button class="btn" data-a="auto">Автобій</button><button class="btn ghost" data-a="liftSiege">Зняти облогу</button></div>`);
 }
