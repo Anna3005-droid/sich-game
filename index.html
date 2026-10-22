@@ -4405,17 +4405,20 @@ function animBoat(bt,moving,now){
 }
 // куди дивиться фігура відносно камери: від камери — бачимо спину, на камеру — обличчя, вбік — профіль
 /* ---------- головний герой на мапі — об'ємна 3D-модель з анімаціями Mixamo ---------- */
+// модель .glb; де такі файли не віддають (перегляд у Claude) — та сама модель текстом base64 поруч, у файлі .glb.txt
+function glbLoad(url,ok,fail){const L=new THREE.GLTFLoader();
+  L.load(url,ok,undefined,()=>fetch(url+'.txt').then(r=>r.ok?r.text():Promise.reject(r.status)).then(t=>L.load('data:application/octet-stream;base64,'+t.trim(),ok,undefined,fail)).catch(fail))}
 const HERO3D={obj:null,mixer:null,acts:{},cur:null,t:0,state:0};   // state: 0 — не вантажили, 1 — вантажиться, 2 — готово, 3 — помилка
 const HERO3D_H=13;   // зріст на мапі, як у спрайта загону
 function loadHero3D(){
   if(HERO3D.state||!THREE.GLTFLoader)return;HERO3D.state=1;
-  new THREE.GLTFLoader().load('assets/hero/cossack.glb',g=>{
+  glbLoad('assets/hero/cossack.glb',g=>{
     const o=g.scene;o.scale.setScalar(HERO3D_H/1.8);
     // матеріал як у решти мапи (Lambert, без перетворення кольорів) і трохи власного світла — щоб не був темнішим за мальованих бійців
     o.traverse(m=>{if(m.isMesh){m.castShadow=true;m.frustumCulled=false;const map=m.material.map;if(map)map.encoding=THREE.LinearEncoding;
       m.material=new THREE.MeshLambertMaterial({map,color:map?'#ffffff':m.material.color,skinning:!!m.isSkinnedMesh,emissive:'#ffffff',emissiveMap:map,emissiveIntensity:.4})}});
     HERO3D.mixer=new THREE.AnimationMixer(o);g.animations.forEach(c=>HERO3D.acts[c.name]=HERO3D.mixer.clipAction(c));
-    HERO3D.obj=o;HERO3D.state=2;heroPlay('Idle')},undefined,e=>{HERO3D.state=3;console.warn('Не вдалося завантажити 3D-героя',e)});
+    HERO3D.obj=o;HERO3D.state=2;heroPlay('Idle')},e=>{HERO3D.state=3;console.warn('Не вдалося завантажити 3D-героя',e)});
 }
 // рух моделі: once — зіграти раз і завмерти в кінці; restart — почати спочатку, навіть якщо вже грає
 function heroPlay(n,once,speed,restart){const a=HERO3D.acts[n];if(!a)return;if(HERO3D.cur===a&&!restart)return;
@@ -4453,10 +4456,10 @@ function hero3DBattle(u,gh,H,now){
 const U3D={state:0,g:null,clips:{}},U3D_MAX={hi:40,mid:16,low:0};
 const is3DUnit=u=>!u.hero&&u.team===0&&u.t==='sword';
 function loadU3D(){if(U3D.state||!window.THREE||!THREE.GLTFLoader||!THREE.SkeletonUtils)return;U3D.state=1;
-  new THREE.GLTFLoader().load('assets/units/kozak_prostyi.glb',g=>{
+  glbLoad('assets/units/kozak_prostyi.glb',g=>{
     g.scene.traverse(m=>{if(m.isMesh){const map=m.material.map;if(map)map.encoding=THREE.LinearEncoding;
       m.material=new THREE.MeshLambertMaterial({map,color:map?'#ffffff':m.material.color,skinning:!!m.isSkinnedMesh,emissive:'#ffffff',emissiveMap:map,emissiveIntensity:.4})}});
-    g.animations.forEach(c=>U3D.clips[c.name]=c);U3D.g=g;U3D.state=2},undefined,e=>{U3D.state=3;console.warn('Не вдалося завантажити 3D-воїнів',e)})}
+    g.animations.forEach(c=>U3D.clips[c.name]=c);U3D.g=g;U3D.state=2},e=>{U3D.state=3;console.warn('Не вдалося завантажити 3D-воїнів',e)})}
 function u3dMake(sc){const o=THREE.SkeletonUtils.clone(U3D.g.scene);o.traverse(m=>{if(m.isMesh)m.frustumCulled=false});sc.add(o);
   const mx=new THREE.AnimationMixer(o),acts={};for(const n in U3D.clips)acts[n]=mx.clipAction(U3D.clips[n]);return{o,mx,acts,cur:null,lastAt:-1,owner:null,corpse:false,fid:0}}
 function u3dPlay(m,n,once,speed,restart){const a=m.acts[n];if(!a)return;if(m.cur===a&&!restart)return;
