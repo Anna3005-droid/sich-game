@@ -3806,7 +3806,8 @@ function finishAuto(){
 }
 function endBattle(o){
   if(B.over)return;B.over=true;$('#ordMenu').hidden=true;SFX.ambient(false);if(musicOn&&!BGM.paused)BGM.volume=.5*SET.mus;if(GL.bat){m3dDetach(GL.bat.sc);GL.bat.units3d=null;   // моделі героя й пищальників ще знадобляться — не звільняємо
-    if(o.win)HERO.dance=performance.now();   // перемога — танцює на мапі
+    // перемога — герой святкує на мапі: щоразу навмання вихід із шаблею або танець (рухи спільні для всіх героїв)
+    if(o.win){HERO.dance=performance.now();HERO.party=Math.random()<.5?'Entry':'Dance';m3dLoad('cossack')}
     GL.bat.sc.traverse(o=>{if(o.geometry&&o.geometry!==GL.ringGeo&&o.geometry!==GL.shadowGeo)o.geometry.dispose()});GL.bat=null}
   const res={win:o.win,retreat:!!o.retreat,aSurv:splitAlly(o.aSurv||bSurv(0),B.allyA||zero()),bSurv:o.bSurv||bSurv(1),heroHp:o.heroHp!==undefined?o.heroHp:Math.max(0,B.hero.hp),startA:B.startA,startB:B.startB};
   const c=B.c;scene='map';$('#bhud').hidden=true;enterMap();
@@ -4422,10 +4423,13 @@ function m3dLoad(k){const m=M3D[k];if(m.st)return m.st===2;if(!THREE.GLTFLoader|
 function m3dInst(k){const m=M3D[k],o=THREE.SkeletonUtils.clone(m.g.scene),mixer=new THREE.AnimationMixer(o),acts={};
   m.g.animations.forEach(c=>acts[c.name]=mixer.clipAction(c));o.traverse(x=>{if(x.isMesh)x.frustumCulled=false});o.userData.m3d=1;
   return{k,o,mixer,acts,cur:null,t:0,weapon:o.getObjectByName(m.weapon)}}
-const m3dDur=(I,n)=>I.acts[n]?I.acts[n].getClip().duration*1000:0;
-const m3dHas=(I,n)=>!!I.acts[n];
+// рух, якого немає в цієї моделі, позичаємо в іншої: скелети Mixamo однакові за назвами кісток
+function m3dAct(I,n){if(I.acts[n])return I.acts[n];
+  for(const k in M3D){const g=M3D[k].g,c=g&&g.animations.find(c=>c.name===n);if(c)return I.acts[n]=I.mixer.clipAction(c)}return null}
+const m3dDur=(I,n)=>{const a=m3dAct(I,n);return a?a.getClip().duration*1000:0};
+const m3dHas=(I,n)=>!!m3dAct(I,n);
 // рух моделі: once — зіграти раз і завмерти в кінці; restart — почати спочатку, навіть якщо вже грає
-function m3dPlay(I,n,once,speed,restart){const a=I.acts[n];if(!a)return;if(I.cur===a&&!restart)return;
+function m3dPlay(I,n,once,speed,restart){const a=m3dAct(I,n);if(!a)return;if(I.cur===a&&!restart)return;
   a.setLoop(once?THREE.LoopOnce:THREE.LoopRepeat,Infinity);a.clampWhenFinished=!!once;a.timeScale=speed||1;a.reset().play();
   if(I.cur&&I.cur!==a)I.cur.crossFadeTo(a,.15,false);I.cur=a}
 // поставити модель у сцену (мапа чи бій — рендериться завжди одна) і плавно повернути обличчям у напрямку rot
@@ -4438,10 +4442,11 @@ function m3dDetach(sc){sc.children.filter(o=>o.userData.m3d).forEach(o=>sc.remov
 const unit3D=u=>u.team===0&&!u.hero&&baseOf(u.t)==='musket';
 
 // ---- головний герой: модель залежить від звання
-const HERO={I:null,dance:0};
+const HERO={I:null,dance:0,party:'Dance'};
 function heroI(){const k=heroRank()>=1?'veteran':'cossack';
+  if(k!=='cossack')m3dLoad('cossack');   // спільні рухи (вихід, старт бігу…) лежать у моделі першого козака
   if(!m3dLoad(k)){if(k!=='cossack'&&!HERO.I&&m3dLoad('cossack'))HERO.I=m3dInst('cossack');return HERO.I}   // поки нова модель вантажиться — стара
-  if(!HERO.I||HERO.I.k!==k){if(HERO.I&&HERO.I.o.parent)HERO.I.o.parent.remove(HERO.I.o);const was=HERO.I;HERO.I=m3dInst(k);if(was)HERO.I.entryDone=true}
+  if(!HERO.I||HERO.I.k!==k){if(HERO.I&&HERO.I.o.parent)HERO.I.o.parent.remove(HERO.I.o);const was=HERO.I;HERO.I=m3dInst(k);}
   return HERO.I}
 function hero3D(M,now){
   const I=heroI();if(!I)return;
@@ -4450,13 +4455,11 @@ function hero3D(M,now){
   const nx=G.path&&G.path[0],moving=!!targetPos()&&!uiOpen&&!!nx,dx=nx?nx.x-G.x:0,dy=nx?nx.y-G.y:0;
   m3dPlace(I,M.sc,G.x,tt===T_BRIDGE?Math.max(heightAt(G.x,G.y),5):heightAt(G.x,G.y),G.y,HERO3D_H,Math.abs(dx)+Math.abs(dy)>.5?Math.atan2(dx,dy):null,I.k!=='cossack');
   if(tt===T_WATER)I.o.visible=false;   // на воді — лише чайка
-  // вихід героя — коли гравець уперше бачить мапу (не під заставкою чи вікном)
-  if(!I.entryDone&&!uiOpen&&$('#title').hidden){I.entryDone=true;if(m3dHas(I,'Entry')){m3dPlay(I,'Entry',true,1,true);I.entryUntil=now+m3dDur(I,'Entry')}}
   // рушив — зривається з місця й біжить; стоїть — танець після перемоги, вихід на початку або спокій
   const run=m3dHas(I,'Run_Map')?'Run_Map':'Run';
   if(moving){if(!I.wasMoving&&m3dHas(I,'Run_Start')){m3dPlay(I,'Run_Start',true,1,true);I.until=now+m3dDur(I,'Run_Start')*.85}if(now>=(I.until||0))m3dPlay(I,run);HERO.dance=0}
-  else if(HERO.dance&&now-HERO.dance<m3dDur(I,'Dance'))m3dPlay(I,'Dance',true);
-  else if(now>=(I.entryUntil||0))m3dPlay(I,'Idle');
+  else if(HERO.dance&&now-HERO.dance<m3dDur(I,HERO.party))m3dPlay(I,HERO.party,true);
+  else m3dPlay(I,'Idle');
   I.wasMoving=moving;m3dTick(I,now);
 }
 // герой у бою: рух моделі за станом бійця (удар/постріл, блок, поранення, біг, загибель)
