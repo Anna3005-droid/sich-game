@@ -1114,7 +1114,7 @@ body.qlow .avv>video{display:none}
     <button class="hs round" data-t="lang" style="left:86.1%;top:2.6%;width:3.4%;height:6%" aria-label="Мова"></button>
     <button class="hs round" data-t="sound" style="left:90.6%;top:2.6%;width:3.4%;height:6%" aria-label="Звук"></button>
     <button class="hs round" data-t="music" style="left:95.1%;top:2.6%;width:3.4%;height:6%" aria-label="Музика"></button>
-    <div class="tver">Версія 21.10.18</div>
+    <div class="tver">Версія 21.10.19</div>
     <div class="tload" id="tload"><span id="tloadTxt">Завантаження…</span><i><b id="tbar"></b></i></div>
   </div>
 </div>
@@ -3806,7 +3806,9 @@ function finishAuto(){
   endBattle({win:r.aWin,aSurv:r.aSurv,bSurv:r.bSurv,heroHp:B.hero.hp>0?r.heroHp:0});
 }
 function endBattle(o){
-  if(B.over)return;B.over=true;$('#ordMenu').hidden=true;SFX.ambient(false);if(musicOn&&!BGM.paused)BGM.volume=.5*SET.mus;if(GL.bat){GL.bat.sc.traverse(o=>{if(o.geometry&&o.geometry!==GL.ringGeo&&o.geometry!==GL.shadowGeo)o.geometry.dispose()});GL.bat=null}
+  if(B.over)return;B.over=true;$('#ordMenu').hidden=true;SFX.ambient(false);if(musicOn&&!BGM.paused)BGM.volume=.5*SET.mus;if(GL.bat){if(HERO3D.obj&&HERO3D.obj.parent===GL.bat.sc)GL.bat.sc.remove(HERO3D.obj);   // модель героя ще знадобиться на мапі — не звільняємо
+    if(o.win)HERO3D.dance=performance.now();   // перемога — танцює на мапі
+    GL.bat.sc.traverse(o=>{if(o.geometry&&o.geometry!==GL.ringGeo&&o.geometry!==GL.shadowGeo&&!o.geometry.userData.keep)o.geometry.dispose()});GL.bat=null}
   const res={win:o.win,retreat:!!o.retreat,aSurv:splitAlly(o.aSurv||bSurv(0),B.allyA||zero()),bSurv:o.bSurv||bSurv(1),heroHp:o.heroHp!==undefined?o.heroHp:Math.max(0,B.hero.hp),startA:B.startA,startB:B.startB};
   const c=B.c;scene='map';$('#bhud').hidden=true;enterMap();
   applyResult(c,res);B=null;
@@ -4421,6 +4423,7 @@ function loadHero3D(){
     HERO3D.obj=o;HERO3D.state=2;heroPlay('Idle')},e=>{HERO3D.state=3;console.warn('Не вдалося завантажити 3D-героя',e)});
 }
 // рух моделі: once — зіграти раз і завмерти в кінці; restart — почати спочатку, навіть якщо вже грає
+const heroDur=n=>HERO3D.acts[n]?HERO3D.acts[n].getClip().duration*1000:0;
 function heroPlay(n,once,speed,restart){const a=HERO3D.acts[n];if(!a)return;if(HERO3D.cur===a&&!restart)return;
   a.setLoop(once?THREE.LoopOnce:THREE.LoopRepeat,Infinity);a.clampWhenFinished=!!once;a.timeScale=speed||1;a.reset().play();
   if(HERO3D.cur&&HERO3D.cur!==a)HERO3D.cur.crossFadeTo(a,.15,false);HERO3D.cur=a}
@@ -4436,12 +4439,19 @@ function hero3D(M,now){
   const nx=G.path&&G.path[0],moving=!!targetPos()&&!uiOpen&&!!nx,dx=nx?nx.x-G.x:0,dy=nx?nx.y-G.y:0;
   hero3DPlace(M.sc,G.x,tt===T_BRIDGE?Math.max(heightAt(G.x,G.y),5):heightAt(G.x,G.y),G.y,HERO3D_H,Math.abs(dx)+Math.abs(dy)>.5?Math.atan2(dx,dy):null,false);
   if(tt===T_WATER)HERO3D.obj.visible=false;   // на воді — лише чайка
-  heroPlay(moving?'Walk':'Idle');hero3DTick(now);
+  // рушив — зривається з місця й біжить; стоїть — танець після перемоги, вихід на початку або спокій
+  const H3=HERO3D;
+  // вихід героя — коли гравець уперше бачить мапу (не під заставкою чи вікном)
+  if(!H3.entryDone&&!uiOpen&&$('#title').hidden){H3.entryDone=true;heroPlay('Entry',true,1,true);H3.entryUntil=now+heroDur('Entry')}
+  if(moving){if(!H3.wasMoving){heroPlay('Run_Start',true,1,true);H3.until=now+heroDur('Run_Start')*.85}if(now>=H3.until)heroPlay('Run_Map');H3.dance=0}
+  else if(H3.dance&&now-H3.dance<heroDur('Dance'))heroPlay('Dance',true);
+  else if(now>=(H3.entryUntil||0))heroPlay('Idle');
+  H3.wasMoving=moving;hero3DTick(now);
 }
 // герой у бою: рух моделі за станом бійця (удар, блок, поранення, біг, загибель)
 function hero3DBattle(u,gh,H,now){
   const sp=Math.hypot(u.vx||0,u.vy||0);
-  if(u.hp<=0)heroPlay('Death',true);
+  if(u.hp<=0)heroPlay('Dying',true);
   else if(u.at>=0){if(!(HERO3D.lastAt>=0)||u.at<HERO3D.lastAt){const c=HERO3D.acts.Attack_Slash;heroPlay('Attack_Slash',true,c?c.getClip().duration/(ATK_T*1.8):1,true)}}
   else if(u.hurt>0&&HERO3D.cur!==HERO3D.acts.Hit)heroPlay('Hit',true,1.6,true);
   else if(u.hurt>0){}
@@ -4464,7 +4474,7 @@ function u3dTint(m,tint){if(m.tint===tint)return;m.tint=tint;
 function loadU3D(){if(U3D.state||!window.THREE||!THREE.GLTFLoader||!THREE.SkeletonUtils)return;U3D.state=1;
   glbLoad('assets/units/kozak_prostyi.glb',g=>{
     g.scene.traverse(m=>{if(m.isMesh){const map=m.material.map;if(map)map.encoding=THREE.LinearEncoding;
-      m.material=new THREE.MeshLambertMaterial({map,color:map?'#ffffff':m.material.color,skinning:!!m.isSkinnedMesh,emissive:'#ffffff',emissiveMap:map,emissiveIntensity:.4});U3D.src.push(m.material)}});
+      m.material=new THREE.MeshLambertMaterial({map,color:map?'#ffffff':m.material.color,skinning:!!m.isSkinnedMesh,emissive:'#ffffff',emissiveMap:map,emissiveIntensity:.4});U3D.src.push(m.material);m.geometry.userData.keep=1}});
     g.animations.forEach(c=>U3D.clips[c.name]=c);U3D.g=g;U3D.state=2},e=>{U3D.state=3;console.warn('Не вдалося завантажити 3D-воїнів',e)})}
 function u3dMake(sc){const o=THREE.SkeletonUtils.clone(U3D.g.scene);o.traverse(m=>{if(m.isMesh)m.frustumCulled=false});sc.add(o);
   const mx=new THREE.AnimationMixer(o),acts={};for(const n in U3D.clips)acts[n]=mx.clipAction(U3D.clips[n]);return{o,mx,acts,cur:null,lastAt:-1,owner:null,corpse:false,fid:0,tint:'',sabre:o.getObjectByName('Cossack_Sabre_Hand')}}
@@ -4488,8 +4498,8 @@ function u3dUnit(Bt,u,F,gh,H,dt){
   m.mx.update(dt);F.s.visible=false;if(F.ghost)F.ghost.s.visible=false;return true}
 // загиблий лишається тією ж моделлю: падає й лежить
 function u3dCorpse(Bt,c,F,dt){const m=c.m3;if(!m||!m.o||gq()==='low')return false;m.fid=Bt.fid;
-  if(!m.corpse){m.corpse=true;u3dPlay(m,'Death',true,1,true)}
-  m.o.visible=true;if(c.t<3)m.mx.update(dt);F.s.visible=false;return true}
+  if(!m.corpse){m.corpse=true;u3dPlay(m,m.acts.Dying?'Dying':'Death',true,1,true)}
+  m.o.visible=true;if(c.t<5)m.mx.update(dt);F.s.visible=false;return true}
 // загін на мапі: найближчі до камери — 3D-козаки, усі одного зросту з героєм, шабля схована; решта — спрайти
 function u3dParty(M,p,x,gh,y,moving,dx,dy,H,F,dt){
   if(!M.p3||!M.p3near.has(p.id))return false;
@@ -4497,7 +4507,7 @@ function u3dParty(M,p,x,gh,y,moving,dx,dy,H,F,dt){
   m.fid=M.p3fid;u3dTint(m,p.kind==='mine'?'':u3dFacTint(p.f));if(m.sabre)m.sabre.visible=false;
   const o=m.o;o.visible=true;o.position.set(x,gh,y);o.scale.setScalar(H/1.8);
   if(Math.abs(dx)+Math.abs(dy)>.5){let d=Math.atan2(dx,dy)-o.rotation.y;d=Math.atan2(Math.sin(d),Math.cos(d));o.rotation.y+=d*.25}
-  u3dPlay(m,moving?'Walk':'Idle');m.mx.update(dt);F.s.visible=F.sh.visible=false;return true}
+  u3dPlay(m,moving?(m.acts.Run_Map?'Run_Map':'Walk'):'Idle');m.mx.update(dt);F.s.visible=F.sh.visible=false;return true}
 // які загони цього кадру малювати в 3D: найближчі до камери, скільки дозволяє якість
 function u3dMapPick(M,v){if(!M.p3){M.p3=new Map();M.p3pool=[];M.p3all=[];M.p3fid=0}M.p3fid++;
   const cap=U3D.state===2&&!GL.overview?U3D_MAP[gq()]||0:0,R=v.d*1.6,d2=p=>(p.x-cam.x)**2+(p.y-cam.y)**2;
