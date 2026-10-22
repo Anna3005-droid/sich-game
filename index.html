@@ -1117,7 +1117,7 @@ body.qlow .avv>video{display:none}
     <button class="hs round" data-t="lang" style="left:86.1%;top:2.6%;width:3.4%;height:6%" aria-label="Мова"></button>
     <button class="hs round" data-t="sound" style="left:90.6%;top:2.6%;width:3.4%;height:6%" aria-label="Звук"></button>
     <button class="hs round" data-t="music" style="left:95.1%;top:2.6%;width:3.4%;height:6%" aria-label="Музика"></button>
-    <div class="tver">Версія 21.10.21</div>
+    <div class="tver">Версія 21.10.22</div>
     <div class="tload" id="tload"><span id="tloadTxt">Завантаження…</span><i><b id="tbar"></b></i></div>
   </div>
 </div>
@@ -2285,7 +2285,8 @@ function fishAct(){
   if(FS.st==='idle'){const[bs,bt]=biteStatus();if(bs!=='bite'){SFX.play('swing');fishPassMin(10);fishView(bs==='calm'?calmLine():bt);return}
     FS.st='wait';SFX.play('swing');fishPassMin(10);const k=RODS[G.rod].k,ice=G.season===2;
     fishView(ice?'Закинули в ополонку. Тихо…':'Поплавок гойдається на воді…');
-    FS.tm=setTimeout(()=>{FS.st='bite';SFX.play('click');fishView(ADVT.bite2);voxSay('bite2');
+    FS.tm=setTimeout(()=>{FS.st='bite';SFX.play('click');fishView(ADVT.bite2);if(G.biteVox===undefined||G.day-G.biteVox>=7){G.biteVox=G.day;voxSay('bite2')}   // Радник гукає «Підсікай!» уперше, а далі хіба раз на тиждень — щоб не набрид
+
       FS.tm=setTimeout(()=>{FS.st='idle';fishView('Не встигли — риба зірвалась з гачка.')},Math.round(900*(.8+.25*k)))},Math.round((1500+Math.random()*3800)/(k*.7+.3)/biteMul()*(ice?1.4:1)));return}
   if(FS.st==='wait'){clearTimeout(FS.tm);FS.st='idle';fishView('Зарано! Риба злякалась.');return}
   if(FS.st==='bite'){clearTimeout(FS.tm);FS.st='idle';const f=rollFish(),msg=landFish(f);SFX.play('loot');fishView(msg);showCatch(f.n);save()}
