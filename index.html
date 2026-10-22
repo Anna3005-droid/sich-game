@@ -182,6 +182,8 @@ input[type=text]{width:100%;font:inherit;font-size:18px;padding:10px 12px;border
 
 /* battle HUD */
 #bhud{position:fixed;inset:0;pointer-events:none}
+#cele{position:fixed;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;z-index:5}#cele[hidden]{display:none}
+#cele b{font-family:var(--f-head);font-size:30px;letter-spacing:.06em;color:var(--gold);text-shadow:0 2px 8px rgba(0,0,0,.75)}#cele .btn{pointer-events:auto;min-width:120px}
 #bhud>*{pointer-events:auto}
 .bport{position:absolute;top:calc(env(safe-area-inset-top,0px) + 8px);left:max(10px,env(safe-area-inset-left,0px));display:flex;gap:10px;align-items:center}
 .bars{display:flex;flex-direction:column;gap:4px}
@@ -1101,6 +1103,7 @@ body.qlow .avv>video{display:none}
   </div>
   <div class="squads" id="squads"></div>
 </div>
+<div id="cele" hidden><b>Перемога!</b><button class="btn gold" id="celeBtn">Далі ›</button></div>
 
 <div id="title">
   <div class="tbg" aria-hidden="true"></div>
@@ -1114,7 +1117,7 @@ body.qlow .avv>video{display:none}
     <button class="hs round" data-t="lang" style="left:86.1%;top:2.6%;width:3.4%;height:6%" aria-label="Мова"></button>
     <button class="hs round" data-t="sound" style="left:90.6%;top:2.6%;width:3.4%;height:6%" aria-label="Звук"></button>
     <button class="hs round" data-t="music" style="left:95.1%;top:2.6%;width:3.4%;height:6%" aria-label="Музика"></button>
-    <div class="tver">Версія 21.10.19</div>
+    <div class="tver">Версія 21.10.20</div>
     <div class="tload" id="tload"><span id="tloadTxt">Завантаження…</span><i><b id="tbar"></b></i></div>
   </div>
 </div>
@@ -1262,6 +1265,7 @@ const UIART={
 /* ================= data ================= */
 // стара мапа 4800×3600 тепер лежить у правій нижній частині; на захід і північ додано нові землі
 // стара мапа 4800×3600 розтягнута на більший світ: міста стоять просторіше, на заході й півночі нові землі
+const MAP_PACE=.72;   // у дорозі все на мапі рухається повільніше (відстань за годину та сама — дорога не дорожчає)
 const W0=4800,H0=3600,W=21600,H=21120,HK=15360/H,HPS=.6,MOVE_K=5/HPS*1.45;   // світ ще в 1,3 раза більший; загони трохи швидші, щоб дорога не тягнулась   // мапа в 1,6 раза більша; загони трохи швидші, щоб дорога не тягнулась // годин за секунду; рух множимо, щоб загін ішов так само швидко
 const mx=f=>.1+f*.78,my=f=>(.1+f*.8)*HK,umx=u=>(u-.1)/.78,umy=v=>(v/HK-.1)/.8;   // HK: південь мапи — нові землі за морем
 // w — зброя; mor — бойовий дух; blk — шанс закритися щитом; ap — пробиття броні
@@ -1441,7 +1445,7 @@ const TOWNS=[
 ].map(t=>({...t,x:mx(t.x),y:my(t.y)}));
 const LORDS=[['Князь Роман','Воєвода Данило','Воєвода Лев'],['Князь Святослав','Воєвода Добриня','Князь Ігор'],['Кошовий Гнат','Отаман Остап','Отаман Байда'],[],['Хан Іслам Ґерай','Тугай-бей','Мурза Карач-бей']];
 // Звання героя приходить саме з рівнем: простий воїн → досвідчений воїн → гетьман
-const RANKS=[{n:'Простий воїн',lvl:1,hp:0,atk:0,lead:0},{n:'Досвідчений воїн',lvl:4,hp:20,atk:2,lead:3},{n:'Гетьман',lvl:10,hp:50,atk:5,lead:6}];
+const RANKS=[{n:'Простий воїн',lvl:1,hp:0,atk:0,lead:0,spd:1},{n:'Досвідчений воїн',lvl:4,hp:20,atk:2,lead:3,spd:1.1},{n:'Гетьман',lvl:10,hp:50,atk:5,lead:6,spd:1.2}];   // spd — у скільки разів швидше ходить мапою
 // за кожен новий рівень — очки, які гравець сам кладе в життя, силу, швидкість чи лідерство
 const PTS_LV=3,HST=[['hp','Життя','heart','+12 здоров’я'],['str','Сила','swords','+2 до удару'],['spd','Швидкість','run','+4% до бігу, швидше відновлюються сили'],['lead','Лідерство','people','+3 місця в загоні, +2% бойового духу']];
 const BANDIT_NAMES=['Лісові розбійники','Степові грабіжники','Дезертири','Річкові пірати','Зграя Чорного Яна'];
@@ -1855,7 +1859,7 @@ function cmpText(r){
   if(r<2)return['Ворог сильніший','var(--blood)'];
   return['Ворог набагато сильніший','var(--blood)'];
 }
-function playerSpeed(){return Math.max(30,62-total(G.army)*.22)*(1+gearItem('boots').spd*.5)}
+function playerSpeed(){return Math.max(30,62-total(G.army)*.22)*(1+gearItem('boots').spd*.5)*RANKS[heroRank()].spd}
 function partySpeed(p){return Math.max(28,(p.kind==='bandit'?58:54)-total(p.army)*.25)}
 
 /* ================= auto-resolve ================= */
@@ -2665,7 +2669,7 @@ function autoBattle(c){
   applyResult(c,{win:r.aWin,aSurv:r.aSurv,bSurv:r.bSurv,heroHp:r.heroHp,startA,startB,auto:true});
 }
 let CUR_PROM=[];   // хто з воїнів виріс у щойно виграному бою
-function applyResult(c,r){CUR_PROM=[];
+function applyResult(c,r){CUR_PROM=[];if(r.win&&r.auto){HERO.danceReq=1;HERO.party=Math.random()<.5?'Entry':'Dance'}   // перемога без бою — герой святкує на мапі, щойно закриють вікна
   fillArmy(r.startA);fillArmy(r.startB);fillArmy(r.aSurv);fillArmy(r.bSurv);fillArmy(G.army);if(!isFinite(G.gold))G.gold=0;
   const lost=zero(),killed=zero();let back=0,kTot=0,lTot=0,xp=0,loot=0;
   const rate=r.win||r.retreat?.5:.25;initCamp();
@@ -2707,7 +2711,7 @@ function applyResult(c,r){CUR_PROM=[];
     <div class="vs"><img src="${vi('loot')}" alt=""><span><small>Здобич</small><b>${r.win?'+'+loot:'0'}</b></span></div>
     <div class="vs"><img src="${vi('xp')}" alt=""><span><small>Досвід</small><b>+${xp}</b></span></div>
   </div>
-  ${rkUp?`<div class="vrow" style="--bg:url(${vi('row0')})"><img src="${vi('lvl')}" alt=""><span>Нове звання: <b>${RANKS[heroRank()].n}</b>! Рівень ${G.hero.lvl}: більше здоров’я, сили й місця в загоні, +${PTS_LV*(G.hero.lvl-lvl0)} очки — у вікні «Армія».</span></div>`
+  ${rkUp?`<div class="vrow" style="--bg:url(${vi('row0')})"><img src="${vi('lvl')}" alt=""><span>Нове звання: <b>${RANKS[heroRank()].n}</b>! Рівень ${G.hero.lvl}: більше здоров’я, сили й місця в загоні, швидша хода, +${PTS_LV*(G.hero.lvl-lvl0)} очки — у вікні «Армія».</span></div>`
     :G.hero.lvl>lvl0?`<div class="vrow" style="--bg:url(${vi('row0')})"><img src="${vi('lvl')}" alt=""><span>Новий рівень героя: ${G.hero.lvl}. +${PTS_LV*(G.hero.lvl-lvl0)} очки на життя, силу, швидкість чи лідерство — у вікні «Армія».</span></div>`:''}
   ${r.win&&CUR_PROM.length?`<div class="vrow" style="--c:var(--good);--bg:url(${vi('row1')})"><img src="${vi('lvl')}" alt=""><span>Воїни набралися досвіду: ${CUR_PROM.map(([k,nk,n])=>`${TYPES[nk].n.toLowerCase()} +${n}`).join(', ')}.</span></div>`:''}
   ${cap.n?`<div class="vrow" style="--c:var(--good);--bg:url(${vi('row1')})"><img src="${vi('pris')}" alt=""><span>Здалися в полон: ${ORDER.filter(k=>cap.cap[k]).map(k=>TYPES[k].n.toLowerCase()+' '+cap.cap[k]).join(', ')}. Їх можна безкоштовно взяти на службу.</span></div>`:''}
@@ -3195,7 +3199,7 @@ function armyPanel(keep){const st=sheet.scrollTop;initCamp();
   show(`<span class="eyebrow" style="color:var(--gold)">Ваш загін</span><h2>${RANKS[rk].n}, рівень ${h.lvl}</h2>
   <p class="muted">${FAC[G.pf].name}</p>
   <div class="cpbox">${campaignsSection()}</div>
-  <div class="ranks r3">${RANKS.map((r,k)=>`<div class="rank${k===rk?' on':''}${k>rk?' locked':''}"><img src="${portrait(G.pf,k)}" alt="${r.n}" class="${portraitCut(G.pf)?'cut':''}"><b>${r.n}</b><small>${k?`з рівня ${r.lvl} · +${r.hp} здоров’я · +${r.atk} удар · +${r.lead} воїнів`:'початкове звання'}</small>${k===rk?'<span class="rk-on">Зараз</span>':k>rk?`<span class="rk-lv">Рівень ${r.lvl}</span>`:'<span class="rk-lv done">Пройдено</span>'}</div>`).join('')}</div>
+  <div class="ranks r3">${RANKS.map((r,k)=>`<div class="rank${k===rk?' on':''}${k>rk?' locked':''}"><img src="${portrait(G.pf,k)}" alt="${r.n}" class="${portraitCut(G.pf)?'cut':''}"><b>${r.n}</b><small>${k?`з рівня ${r.lvl} · +${r.hp} здоров’я · +${r.atk} удар · +${r.lead} воїнів · швидша хода`:'початкове звання'}</small>${k===rk?'<span class="rk-on">Зараз</span>':k>rk?`<span class="rk-lv">Рівень ${r.lvl}</span>`:'<span class="rk-lv done">Пройдено</span>'}</div>`).join('')}</div>
   <div class="hpts${h.pts>0?' has':''}"><div class="hph"><b>Сила героя</b><span>${h.pts>0?`Вільні очки: <em>${h.pts}</em> — натисніть «+»`:`Нові очки — з кожним рівнем (+${PTS_LV})`}</span></div>
   ${HST.map(([k,n,ic,fx])=>`<div class="hst">${picImg(ic)}<span><b>${n} <em>${hst(k)}</em></b><small>${fx} за очко</small></span><button class="btn sm gold" data-a="stat" data-v="${k}" ${h.pts>0?'':'disabled'} aria-label="${n} +1">+</button></div>`).join('')}</div>
   <div class="trainrow"><span>Наставник: <b>+1 рівень</b> і +${PTS_LV} очки</span><button class="btn sm gold" data-a="trainHero" ${G.gold>=trainCost()?'':'disabled'}>Тренувати · ${trainCost()}</button></div>
@@ -3672,6 +3676,7 @@ function bUpdate(dt){
   const h=B.hero;B.flash=Math.max(0,B.flash-dt);siegeStep(dt);B.shake=Math.max(0,(B.shake||0)-dt*30);
   if(h.hp>0){
     let mx=joy.x+(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0),my=joy.y+(keys.s||keys.arrowdown?1:0)-(keys.w||keys.arrowup?1:0);
+    if(B.cele)mx=my=0;   // свято — стоїть на місці
     const l=Math.hypot(mx,my);if(l>1){mx/=l;my/=l}
     if(GL.bat){const c=camVecs(VIEW.battle.cyaw),wx=c.rx*mx-c.fx*my,wy=c.rz*mx-c.fz*my;mx=wx;my=wy}
     h.dashCd-=dt;h.dash-=dt;
@@ -3687,7 +3692,7 @@ function bUpdate(dt){
     if((atkHeld||atkTap||keys[' ']||keys.j)&&h.cd<=0&&!h.blocking&&h.sta>=8){atkTap=false;h.sta-=8;heroSwing(h)}
   }
   buildGrid();B.tick=(B.tick||0)+1;
-  for(const u of B.units){if(u.hero||u.hp<=0)continue;if(B.hold&&u.team===1){u.vx*=.8;u.vy*=.8;u.blocking=false;continue}if(dist(u,B.hero)>700&&(u.id+B.tick)%2)continue;unitAI(u,dt*((dist(u,B.hero)>700)?2:1))}
+  for(const u of B.units){if(u.hero||u.hp<=0)continue;if(B.cele&&u.team===0&&u.cx!==undefined){const dx=u.cx-u.x,dy=u.cy-u.y,l=Math.hypot(dx,dy);if(l>6){const f=l>120?1:.7;steer(u,dx/l*f,dy/l*f,dt);u.face=Math.atan2(dy,dx)}else{u.vx*=.8;u.vy*=.8;u.face=Math.atan2(B.hero.y-u.y,B.hero.x-u.x)}continue}if(B.hold&&u.team===1){u.vx*=.8;u.vy*=.8;u.blocking=false;continue}if(dist(u,B.hero)>700&&(u.id+B.tick)%2)continue;unitAI(u,dt*((dist(u,B.hero)>700)?2:1))}
   const U=B.units;
   // рух, крок, поворот, таймери анімації
   for(const u of U){
@@ -3716,7 +3721,7 @@ function bUpdate(dt){
     // смерть товариша знижує дух поруч, перемога над ворогом — піднімає
     near(u.x,u.y,150,o=>{if(o===u)return;if(o.team===u.team)moraleHit(o,u.hero?0:7);else o.mor=Math.min(o.morMax,o.mor+3)});
     if(u.hero)B.units.forEach(o=>{if(o.team===0)moraleHit(o,30)});
-    if(sprReady()){const c={x:u.x,y:u.y,sx:u.sx,fall:u.vx>=0?1:-1,set:aniSet(sprIndex(u),'e'),H:uH(u),t:0};B.corpses.push(c);
+    if(sprReady()){const c={x:u.x,y:u.y,sx:u.sx,fall:u.vx>=0?1:-1,set:aniSet(sprIndex(u),'e'),H:uH(u),t:0,m3d:GL.bat&&((unit3D(u)&&M3D.musket.st===2)||(u.hero&&!!HERO.I))};B.corpses.push(c);   // m3d — падає сама 3D-модель героя чи пищальника
       if(u.m3&&B.corpses.filter(q=>q.m3).length<24){c.m3=u.m3;u.m3.owner=null;u.m3=null;if(GL.bat)GL.bat.m3n--}}
     else B.decals.push({x:u.x,y:u.y,r:u.r,team:u.team});
     U.splice(i,1)}
@@ -3727,7 +3732,7 @@ function bUpdate(dt){
   B.fx=B.fx.filter(f=>f.t>0);
   // переможець: хто знищив або розігнав усе вороже військо
   let a=0,b=0;U.forEach(u=>{if(!u.hero&&u.state!=='rout')u.team?b++:a++});
-  if(b===0&&!B.resB.length)return endBattle({win:true});
+  if(b===0&&!B.resB.length){if(B.cele?performance.now()>=B.cele.end:h.hp<=0||!GL.bat||!HERO.I)return endBattle({win:true});if(!B.cele)celeStart();return}
   if(h.hp<=0){
     if(a===0&&!B.resA.length)return endBattle({win:false});
     toast('Героя поранено. Бій завершено автоматично.',true);return finishAuto();
@@ -3805,9 +3810,21 @@ function finishAuto(){
   const r=simulate(bSurv(0),bSurv(1),{hero:B.hero.hp>0,heroHp:B.hero.hp,bonusB:B.wall?B.bonus*.6:0});
   endBattle({win:r.aWin,aSurv:r.aSurv,bSurv:r.bSurv,heroHp:B.hero.hp>0?r.heroHp:0});
 }
+// свято перемоги на полі бою: герой танцює або вимахує шаблею, камера під'їжджає — і лише потім вікно з підсумками
+// хто як святкує: кожен воїн сам вирішує — вихід із шаблею, танець чи просто стоїть; починають не разом, коли дійдуть до свого місця
+function celePick(u,now,dur){const n=u.party;if(!n||n==='Stand'||!dur(n))return 'Stand';
+  if(!u.pT)u.pT=now+u.pDelay;return now>=u.pT&&now<u.pT+dur(n)?n:'Stand'}
+function celeStart(){HERO.party=Math.random()<.5?'Entry':'Dance';const I=HERO.I,dur=I&&m3dHas(I,HERO.party)?m3dDur(I,HERO.party):0,now=performance.now();
+  B.cele={end:now+Math.max(3000,dur+300),d:null};joy.id=null;
+  // наші воїни розступаються колом і дивляться на героя; з боку камери — прохід, щоб нікого не заступали
+  const h=B.hero,yw=Math.atan2(Math.cos(h.face),Math.sin(h.face))+.5,ac=Math.atan2(Math.cos(yw),Math.sin(yw)),gap=.95;
+  const us=B.units.filter(u=>u.team===0&&!u.hero&&u.hp>0).map(u=>({u,a:((Math.atan2(u.y-h.y,u.x-h.x)-ac-gap)%(Math.PI*2)+Math.PI*4)%(Math.PI*2)})).sort((a,b)=>a.a-b.a);
+  const per=15,arc=Math.PI*2-gap*2;us.forEach((o,i)=>{const ring=Math.floor(i/per),n=Math.min(per,us.length-ring*per),k=i%per,a=ac+gap+arc*(n>1?k/(n-1):.5);
+    const R=105+ring*30;o.u.cx=clamp(h.x+Math.cos(a)*R,30,BW-30);o.u.cy=clamp(h.y+Math.sin(a)*R,30,BH-30);o.u.blocking=false;
+    o.u.party=['Entry','Dance','Stand'][Math.floor(Math.random()*3)];o.u.pT=0;o.u.pDelay=Math.random()*1800});joy.x=joy.y=0;atkHeld=false;blockHeld=false;
+  $('#bhud').hidden=true;$('#ordMenu').hidden=true;$('#cele').hidden=false}
 function endBattle(o){
-  if(B.over)return;B.over=true;$('#ordMenu').hidden=true;SFX.ambient(false);if(musicOn&&!BGM.paused)BGM.volume=.5*SET.mus;if(GL.bat){if(HERO3D.obj&&HERO3D.obj.parent===GL.bat.sc)GL.bat.sc.remove(HERO3D.obj);   // модель героя ще знадобиться на мапі — не звільняємо
-    if(o.win)HERO3D.dance=performance.now();   // перемога — танцює на мапі
+  if(B.over)return;B.over=true;$('#ordMenu').hidden=true;$('#cele').hidden=true;SFX.ambient(false);if(musicOn&&!BGM.paused)BGM.volume=.5*SET.mus;if(GL.bat){m3dDetach(GL.bat.sc);GL.bat.units3d=null;   // моделі героя й пищальників ще знадобляться — не звільняємо
     GL.bat.sc.traverse(o=>{if(o.geometry&&o.geometry!==GL.ringGeo&&o.geometry!==GL.shadowGeo&&!o.geometry.userData.keep)o.geometry.dispose()});GL.bat=null}
   const res={win:o.win,retreat:!!o.retreat,aSurv:splitAlly(o.aSurv||bSurv(0),B.allyA||zero()),bSurv:o.bSurv||bSurv(1),heroHp:o.heroHp!==undefined?o.heroHp:Math.max(0,B.hero.hp),startA:B.startA,startB:B.startB};
   const c=B.c;scene='map';$('#bhud').hidden=true;enterMap();
@@ -4406,60 +4423,105 @@ function animBoat(bt,moving,now){
   bt.position.y=-4.5+Math.sin(now/700)*.6;bt.rotation.z=Math.sin(now/900)*.02;
 }
 // куди дивиться фігура відносно камери: від камери — бачимо спину, на камеру — обличчя, вбік — профіль
-/* ---------- головний герой на мапі — об'ємна 3D-модель з анімаціями Mixamo ---------- */
-// модель .glb; де такі файли не віддають (перегляд у Claude) — та сама модель текстом base64 поруч, у файлі .glb.txt
+// 3D-моделі .glb; де такі файли не віддають (перегляд у Claude) — та сама модель текстом base64 поруч, у файлі .glb.txt
 function glbLoad(url,ok,fail){const L=new THREE.GLTFLoader();
   L.load(url,ok,undefined,()=>fetch(url+'.txt').then(r=>r.ok?r.text():Promise.reject(r.status)).then(t=>L.load('data:application/octet-stream;base64,'+t.trim(),ok,undefined,fail)).catch(fail))}
-const HERO3D={obj:null,mixer:null,acts:{},cur:null,t:0,state:0};   // state: 0 — не вантажили, 1 — вантажиться, 2 — готово, 3 — помилка
-const HERO3D_H=12;   // зріст на мапі — такий самий, як у загонів
-function loadHero3D(){
-  if(HERO3D.state||!THREE.GLTFLoader)return;HERO3D.state=1;
-  glbLoad('assets/hero/cossack.glb',g=>{
-    const o=g.scene;o.scale.setScalar(HERO3D_H/1.8);
+/* ---------- об'ємні 3D-моделі з анімаціями Mixamo: головний герой і пищальники ---------- */
+// cossack — герой «Простий воїн» (шабля), veteran — герой від звання «Досвідчений воїн» (самопал),
+// musket — спрощений досвідчений воїн для пищальників у бою (їх багато, тому легша модель)
+const M3D={cossack:{url:'assets/hero/cossack.glb',weapon:'Cossack_Sabre_Hand'},veteran:{url:'assets/hero/veteran.glb',weapon:'Veteran_Musket'},musket:{url:'assets/hero/musketeer.glb',weapon:'Veteran_Musket'}};
+const HERO3D_H=12;   // зріст героя на мапі — такий самий, як у загонів
+// st: 0 — не вантажили, 1 — вантажиться, 2 — готово, 3 — помилка; повертає true, коли модель готова
+function m3dLoad(k){const m=M3D[k];if(m.st)return m.st===2;if(!THREE.GLTFLoader||!THREE.SkeletonUtils)return false;m.st=1;
+  glbLoad(m.url,g=>{
     // матеріал як у решти мапи (Lambert, без перетворення кольорів) і трохи власного світла — щоб не був темнішим за мальованих бійців
-    o.traverse(m=>{if(m.isMesh){m.castShadow=true;m.frustumCulled=false;const map=m.material.map;if(map)map.encoding=THREE.LinearEncoding;
-      m.material=new THREE.MeshLambertMaterial({map,color:map?'#ffffff':m.material.color,skinning:!!m.isSkinnedMesh,emissive:'#ffffff',emissiveMap:map,emissiveIntensity:.4})}});
-    HERO3D.mixer=new THREE.AnimationMixer(o);g.animations.forEach(c=>HERO3D.acts[c.name]=HERO3D.mixer.clipAction(c));
-    HERO3D.obj=o;HERO3D.state=2;heroPlay('Idle')},e=>{HERO3D.state=3;console.warn('Не вдалося завантажити 3D-героя',e)});
-}
+    g.scene.traverse(x=>{if(x.isMesh){x.castShadow=true;x.frustumCulled=false;const map=x.material.map;if(map)map.encoding=THREE.LinearEncoding;
+      x.material=new THREE.MeshLambertMaterial({map,color:map?'#ffffff':x.material.color,skinning:!!x.isSkinnedMesh,emissive:map?'#ffffff':'#000000',emissiveMap:map,emissiveIntensity:.4})}});
+    m.g=g;m.st=2},e=>{m.st=3;console.warn('Не вдалося завантажити 3D-модель',m.url,e)});
+  return false}
+// окремий екземпляр моделі зі своїм скелетом і рухами
+function m3dInst(k){const m=M3D[k],o=THREE.SkeletonUtils.clone(m.g.scene),mixer=new THREE.AnimationMixer(o),acts={};
+  m.g.animations.forEach(c=>acts[c.name]=mixer.clipAction(c));o.traverse(x=>{if(x.isMesh)x.frustumCulled=false});o.userData.m3d=1;
+  return{k,o,mixer,acts,cur:null,t:0,weapon:o.getObjectByName(m.weapon)}}
+// рух, якого немає в цієї моделі, позичаємо в іншої: скелети Mixamo однакові за назвами кісток.
+// Кістки в інших моделей іншої довжини, тож беремо лише повороти, а зсув стегон підганяємо під зріст
+function m3dAct(I,n){if(I.acts[n])return I.acts[n];
+  for(const k in M3D){const m=M3D[k],c=m.g&&m.g.animations.find(c=>c.name===n);if(!c)continue;
+    const key=I.k+'<'+n,cache=M3D[I.k].borrow||(M3D[I.k].borrow={});
+    if(!cache[key]){const hs=m.g.scene.getObjectByName('mixamorigHips'),ht=I.o.getObjectByName('mixamorigHips'),sc=hs&&ht&&hs.position.length()>1e-3?ht.position.length()/hs.position.length():1;
+      cache[key]=new THREE.AnimationClip(n,c.duration,c.tracks.filter(t=>/\.quaternion$/.test(t.name)||/Hips\.position$/.test(t.name)).map(t=>{
+        if(!/\.position$/.test(t.name)||!hs||!ht)return t;const v=Float32Array.from(t.values),a=hs.position,b=ht.position;
+        for(let i=0;i<v.length;i+=3){v[i]=b.x+(v[i]-a.x)*sc;v[i+1]=b.y+(v[i+1]-a.y)*sc;v[i+2]=b.z+(v[i+2]-a.z)*sc}
+        return new THREE.VectorKeyframeTrack(t.name,t.times,v)}))}
+    return I.acts[n]=I.mixer.clipAction(cache[key])}
+  return null}
+const m3dDur=(I,n)=>{const a=m3dAct(I,n);return a?a.getClip().duration*1000:0};
+const m3dHas=(I,n)=>!!m3dAct(I,n);
 // рух моделі: once — зіграти раз і завмерти в кінці; restart — почати спочатку, навіть якщо вже грає
-const heroDur=n=>HERO3D.acts[n]?HERO3D.acts[n].getClip().duration*1000:0;
-function heroPlay(n,once,speed,restart){const a=HERO3D.acts[n];if(!a)return;if(HERO3D.cur===a&&!restart)return;
-  a.setLoop(once?THREE.LoopOnce:THREE.LoopRepeat,Infinity);a.clampWhenFinished=!!once;a.timeScale=speed||1;a.reset().play();
-  if(HERO3D.cur&&HERO3D.cur!==a)HERO3D.cur.crossFadeTo(a,.15,false);HERO3D.cur=a}
+function m3dPlay(I,n,once,speed,restart){const a=m3dAct(I,n);if(!a)return;if(I.cur===a&&!restart)return;
+  a.setLoop(once?THREE.LoopOnce:n==='Stand'?THREE.LoopPingPong:THREE.LoopRepeat,Infinity);a.clampWhenFinished=!!once;a.timeScale=speed||1;a.reset().play();
+  if(I.cur&&I.cur!==a)I.cur.crossFadeTo(a,.15,false);I.cur=a}
 // поставити модель у сцену (мапа чи бій — рендериться завжди одна) і плавно повернути обличчям у напрямку rot
-function hero3DPlace(sc,x,h,y,H,rot,sabre){const o=HERO3D.obj;if(o.parent!==sc)sc.add(o);o.visible=true;o.position.set(x,h,y);o.scale.setScalar(H/1.8);
+function m3dPlace(I,sc,x,h,y,H,rot,weapon){const o=I.o;if(o.parent!==sc)sc.add(o);o.visible=true;o.position.set(x,h,y);o.scale.setScalar(H/1.8);
   if(rot!==null){let d=rot-o.rotation.y;d=Math.atan2(Math.sin(d),Math.cos(d));o.rotation.y+=d*.25}
-  const s=o.getObjectByName('Cossack_Sabre_Hand');if(s)s.visible=sabre}
-function hero3DTick(now){const t=now/1000,dt=HERO3D.t?Math.min(.1,t-HERO3D.t):0;HERO3D.t=t;HERO3D.mixer.update(dt)}
-function hero3D(M,now){
-  if(HERO3D.state!==2){loadHero3D();return}
+  if(I.weapon)I.weapon.visible=weapon}
+function m3dTick(I,now){const t=now/1000,dt=I.t?Math.min(.1,t-I.t):0;I.t=t;I.mixer.update(dt)}
+// перед закриттям бою сцену звільняють — наші моделі ще знадобляться, тож забираємо їх
+function m3dDetach(sc){sc.children.filter(o=>o.userData.m3d).forEach(o=>sc.remove(o))}
+const unit3D=u=>u.team===0&&!u.hero&&baseOf(u.t)==='musket';
+
+// ---- головний герой: модель залежить від звання
+const HERO={I:null,dance:0,danceReq:0,cam:null,party:'Dance'};
+function heroI(){const k=heroRank()>=1?'veteran':'cossack';
+  if(k!=='cossack')m3dLoad('cossack');   // спільні рухи (вихід із шаблею…) лежать у моделі першого козака
+  if(!m3dLoad(k)){if(k!=='cossack'&&!HERO.I&&m3dLoad('cossack'))HERO.I=m3dInst('cossack');return HERO.I}   // поки нова модель вантажиться — стара
+  if(!HERO.I||HERO.I.k!==k){if(HERO.I&&HERO.I.o.parent)HERO.I.o.parent.remove(HERO.I.o);HERO.I=m3dInst(k)}
+  return HERO.I}
+// камера під час танцю: плавно наїжджає на героя, потім повертається туди, де була; гравець потягнув чи покрутив — віддаємо йому
+function danceCam(on,dt){const v=VIEW.map,k=Math.min(1,dt*2.2);
+  if(on&&!HERO.cam){HERO.cam={d:v.d,pitch:v.pitch,back:false};cam.follow=true}
+  const c=HERO.cam;if(!c)return;
+  if(!cam.follow||c.user){HERO.cam=null;v.ly=0;return}
+  if(on){v.d+=(70-v.d)*k;v.pitch+=(.42-v.pitch)*k;v.ly=(v.ly||0)+(6-(v.ly||0))*k}
+  else{v.d+=(c.d-v.d)*k;v.pitch+=(c.pitch-v.pitch)*k;v.ly=(v.ly||0)*(1-k);if(Math.abs(v.d-c.d)<c.d*.02){v.d=c.d;v.pitch=c.pitch;v.ly=0;HERO.cam=null}}}
+function hero3D(M,now,dt){
+  const I=heroI();if(!I)return;
   const F=M.figs.get('me'),tt=terAt(G.x,G.y);
   if(F){F.s.visible=false;F.sh.visible=false}   // плаский спрайт ховаємо — замість нього модель
   const nx=G.path&&G.path[0],moving=!!targetPos()&&!uiOpen&&!!nx,dx=nx?nx.x-G.x:0,dy=nx?nx.y-G.y:0;
-  hero3DPlace(M.sc,G.x,tt===T_BRIDGE?Math.max(heightAt(G.x,G.y),5):heightAt(G.x,G.y),G.y,HERO3D_H,Math.abs(dx)+Math.abs(dy)>.5?Math.atan2(dx,dy):null,false);
-  if(tt===T_WATER)HERO3D.obj.visible=false;   // на воді — лише чайка
-  // рушив — зривається з місця й біжить; стоїть — танець після перемоги, вихід на початку або спокій
-  const H3=HERO3D;
-  // вихід героя — коли гравець уперше бачить мапу (не під заставкою чи вікном)
-  if(!H3.entryDone&&!uiOpen&&$('#title').hidden){H3.entryDone=true;heroPlay('Entry',true,1,true);H3.entryUntil=now+heroDur('Entry')}
-  if(moving){if(!H3.wasMoving){heroPlay('Run_Start',true,1,true);H3.until=now+heroDur('Run_Start')*.85}if(now>=H3.until)heroPlay('Run_Map');H3.dance=0}
-  else if(H3.dance&&now-H3.dance<heroDur('Dance'))heroPlay('Dance',true);
-  else if(now>=(H3.entryUntil||0))heroPlay('Idle');
-  H3.wasMoving=moving;hero3DTick(now);
+  // свято перемоги без бою (автобій) — коли закрили всі вікна і герой стоїть на землі
+  if(uiOpen||!$('#title').hidden)HERO.freeT=now;   // вікна після бою йдуть одне за одним — чекаємо, поки всі закриють
+  if(HERO.danceReq&&now-(HERO.freeT||0)>600){HERO.danceReq=0;if(!moving&&tt!==T_WATER&&m3dHas(I,HERO.party)){HERO.dance=now;m3dPlay(I,HERO.party,true,1,true)}}
+  if(moving||uiOpen)HERO.dance=0;
+  const dancing=HERO.dance&&now-HERO.dance<m3dDur(I,HERO.party);if(!dancing)HERO.dance=0;
+  const show=!!dancing;   // у святі — зі зброєю в руці; у дорозі — без
+  m3dPlace(I,M.sc,G.x,tt===T_BRIDGE?Math.max(heightAt(G.x,G.y),5):heightAt(G.x,G.y),G.y,HERO3D_H,Math.abs(dx)+Math.abs(dy)>.5?Math.atan2(dx,dy):null,I.k!=='cossack'||show);
+  if(tt===T_WATER)I.o.visible=false;   // на воді — лише чайка
+  // мапою ходить спокійно: звичайний біг і спокійна стійка (бойові рухи — лише в бою)
+  if(moving)m3dPlay(I,m3dHas(I,'Run_Map')?'Run_Map':'Run');
+  else if(!dancing)m3dPlay(I,m3dHas(I,'Stand')?'Stand':'Idle');
+  danceCam(!!dancing,dt);
+  I.wasMoving=moving;m3dTick(I,now);
 }
-// герой у бою: рух моделі за станом бійця (удар, блок, поранення, біг, загибель)
-function hero3DBattle(u,gh,H,now){
+// герой у бою: рух моделі за станом бійця (удар/постріл, блок, поранення, біг, загибель)
+function hero3DBattle(I,u,gh,H,now){
+  const sp=Math.hypot(u.vx||0,u.vy||0),gun=I.k!=='cossack';
+  if(B.cele&&u.hp>0)m3dPlay(I,HERO.party,true);
+  else if(u.hp<=0)m3dPlay(I,m3dHas(I,'Dying')&&!gun?'Dying':'Death',true);
+  else if(u.at>=0){if(gun)m3dPlay(I,'Aim');else if(!(I.lastAt>=0)||u.at<I.lastAt){const c=m3dAct(I,'Attack_Slash');m3dPlay(I,'Attack_Slash',true,c?c.getClip().duration/(ATK_T*1.8):1,true)}}
+  else if(u.hurt>0&&m3dHas(I,'Hit')&&I.cur!==I.acts.Hit)m3dPlay(I,'Hit',true,1.6,true);
+  else if(u.hurt>0&&m3dHas(I,'Hit')){}
+  else if(u.blocking)m3dPlay(I,gun?'Crouch_Aim':'Block_Idle');
+  else if(u.st<.08)m3dPlay(I,'Idle');
+  else m3dPlay(I,sp>105?'Run':'Walk');
+  I.lastAt=u.at;I.dead3=0;
+  m3dPlace(I,GL.bat.sc,u.x,gh,u.y,H,Math.atan2(Math.cos(u.face),Math.sin(u.face)),true);m3dTick(I,now);
+}
+// пищальник у бою: цілиться, коли стріляє; падає, коли гине (модель лишається лежати до кінця бою)
+function unit3DBattle(I,u,gh,H,now){
   const sp=Math.hypot(u.vx||0,u.vy||0);
-  if(u.hp<=0)heroPlay('Dying',true);
-  else if(u.at>=0){if(!(HERO3D.lastAt>=0)||u.at<HERO3D.lastAt){const c=HERO3D.acts.Attack_Slash;heroPlay('Attack_Slash',true,c?c.getClip().duration/(ATK_T*1.8):1,true)}}
-  else if(u.hurt>0&&HERO3D.cur!==HERO3D.acts.Hit)heroPlay('Hit',true,1.6,true);
-  else if(u.hurt>0){}
-  else if(u.blocking)heroPlay('Block_Idle');
-  else if(u.st<.08)heroPlay('Idle');
-  else heroPlay(sp>105?'Run':'Walk');
-  HERO3D.lastAt=u.at;
-  hero3DPlace(GL.bat.sc,u.x,gh,u.y,H,Math.atan2(Math.cos(u.face),Math.sin(u.face)),true);hero3DTick(now);
+  if(u.at>=0)m3dPlay(I,'Aim');else if(u.st<.08){if(B.cele){const n=celePick(u,now,n=>m3dDur(I,n));m3dPlay(I,n,n!=='Stand')}else m3dPlay(I,'Idle')}else m3dPlay(I,sp>105?'Run':'Walk');
+  m3dPlace(I,GL.bat.sc,u.x,gh,u.y,H,Math.atan2(Math.cos(u.face),Math.sin(u.face)),true);m3dTick(I,now);
 }
 /* ---------- усі воїни й загони — той самий 3D-козак, легка модель (≈5 тис. трикутників) ---------- */
 // поки немає окремих моделей лучників, досвідчених, елітних — у всіх цей козак; чужі підфарбовані в колір своєї сторони.
@@ -4478,8 +4540,9 @@ function loadU3D(){if(U3D.state||!window.THREE||!THREE.GLTFLoader||!THREE.Skelet
     g.animations.forEach(c=>U3D.clips[c.name]=c);U3D.g=g;U3D.state=2},e=>{U3D.state=3;console.warn('Не вдалося завантажити 3D-воїнів',e)})}
 function u3dMake(sc){const o=THREE.SkeletonUtils.clone(U3D.g.scene);o.traverse(m=>{if(m.isMesh)m.frustumCulled=false});sc.add(o);
   const mx=new THREE.AnimationMixer(o),acts={};for(const n in U3D.clips)acts[n]=mx.clipAction(U3D.clips[n]);return{o,mx,acts,cur:null,lastAt:-1,owner:null,corpse:false,fid:0,tint:'',sabre:o.getObjectByName('Cossack_Sabre_Hand')}}
-function u3dPlay(m,n,once,speed,restart){const a=m.acts[n];if(!a)return;if(m.cur===a&&!restart)return;
-  a.setLoop(once?THREE.LoopOnce:THREE.LoopRepeat,Infinity);a.clampWhenFinished=!!once;a.timeScale=speed||1;a.reset().play();
+function u3dAct(m,n){if(m.acts[n])return m.acts[n];const g=M3D.cossack.g,c=g&&g.animations.find(c=>c.name===n);return c?(m.acts[n]=m.mx.clipAction(c)):null}
+function u3dPlay(m,n,once,speed,restart){const a=u3dAct(m,n);if(!a)return;if(m.cur===a&&!restart)return;
+  a.setLoop(once?THREE.LoopOnce:n==='Stand'?THREE.LoopPingPong:THREE.LoopRepeat,Infinity);a.clampWhenFinished=!!once;a.timeScale=speed||1;a.reset().play();
   if(!once&&!m.cur)a.time=Math.random()*a.getClip().duration;   // щоб загін не рухався як один
   if(m.cur&&m.cur!==a)m.cur.crossFadeTo(a,.15,false);m.cur=a}
 // воїн у 3D: модель на місці спрайта, рух за станом бійця; false — малюємо як раніше, спрайтом
@@ -4490,7 +4553,7 @@ function u3dUnit(Bt,u,F,gh,H,dt){
   if(u.at>=0){if(m.lastAt<0||u.at<m.lastAt){const an=TYPES[u.t]&&TYPES[u.t].ranged?'Attack':'Attack_Slash',c=m.acts[an];u3dPlay(m,an,true,c?c.getClip().duration/(ATK_T*1.8):1,true)}}
   else if(u.hurt>0){if(m.cur!==m.acts.Hit)u3dPlay(m,'Hit',true,1.6,true)}
   else if(u.blocking)u3dPlay(m,'Block_Idle');
-  else if(sp<8)u3dPlay(m,'Idle');
+  else if(sp<8){if(B.cele){const n=celePick(u,performance.now(),n=>{const a=u3dAct(m,n);return a?a.getClip().duration*1000:0});u3dPlay(m,n,n!=='Stand')}else u3dPlay(m,'Idle')}
   else u3dPlay(m,sp>105?'Run':'Walk');
   m.lastAt=u.at;
   const o=m.o;o.visible=true;o.position.set(u.x,gh,u.y);o.scale.setScalar(H/1.8);
@@ -4507,7 +4570,7 @@ function u3dParty(M,p,x,gh,y,moving,dx,dy,H,F,dt){
   m.fid=M.p3fid;u3dTint(m,p.kind==='mine'?'':u3dFacTint(p.f));if(m.sabre)m.sabre.visible=false;
   const o=m.o;o.visible=true;o.position.set(x,gh,y);o.scale.setScalar(H/1.8);
   if(Math.abs(dx)+Math.abs(dy)>.5){let d=Math.atan2(dx,dy)-o.rotation.y;d=Math.atan2(Math.sin(d),Math.cos(d));o.rotation.y+=d*.25}
-  u3dPlay(m,moving?(m.acts.Run_Map?'Run_Map':'Walk'):'Idle');m.mx.update(dt);F.s.visible=F.sh.visible=false;return true}
+  u3dPlay(m,moving?(m.acts.Run_Map?'Run_Map':'Walk'):m.acts.Stand?'Stand':'Idle');m.mx.update(dt);F.s.visible=F.sh.visible=false;return true}
 // які загони цього кадру малювати в 3D: найближчі до камери, скільки дозволяє якість
 function u3dMapPick(M,v){if(!M.p3){M.p3=new Map();M.p3pool=[];M.p3all=[];M.p3fid=0}M.p3fid++;
   const cap=U3D.state===2&&!GL.overview?U3D_MAP[gq()]||0:0,R=v.d*1.6,d2=p=>(p.x-cam.x)**2+(p.y-cam.y)**2;
@@ -4516,7 +4579,7 @@ function u3dMapSweep(M){if(!M.p3)return;for(const m of M.p3all){if(m.fid===M.p3f
   for(const[id,m]of M.p3)if(m.fid!==M.p3fid){M.p3.delete(id);M.p3pool.push(m)}}
 // після кадру: моделі, яких не малювали, ховаємо; воїн пішов з поля — модель назад у запас
 function u3dSweep(Bt,seen){for(const m of Bt.m3all){if(m.fid===Bt.fid)continue;m.o.visible=false;
-  if(m.owner&&!m.corpse&&!seen.has(m.owner.id)){m.owner.m3=null;m.owner=null;Bt.m3pool.push(m);Bt.m3n--}}}
+  if(m.owner&&!m.corpse){m.owner.m3=null;m.owner=null;Bt.m3pool.push(m);Bt.m3n--}}}
 function facing(set,dx,dy,yaw){
   const l=Math.hypot(dx,dy);if(!set.dir||!set.dir.length||l<1e-6)return null;
   const c=camVecs(yaw),f=(dx*c.fx+dy*c.fz)/l;
@@ -4541,10 +4604,10 @@ function build3DMap(){
 function drawMap3D(dt){
   const M=GL.map;if(!M)return;
   const v=VIEW.map;if(cam.follow){cam.x=G.x;cam.y=G.y}cam.x=clamp(cam.x,0,W);cam.y=clamp(cam.y,0,H);
-  v.pitch=Math.max(v.pitch,mapPitchMin(v.d));
-  const ty=Math.max(0,heightAt(cam.x,cam.y));placeCam(v,v.yaw,cam.x,ty,cam.y);
+  if(!HERO.cam)v.pitch=Math.max(v.pitch,mapPitchMin(v.d));
+  const ty=Math.max(0,heightAt(cam.x,cam.y))+(v.ly||0);placeCam(v,v.yaw,cam.x,ty,cam.y);
   {const c=GL.cam,nr=Math.max(4,v.d*.04),fr=Math.max(16000,v.d*6);if(c.near!==nr||c.far!==fr){c.near=nr;c.far=fr;c.updateProjectionMatrix()}}
-  M.sc.fog.near=v.d*(v.d>3500?1.5:1.1);M.sc.fog.far=v.d*(v.d>3500?3.6:3.2);fitSun(M.sun,cam.x,ty,cam.y,Math.min(3200,v.d*1.15));
+  {const fd=Math.max(v.d,400);M.sc.fog.near=fd*(fd>3500?1.5:1.1);M.sc.fog.far=fd*(fd>3500?3.6:3.2)}fitSun(M.sun,cam.x,ty,cam.y,Math.min(3200,v.d*1.15));
   M.flags.forEach(f=>{const fc=FAC[f.t.f].color;if(f.c!==fc){f.c=fc;f.flag.material.color.set(fc)}f.flag.rotation.y=Math.sin(performance.now()/500+f.t.id)*.25});
   const {rx,rz}=camVecs(v.yaw),seen=new Set(),now=performance.now();
   if(!U3D.state)loadU3D();u3dMapPick(M,v);
@@ -4563,7 +4626,7 @@ function drawMap3D(dt){
     for(const p of G.parties){const nx=p.path&&p.path[0],mv=!!nx&&!(p.wait>0)&&(G.target||G.waiting)&&!uiOpen;put(p.id,p.x,p.y,p.kind==='lord'?2:p.kind==='mine'?1:0,p.kind==='lord'?'e':p.kind==='mine'?'p':'b',mv,nx?nx.x-p.x:0,nx?nx.y-p.y:0,12,p)}
     const nx=G.path&&G.path[0];put('me',G.x,G.y,heroSpr(),'p',!!targetPos()&&!uiOpen,nx?nx.x-G.x:0,nx?nx.y-G.y:0,12);
   }
-  hero3D(M,now);u3dMapSweep(M);
+  hero3D(M,now,dt);u3dMapSweep(M);
   for(const[k,F]of M.figs)if(!seen.has(k)){M.sc.remove(F.s);M.sc.remove(F.sh);M.figs.delete(k);const bt=M.boats&&M.boats.get(k);if(bt){M.sc.remove(bt);M.boats.delete(k)}}
   if(M.cover){const on=v.d<2400&&gq()!=='low';M.cover.g.visible=on;if(on&&(!M.cover.c||Math.hypot(cam.x-M.cover.c.x,cam.y-M.cover.c.y)>200))fillCover(M.cover,cam.x,cam.y);WIND.c.value.set(cam.x,0,cam.y)}
   syncCamp3D(M);tickWater();
@@ -4742,14 +4805,18 @@ function drawBattle3D(dt){
   if(GL.campFire){const t=performance.now();GL.campFire.scale.set(1+Math.sin(t/70)*.08,1+Math.sin(t/90)*.2+Math.random()*.08,1)}
   const h=B.hero,v=VIEW.battle,hx=h.hp>0?h.x:(B.camx??BW/2),hy=h.hp>0?h.y:(B.camy??BH/2);B.camx=hx;B.camy=hy;
   // режим «від героя»: камера за спиною, повертається слідом за героєм
-  if(v.hero){const want=Math.atan2(-Math.cos(h.face),-Math.sin(h.face));let d=want-v.cyaw;d=Math.atan2(Math.sin(d),Math.cos(d));v.cyaw+=d*Math.min(1,dt*2.6)}else v.cyaw=v.yaw;
-  const vv=v.hero?{d:clamp(v.d*.26,140,520),pitch:Math.min(v.pitch,.42)}:v,ty=battleHeight(hx,hy)+(v.hero?34:10);
+  const cl=B.cele;
+  if(cl){if(!cl.d){cl.d=v.hero?clamp(v.d*.26,140,520):v.d;cl.p=v.hero?Math.min(v.pitch,.42):v.pitch;cl.ly=v.hero?34:10}   // свято — камера під'їжджає до героя спереду-збоку
+    const k=Math.min(1,dt*1.6),want=Math.atan2(Math.cos(h.face),Math.sin(h.face))+.5;let d=want-v.cyaw;d=Math.atan2(Math.sin(d),Math.cos(d));v.cyaw+=d*k;
+    cl.d+=(190-cl.d)*k;cl.p+=(.4-cl.p)*k;cl.ly+=(22-cl.ly)*k}
+  else if(v.hero){const want=Math.atan2(-Math.cos(h.face),-Math.sin(h.face));let d=want-v.cyaw;d=Math.atan2(Math.sin(d),Math.cos(d));v.cyaw+=d*Math.min(1,dt*2.6)}else v.cyaw=v.yaw;
+  const vv=cl?{d:cl.d,pitch:cl.p}:v.hero?{d:clamp(v.d*.26,140,520),pitch:Math.min(v.pitch,.42)}:v,ty=battleHeight(hx,hy)+(cl?cl.ly:v.hero?34:10);
   placeCam(vv,v.cyaw,hx+(Math.random()-.5)*(B.shake||0),ty,hy+(Math.random()-.5)*(B.shake||0));
-  Bt.sc.fog.near=v.hero?900:vv.d*1.05;Bt.sc.fog.far=v.hero?3400:vv.d*2.9;fitSun(Bt.sun,hx,ty,hy,Math.max(500,vv.d*1.2));
+  Bt.sc.fog.near=v.hero||cl?900:vv.d*1.05;Bt.sc.fog.far=v.hero||cl?3400:vv.d*2.9;fitSun(Bt.sun,hx,ty,hy,Math.max(500,vv.d*1.2));
   const {rx,rz}=camVecs(v.cyaw),seen=new Set();
   if(Bt.gate)Bt.gate.visible=!B.gate.open;if(Bt.ram&&B.ram){Bt.ram.position.set(B.ram.x,battleHeight(B.ram.x,B.ram.y),B.ram.y);if(B.ram.at&&!B.gate.open)Bt.ram.position.x+=Math.sin(performance.now()/120)*4}
-  let hero3D_seen=false;if(HERO3D.state!==2)loadHero3D();if(!U3D.state)loadU3D();
-  if(!Bt.m3all){Bt.m3all=[];Bt.m3pool=[];Bt.m3n=0;Bt.fid=0}Bt.fid++;
+  const now3=performance.now(),seen3=new Set(),U3=Bt.units3d||(Bt.units3d=new Map());m3dLoad('musket');
+  if(!U3D.state)loadU3D();if(!Bt.m3all){Bt.m3all=[];Bt.m3pool=[];Bt.m3n=0;Bt.fid=0}Bt.fid++;
   if(sprReady()){
     for(const u of B.units){let F=Bt.figs.get(u.id);if(!F){F=poolFig(Bt);F.ring.material.color.set(u.team?'#e65c4e':u.hero?'#ffe08a':FAC[0].color);F.cmp=null;Bt.figs.set(u.id,F)}
       seen.add(u.id);const set=aniSet(sprIndex(u),u.team===0?'p':B.f===4?'b':'e'),H=uH(u)*1.15,gh=battleHeight(u.x,u.y);
@@ -4769,16 +4836,20 @@ function drawBattle3D(dt){
       const fa=lod?0:fadeOf(u);if(fa>0&&u.prevFr&&u.prevFr!==fr){if(!F.ghost){F.ghost=figSprite(Bt.sc);F.ghost.s.material.alphaTest=.02;F.ghost.s.material.depthWrite=false;F.ghost.sh.visible=false}
         F.ghost.s.visible=true;F.ghost.s.material.opacity=fa*.9;setFig(F.ghost,u.prevFr,u.x,u.y,gh,H*(fr.h/fr.h),false,msx)}else if(F.ghost)F.ghost.s.visible=false;
       F.s.material.color.setScalar(u.hitT>0?1.6:1);F.ring.position.set(u.x,gh+.8,u.y);F.ring.scale.set(H*.36,1,H*.36);
-      if(u.hero&&HERO3D.state===2){F.s.visible=F.sh.visible=false;if(F.ghost)F.ghost.s.visible=false;hero3D_seen=true;hero3DBattle(u,gh,H,performance.now())}
-      else u3dUnit(Bt,u,F,gh,H,dt)}
+      // герой і наші пищальники — об'ємні моделі замість плаского спрайта
+      let I3=null;if(u.hero)I3=heroI();else if(unit3D(u)&&M3D.musket.st===2){I3=U3.get(u.id);if(!I3){I3=m3dInst('musket');U3.set(u.id,I3)}}
+      if(I3){F.s.visible=F.sh.visible=false;if(F.ghost)F.ghost.s.visible=false;seen3.add(u.id);I3.last=[u.x,gh,u.y,H];if(u.hero){I3.bat=1;hero3DBattle(I3,u,gh,H,now3)}else unit3DBattle(I3,u,gh,H,now3)}
+      else if(!u.hero)u3dUnit(Bt,u,F,gh,H,dt)}
     // загиблі падають і лягають на землю
-    for(const c of B.corpses){const key='c'+c.x.toFixed(1)+c.y.toFixed(1);let F=Bt.figs.get(key);if(!F){F=poolFig(Bt);F.ring.visible=false;Bt.figs.set(key,F)}seen.add(key);
+    for(const c of B.corpses){if(c.m3d)continue;const key='c'+c.x.toFixed(1)+c.y.toFixed(1);let F=Bt.figs.get(key);if(!F){F=poolFig(Bt);F.ring.visible=false;Bt.figs.set(key,F)}seen.add(key);
       const dth=c.set.death&&c.set.death.length,fr=corpseFrame(c);setFig(F,fr,c.x,c.y,battleHeight(c.x,c.y),c.H*1.15,c.sx<0);F.s.material.rotation=dth?0:c.fall*Math.PI/2*Math.min(1,(c.t/.45)**2)*.92;F.s.material.color.setScalar(.75);
       u3dCorpse(Bt,c,F,dt)}
   }
   // невикористані фігури не видаляємо, а ховаємо й повертаємо в запас для наступних бійців
   for(const[k,F]of Bt.figs)if(!seen.has(k)){F.s.visible=F.sh.visible=F.ring.visible=false;if(F.ghost)F.ghost.s.visible=false;F.s.material.rotation=0;F.s.material.color.setScalar(1);F.fr=null;F.sx=undefined;(Bt.pool||(Bt.pool=[])).push(F);Bt.figs.delete(k)}
-  if(HERO3D.obj&&HERO3D.obj.parent===Bt.sc&&!hero3D_seen)HERO3D.obj.visible=false;
+  // загиблий пищальник: модель падає і лежить; героя, якого немає серед бійців, ховаємо
+  for(const[id,I]of U3)if(!seen3.has(id)){if(!I.dead){I.dead=1;m3dPlay(I,'Death',true)}m3dTick(I,now3)}
+  if(HERO.I&&HERO.I.o.parent===Bt.sc&&!B.units.some(u=>u.hero)){const I=HERO.I;if(!I.dead3){I.dead3=1;m3dPlay(I,I.k==='cossack'&&m3dHas(I,'Dying')?'Dying':'Death',true)}m3dTick(I,now3)}
   u3dSweep(Bt,seen);
   Bt.dirty-=dt;if(Bt.dirty<=0&&B.groundDirty){Bt.gm.material.map.needsUpdate=true;B.groundDirty=false;Bt.dirty=.3}
   GL.r.render(Bt.sc,GL.cam);
@@ -4811,7 +4882,7 @@ function camTilt(d){const v=camView();v.pitch=clamp(v.pitch+d,scene==='battle'?.
 // верхній край кадру завжди дивиться в землю (кут огляду 40°), а здалеку камера ще більше нахиляється вниз
 const mapPitchMin=d=>.56+clamp((d-2500)/9000,0,1)*.32;
 function camRot(d){const v=camView();v.yaw+=d;if(scene==='battle')v.cyaw=v.yaw}
-function camZoom(f){const v=camView();v.d=clamp(v.d*f,scene==='battle'?380:400,scene==='battle'?3200:13500)}
+function camZoom(f){if(scene!=='battle'&&HERO.cam)HERO.cam.user=1;const v=camView();v.d=clamp(v.d*f,scene==='battle'?380:400,scene==='battle'?3200:13500)}
 
 /* ================= HUD ================= */
 let hudT=0;
@@ -4920,6 +4991,7 @@ function setOrder(o,k){if(!B)return;if(B.tut&&o==='charge'&&!k)B.tutOrd=1;(k?ORD
 $('#orderBtn').onclick=()=>{SFX.play('click');ordMenu()};
 $('#autoBtn').onclick=()=>{if(B&&!B.over)finishAuto()};
 $('#fleeBtn').onclick=()=>{if(B&&!B.over)endBattle({win:false,retreat:true})};
+$('#celeBtn').onclick=()=>{if(B&&B.cele&&!B.over)endBattle({win:true})};
 
 /* ================= головне меню, музика, альбомний режим ================= */
 const BGM=$('#bgm');let musicOn=true;try{musicOn=localStorage.getItem('sich-music')!=='off'}catch(e){}
@@ -5011,7 +5083,7 @@ function frameBody({now,dt}){
     try{const want3d=GL.ok&&(scene==='battle'?!!GL.bat:!GL.overview&&!!GL.map);if(GL.on!==want3d){GL.on=want3d;$('#gl').style.display=want3d?'block':'none'}
     if(scene==='battle'&&B){if(!B.over&&!tutPause())bUpdate(dt);if(B)GL.bat?drawBattle3D(dt):drawBattle()}
     else{
-      if(!uiOpen&&(G.target||G.waiting||G.camp)){const dh=dt*HPS*(G.waiting||G.camp?2:1);const steps=Math.ceil(dh/.25);for(let i=0;i<steps&&!uiOpen;i++)worldStep(dh/steps)}
+      if(!uiOpen&&(G.target||G.waiting||G.camp)){const dh=dt*HPS*(G.waiting||G.camp?2:MAP_PACE);const steps=Math.ceil(dh/.25);for(let i=0;i<steps&&!uiOpen;i++)worldStep(dh/steps)}
       GL.on?drawMap3D(dt):drawMap();
     }}catch(e){gameErr(e)}
     hudT-=dt;if(hudT<=0){hudT=.15;safe(updateHud)}
