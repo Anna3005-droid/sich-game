@@ -1152,7 +1152,7 @@ body.qlow .avv>video{display:none}
     <button class="hs round" data-t="lang" style="left:86.1%;top:2.6%;width:3.4%;height:6%" aria-label="Мова"></button>
     <button class="hs round" data-t="sound" style="left:90.6%;top:2.6%;width:3.4%;height:6%" aria-label="Звук"></button>
     <button class="hs round" data-t="music" style="left:95.1%;top:2.6%;width:3.4%;height:6%" aria-label="Музика"></button>
-    <div class="tver">Версія 21.10.23</div>
+    <div class="tver">Версія 21.10.24</div>
     <div class="tload" id="tload"><span id="tloadTxt">Завантаження…</span><i><b id="tbar"></b></i></div>
   </div>
 </div>
@@ -4509,17 +4509,21 @@ function m3dLoad(k){const m=M3D[k];if(m.st)return m.st===2;if(!THREE.GLTFLoader|
 function m3dInst(k){const m=M3D[k],o=THREE.SkeletonUtils.clone(m.g.scene),mixer=new THREE.AnimationMixer(o),acts={};
   m.g.animations.forEach(c=>acts[c.name]=mixer.clipAction(c));o.traverse(x=>{if(x.isMesh)x.frustumCulled=false});o.userData.m3d=1;
   return{k,o,mixer,acts,cur:null,t:0,weapon:o.getObjectByName(m.weapon)}}
-// рух, якого немає в цієї моделі, позичаємо в іншої: скелети Mixamo однакові за назвами кісток.
-// Кістки в інших моделей іншої довжини, тож беремо лише повороти, а зсув стегон підганяємо під зріст
+// рух з іншої моделі: скелети Mixamo однакові за назвами кісток, але кістки іншої довжини —
+// беремо лише повороти, а зсув стегон підганяємо під зріст
+const RT=new Map();
+function retarget(c,from,to){const key=c.uuid+'>'+to.uuid;let r=RT.get(key);if(r)return r;
+  const hs=from.getObjectByName('mixamorigHips'),ht=to.getObjectByName('mixamorigHips'),sc=hs&&ht&&hs.position.length()>1e-3?ht.position.length()/hs.position.length():1;
+  // кістки, якої в цій моделі немає (скажімо, пальців), пропускаємо — інакше three.js крутить нею всю фігуру
+  const has=n=>!!to.getObjectByName(n.slice(0,n.lastIndexOf('.')));
+  r=new THREE.AnimationClip(c.name,c.duration,c.tracks.filter(t=>(/\.quaternion$/.test(t.name)||/Hips\.position$/.test(t.name))&&has(t.name)).map(t=>{
+    if(!/\.position$/.test(t.name)||!hs||!ht)return t;const v=Float32Array.from(t.values),a=hs.position,b=ht.position;
+    for(let i=0;i<v.length;i+=3){v[i]=b.x+(v[i]-a.x)*sc;v[i+1]=b.y+(v[i+1]-a.y)*sc;v[i+2]=b.z+(v[i+2]-a.z)*sc}
+    return new THREE.VectorKeyframeTrack(t.name,t.times,v)}));
+  RT.set(key,r);return r}
+// рух, якого немає в цієї моделі, позичаємо в іншої
 function m3dAct(I,n){if(I.acts[n])return I.acts[n];
-  for(const k in M3D){const m=M3D[k],c=m.g&&m.g.animations.find(c=>c.name===n);if(!c)continue;
-    const key=I.k+'<'+n,cache=M3D[I.k].borrow||(M3D[I.k].borrow={});
-    if(!cache[key]){const hs=m.g.scene.getObjectByName('mixamorigHips'),ht=I.o.getObjectByName('mixamorigHips'),sc=hs&&ht&&hs.position.length()>1e-3?ht.position.length()/hs.position.length():1;
-      cache[key]=new THREE.AnimationClip(n,c.duration,c.tracks.filter(t=>/\.quaternion$/.test(t.name)||/Hips\.position$/.test(t.name)).map(t=>{
-        if(!/\.position$/.test(t.name)||!hs||!ht)return t;const v=Float32Array.from(t.values),a=hs.position,b=ht.position;
-        for(let i=0;i<v.length;i+=3){v[i]=b.x+(v[i]-a.x)*sc;v[i+1]=b.y+(v[i+1]-a.y)*sc;v[i+2]=b.z+(v[i+2]-a.z)*sc}
-        return new THREE.VectorKeyframeTrack(t.name,t.times,v)}))}
-    return I.acts[n]=I.mixer.clipAction(cache[key])}
+  for(const k in M3D){const m=M3D[k],c=m.g&&m.g.animations.find(c=>c.name===n);if(c)return I.acts[n]=I.mixer.clipAction(retarget(c,m.g.scene,M3D[I.k].g.scene))}
   return null}
 const m3dDur=(I,n)=>{const a=m3dAct(I,n);return a?a.getClip().duration*1000:0};
 const m3dHas=(I,n)=>!!m3dAct(I,n);
@@ -4600,20 +4604,32 @@ const U3D={state:0,g:null,clips:{},src:[],mats:{}},U3D_MAX={hi:64,mid:24,low:0},
 const is3DUnit=u=>!u.hero;
 // відтінок сторони: колір фракції, розбавлений білим (розбійники — просто темніші)
 const u3dFacTint=f=>f===4?'#8f8a80':'#'+new THREE.Color('#ffffff').lerp(new THREE.Color(FAC[f].color),.45).getHexString();
-function u3dTint(m,tint){if(m.tint===tint)return;m.tint=tint;
-  const mats=tint?U3D.mats[tint]||(U3D.mats[tint]=U3D.src.map(x=>{const n=x.clone(),c=new THREE.Color(tint);n.color.copy(c);n.emissive.copy(c);return n})):U3D.src;
-  let i=0;m.o.traverse(o=>{if(o.isMesh)o.material=mats[i++]})}
+function u3dTint(m,tint){if(m.tint===tint)return;m.tint=tint;const S=m.kind==='vet'?U3V:U3D;
+  const mats=tint?S.mats[tint]||(S.mats[tint]=S.src.map(x=>{const n=x.clone(),c=new THREE.Color(tint);n.color.copy(c);n.emissive.copy(c);return n})):S.src;
+  let i=0;m.o.traverse(o=>{if(o.isMesh&&!o.userData.sab)o.material=mats[i++]})}
 function loadU3D(){if(U3D.state||!window.THREE||!THREE.GLTFLoader||!THREE.SkeletonUtils)return;U3D.state=1;
   glbLoad('assets/units/kozak_prostyi.glb',g=>{
     g.scene.traverse(m=>{if(m.isMesh){const map=m.material.map;if(map)map.encoding=THREE.LinearEncoding;
       m.material=new THREE.MeshLambertMaterial({map,color:map?'#ffffff':m.material.color,skinning:!!m.isSkinnedMesh,emissive:'#ffffff',emissiveMap:map,emissiveIntensity:.4});U3D.src.push(m.material);m.geometry.userData.keep=1}});
     g.animations.forEach(c=>U3D.clips[c.name]=c);U3D.g=g;U3D.state=2},e=>{U3D.state=3;console.warn('Не вдалося завантажити 3D-воїнів',e)})}
-function u3dMake(sc){const o=THREE.SkeletonUtils.clone(U3D.g.scene);o.traverse(m=>{if(m.isMesh)m.frustumCulled=false});sc.add(o);
-  const mx=new THREE.AnimationMixer(o),acts={};for(const n in U3D.clips)acts[n]=mx.clipAction(U3D.clips[n]);return{o,mx,acts,cur:null,lastAt:-1,owner:null,corpse:false,fid:0,tint:'',sabre:o.getObjectByName('Cossack_Sabre_Hand')}}
-function u3dAct(m,n){if(m.acts[n])return m.acts[n];const g=M3D.cossack.g,c=g&&g.animations.find(c=>c.name===n);if(c)return m.acts[n]=m.mx.clipAction(c);
-  // рухи з бібліотеки (поразка) — з іншого скелета, тож лише повороти кісток і зсув стегон
-  const a=M3D.anims.g,ca=a&&a.animations.find(c=>c.name===n);if(!ca)return null;
-  return m.acts[n]=m.mx.clipAction(new THREE.AnimationClip(n,ca.duration,ca.tracks.filter(t=>/\.quaternion$/.test(t.name)||/Hips\.position$/.test(t.name))))}
+// досвідчені й елітні воїни — у вигляді досвідченого героя (легка модель пищальника), рухи ті самі, що в козака;
+// пищальник тримає самопал, решта — шаблю козака в правій руці
+const U3V={src:[],mats:{},clips:null};
+function u3vReady(){if(U3D.state!==2||!m3dLoad('musket'))return false;
+  if(!U3V.clips){const g=M3D.musket.g;U3V.clips={};for(const n in U3D.clips)U3V.clips[n]=retarget(U3D.clips[n],U3D.g.scene,g.scene);
+    g.scene.traverse(x=>{if(x.isMesh){U3V.src.push(x.material);x.geometry.userData.keep=1}})}
+  return true}
+const u3dPool=(Bt,k)=>Bt.m3pool[k]||(Bt.m3pool[k]=[]);
+function u3dMake(sc,kind){const vet=kind==='vet',o=THREE.SkeletonUtils.clone(vet?M3D.musket.g.scene:U3D.g.scene);o.traverse(m=>{if(m.isMesh)m.frustumCulled=false});sc.add(o);
+  const mx=new THREE.AnimationMixer(o),acts={},clips=vet?U3V.clips:U3D.clips;for(const n in clips)acts[n]=mx.clipAction(clips[n]);
+  let sabre=o.getObjectByName('Cossack_Sabre_Hand'),gun=null;
+  if(vet){gun=o.getObjectByName('Veteran_Musket');const hand=o.getObjectByName('mixamorigRightHand'),s0=U3D.g.scene.getObjectByName('Cossack_Sabre_Hand');
+    if(hand&&s0){sabre=s0.clone();sabre.traverse(x=>{x.userData.sab=1;if(x.isMesh)x.frustumCulled=false});hand.add(sabre)}}
+  return{o,mx,acts,kind:vet?'vet':'base',cur:null,lastAt:-1,owner:null,corpse:false,fid:0,tint:'',sabre,gun}}
+// рух, якого в легкій моделі немає (свято, поразка), — з моделі героя чи бібліотеки рухів; чужий скелет — лише повороти кісток
+function u3dAct(m,n){if(m.acts[n])return m.acts[n];const to=m.kind==='vet'?M3D.musket.g.scene:U3D.g.scene;
+  for(const k of['cossack','anims']){const g=M3D[k].g,c=g&&g.animations.find(c=>c.name===n);if(c)return m.acts[n]=m.mx.clipAction(m.kind==='vet'||k!=='cossack'?retarget(c,g.scene,to):c)}
+  return null}
 function u3dPlay(m,n,once,speed,restart){const a=u3dAct(m,n);if(!a)return;if(m.cur===a&&!restart)return;
   a.setLoop(once?THREE.LoopOnce:n==='Stand'?THREE.LoopPingPong:THREE.LoopRepeat,Infinity);a.clampWhenFinished=!!once;a.timeScale=speed||1;a.reset().play();
   if(!once&&!m.cur)a.time=Math.random()*a.getClip().duration;   // щоб загін не рухався як один
@@ -4621,8 +4637,10 @@ function u3dPlay(m,n,once,speed,restart){const a=u3dAct(m,n);if(!a)return;if(m.c
 // воїн у 3D: модель на місці спрайта, рух за станом бійця; false — малюємо як раніше, спрайтом
 function u3dUnit(Bt,u,F,gh,H,dt){
   if(!is3DUnit(u)||U3D.state!==2||gq()==='low')return false;
-  if(!u.m3){if(Bt.m3n>=(U3D_MAX[gq()]||0))return false;const m=Bt.m3pool.pop()||(m0=>(Bt.m3all.push(m0),m0))(u3dMake(Bt.sc));m.owner=u;m.corpse=false;m.cur=null;m.lastAt=-1;u.m3=m;Bt.m3n++}
-  const m=u.m3,sp=Math.hypot(u.vx||0,u.vy||0);m.fid=Bt.fid;u3dTint(m,u.team?u3dFacTint(B.f):'');if(m.sabre)m.sabre.visible=true;
+  const kind=tierOf(u.t)>=2&&u3vReady()?'vet':'base';   // досвідчені й елітні — як досвідчений герой
+  if(u.m3&&u.m3.kind!==kind){const o=u.m3;o.o.visible=false;o.owner=null;u3dPool(Bt,o.kind).push(o);u.m3=null;Bt.m3n--}
+  if(!u.m3){if(Bt.m3n>=(U3D_MAX[gq()]||0))return false;const m=u3dPool(Bt,kind).pop()||(m0=>(Bt.m3all.push(m0),m0))(u3dMake(Bt.sc,kind));m.owner=u;m.corpse=false;m.cur=null;m.lastAt=-1;u.m3=m;Bt.m3n++}
+  const m=u.m3,sp=Math.hypot(u.vx||0,u.vy||0);m.fid=Bt.fid;u3dTint(m,u.team?u3dFacTint(B.f):'');if(m.gun)m.gun.visible=baseOf(u.t)==='musket';if(m.sabre)m.sabre.visible=!(m.gun&&m.gun.visible);
   if(u.at>=0){if(m.lastAt<0||u.at<m.lastAt){const an=TYPES[u.t]&&TYPES[u.t].ranged?'Attack':'Attack_Slash',c=m.acts[an];u3dPlay(m,an,true,c?c.getClip().duration/(ATK_T*1.8):1,true)}}
   else if(u.hurt>0){if(m.cur!==m.acts.Hit)u3dPlay(m,'Hit',true,1.6,true)}
   else if(u.blocking)u3dPlay(m,'Block_Idle');
@@ -4652,7 +4670,7 @@ function u3dMapSweep(M){if(!M.p3)return;for(const m of M.p3all){if(m.fid===M.p3f
   for(const[id,m]of M.p3)if(m.fid!==M.p3fid){M.p3.delete(id);M.p3pool.push(m)}}
 // після кадру: моделі, яких не малювали, ховаємо; воїн пішов з поля — модель назад у запас
 function u3dSweep(Bt,seen){for(const m of Bt.m3all){if(m.fid===Bt.fid)continue;m.o.visible=false;
-  if(m.owner&&!m.corpse){m.owner.m3=null;m.owner=null;Bt.m3pool.push(m);Bt.m3n--}}}
+  if(m.owner&&!m.corpse){m.owner.m3=null;m.owner=null;u3dPool(Bt,m.kind).push(m);Bt.m3n--}}}
 function facing(set,dx,dy,yaw){
   const l=Math.hypot(dx,dy);if(!set.dir||!set.dir.length||l<1e-6)return null;
   const c=camVecs(yaw),f=(dx*c.fx+dy*c.fz)/l;
@@ -4889,7 +4907,7 @@ function drawBattle3D(dt){
   const {rx,rz}=camVecs(v.cyaw),seen=new Set();
   if(Bt.gate)Bt.gate.visible=!B.gate.open;if(Bt.ram&&B.ram){Bt.ram.position.set(B.ram.x,battleHeight(B.ram.x,B.ram.y),B.ram.y);if(B.ram.at&&!B.gate.open)Bt.ram.position.x+=Math.sin(performance.now()/120)*4}
   const now3=performance.now(),seen3=new Set(),U3=Bt.units3d||(Bt.units3d=new Map());m3dLoad('musket');
-  if(!U3D.state)loadU3D();if(!Bt.m3all){Bt.m3all=[];Bt.m3pool=[];Bt.m3n=0;Bt.fid=0}Bt.fid++;
+  if(!U3D.state)loadU3D();if(!Bt.m3all){Bt.m3all=[];Bt.m3pool={};Bt.m3n=0;Bt.fid=0}Bt.fid++;
   if(sprReady()){
     for(const u of B.units){let F=Bt.figs.get(u.id);if(!F){F=poolFig(Bt);F.ring.material.color.set(u.team?'#e65c4e':u.hero?'#ffe08a':FAC[0].color);F.cmp=null;Bt.figs.set(u.id,F)}
       seen.add(u.id);const set=aniSet(sprIndex(u),u.team===0?'p':B.f===4?'b':'e'),H=uH(u)*1.15,gh=battleHeight(u.x,u.y);
