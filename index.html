@@ -217,6 +217,38 @@ input[type=text]{width:100%;font:inherit;font-size:18px;padding:10px 12px;border
   .hw-body{grid-template-columns:1fr;grid-template-areas:"por" "slots" "stats"}.hw-por{height:300px}
   .hw-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.hw-acts{flex-direction:column;align-items:stretch}
 }
+/* вікно «Армія» → «Воїни» */
+.sheet.army{max-width:min(1000px,97vw)}
+.av-head{align-items:center;gap:10px;margin-bottom:8px}
+.avtabs{display:flex;gap:4px;margin:0 0 10px}.av-head .avtabs{margin:0 0 0 auto}
+.avtabs button{font:700 13px/1 var(--f-head);letter-spacing:.04em;text-transform:uppercase;color:var(--ash);background:#121417;border:1.5px solid #4d3a19;border-radius:6px;padding:8px 12px;white-space:nowrap}
+.avtabs button.on{color:#1d1408;background:linear-gradient(#e2b25c,#b8853a 55%,#946726);border-color:#5e4318}
+.avdot{display:inline-grid;place-items:center;min-width:16px;height:16px;border-radius:8px;background:var(--blood);color:#fff;font:700 10px/1 var(--f-body);font-style:normal;margin-left:3px}
+.av{display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1fr) minmax(0,1.1fr);gap:10px;height:min(420px,calc(100dvh - 150px));min-height:260px}
+.av-st,.av-list,.av-3d{background:linear-gradient(#17191c,#111316);border:1.5px solid #9e7832;border-radius:8px;box-shadow:inset 0 0 12px rgba(0,0,0,.6);min-height:0}
+.av-st{padding:10px 12px;display:flex;flex-direction:column;gap:6px;overflow:auto}
+.av-st h3{margin:0;font:700 17px/1.1 var(--f-head);color:#fbf3e4}.avtier{color:#e2b45c;font-size:12px;letter-spacing:.06em}
+.avb{display:grid;grid-template-columns:1fr auto;grid-template-areas:"n v" "b b";align-items:center;gap:2px 6px;font-size:12.5px;color:#d8cdb6}.avb span{grid-area:n}.avb em{grid-area:v}.avb i{grid-area:b}
+.avb i{height:10px;background:#0b0c0e;border:1px solid #4d3a19;border-radius:5px;overflow:hidden}.avb i b{display:block;height:100%;background:linear-gradient(#69c672,#2f7d3c)}
+.avb em{font-style:normal;text-align:right;color:#fbf3e4;font-variant-numeric:tabular-nums}
+.avm{margin:2px 0 0;font-size:12px;color:var(--ash);line-height:1.35}.av-st .btn{align-self:flex-start;margin-top:auto}
+.av-3d{position:relative;display:flex;flex-direction:column;overflow:hidden;background:radial-gradient(90% 70% at 50% 62%,#2a2f34,#111316 75%)}
+.av-up{display:flex;gap:6px;justify-content:center;padding:8px 6px 0;z-index:1}.avtop{color:#e2b45c;font:700 13px var(--f-head);padding:6px}
+.av-cv{position:relative;flex:1;min-height:0;touch-action:none}.av-c{position:absolute;inset:0;width:100%;height:100%;cursor:grab}
+.av-fb{position:absolute;inset:12% 18%;width:64%;height:76%;object-fit:contain;opacity:.85}
+.av-to{text-align:center;color:var(--ash);font-size:11.5px;padding:0 6px 7px}
+.av-list{display:flex;flex-direction:column;padding:8px;gap:6px}
+.av-lh{display:flex;justify-content:space-between;font-size:12.5px;color:var(--ash);padding:0 4px}.av-lh b{color:#fbf3e4}
+.av-rows{flex:1;overflow:auto;display:flex;flex-direction:column;gap:5px;min-height:0;padding-right:2px}
+.avr{display:grid;grid-template-columns:18px 1fr auto;align-items:center;gap:6px;text-align:left;padding:7px 10px;border-radius:16px;border:1.5px solid #6b5426;background:#1a1c20;color:#efe6d4;font:500 13.5px/1.15 var(--f-body)}
+.avr b{font-variant-numeric:tabular-nums;color:#fbf3e4}.avr.on{border-color:#e2b45c;background:linear-gradient(#5b4618,#3b2d10);box-shadow:0 0 0 1px #e2b45c inset}
+.avr i{font-style:normal;color:#5fd36a;font-size:12px;text-shadow:0 0 6px rgba(95,211,106,.6)}.avr i.off{color:#56605a;text-shadow:none}
+@media (orientation:landscape) and (max-height:520px){
+  .av{height:calc(100dvh - 108px);min-height:220px;gap:6px}.av-head{margin-bottom:5px}.av-head .hw-rib{--h:44px}.av-head .hw-rib b{font-size:17px}
+  .avtabs button{padding:6px 8px;font-size:11.5px}.av-st{padding:7px 9px;gap:4px}.av-st h3{font-size:15px}.avb{font-size:11.5px;gap:1px 6px}.avb i{height:7px}
+  .avm{font-size:11px}.avr{padding:5px 8px;font-size:12.5px}.av-up .btn{padding:5px 8px;font-size:12px}
+}
+@media (max-width:700px) and (orientation:portrait){.av{grid-template-columns:1fr;height:auto}.av-3d{height:320px}.av-rows{max-height:240px}}
 #cele{position:fixed;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;z-index:5}#cele[hidden]{display:none}
 #cele b{font-family:var(--f-head);font-size:30px;letter-spacing:.06em;color:var(--gold);text-shadow:0 2px 8px rgba(0,0,0,.75)}#cele .btn{pointer-events:auto;min-width:120px}
 #bhud>*{pointer-events:auto}
@@ -1152,7 +1184,7 @@ body.qlow .avv>video{display:none}
     <button class="hs round" data-t="lang" style="left:86.1%;top:2.6%;width:3.4%;height:6%" aria-label="Мова"></button>
     <button class="hs round" data-t="sound" style="left:90.6%;top:2.6%;width:3.4%;height:6%" aria-label="Звук"></button>
     <button class="hs round" data-t="music" style="left:95.1%;top:2.6%;width:3.4%;height:6%" aria-label="Музика"></button>
-    <div class="tver">Версія 21.10.26</div>
+    <div class="tver">Версія 21.10.27</div>
     <div class="tload" id="tload"><span id="tloadTxt">Завантаження…</span><i><b id="tbar"></b></i></div>
   </div>
 </div>
@@ -3179,7 +3211,7 @@ const ACT={
   xclose:()=>xClose(),
   tutStart:()=>{SFX.play('advPick');closeModal();voxPre('start','move','arrived','time','bandit','enc1','enc2');tutGo('start')},tutSkip:()=>{SFX.play('advOk');closeModal();tutEnd(true);introPanel()},advGo:()=>{SFX.play('advOk');closeModal();advTell('bye',ADVT.bye,{now:1,must:1,face:2,v:'bye'})},
   found:()=>foundPanel(),fdType:v=>{FD.name=($('#foundName')||{}).value||FD.name;FD.type=v;foundPanel()},
-  cNew:()=>campaignPanel(true),armyBack:()=>armyPanel(),
+  cNew:()=>campaignPanel(true),armyBack:()=>{AV.tab='hero';armyPanel()},
   cSel:v=>{const[k,d]=v.split(':');CAMP.sel[k]=d==='all'?(CAMP.sel[k]===G.army[k]?0:G.army[k]):clamp((CAMP.sel[k]||0)+(+d),0,G.army[k]);campaignPanel()},
   cAt:()=>{CAMP.at=(CAMP.at+1)%ATAMANS.length;campaignPanel()},cTgt:v=>{CAMP.tgt=+v;campaignPanel()},cGo:()=>sendCampaign(),
   cOrder:v=>{const p=G.parties.find(q=>q.id==v);if(p)orderPanel(p)},
@@ -3214,7 +3246,12 @@ const ACT={
   pass:()=>{CUR.party.cool=2;closeModal()},
   declare:()=>{const p=CUR.party;declareWar(p.f);openEncounter(p)},
   peace:v=>{const f=+v,cost=peaceCost();if(G.gold<cost)return;G.gold-=cost;G.war[f]=false;initDiplo();G.rel[f]=Math.max(G.rel[f],-10);G.parties.forEach(p=>{if(p.f===f)p.cool=4});toast(`Мир із ${FAC[f].name}.`);diplomacyPanel()},
-  dismiss:k=>{if(G.army[k]>0)G.army[k]--;armyPanel()},
+  dismiss:k=>{if(G.army[k]>0)G.army[k]--;armyPanel(1)},
+  armyTab:v=>{AV.tab=v==='hero'?'hero':'troops';armyPanel()},
+  armySel:v=>{if(TYPES[v]){AV.sel=v;armyPanel(1)}},
+  // підвищення з вікна «Армія» — будь-де, за ту саму ціну, що й вишкіл у місті
+  armyUp:v=>{const[k,n0]=v.split(':'),b=UPG[k]&&UPG[k][0];if(!b)return;const c=upgCost(k,b),n=Math.min(+n0,G.army[k]||0,Math.floor(G.gold/c));if(n<=0)return;
+    G.army[k]-=n;G.army[b]=(G.army[b]||0)+n;G.gold-=n*c;SFX.play('coin');toast(`Підвищено: ${TYPES[k].n.toLowerCase()} → ${TYPES[b].n.toLowerCase()} ×${n}`);AV.sel=b;AV.cheer=1;save();armyPanel(1)},
   newConfirm:()=>show(`<h2>Почати нову гру?</h2><p>Поточний похід буде втрачено.</p><div class="acts"><button class="btn red" data-a="newGo">Так, нова гра</button><button class="btn ghost" data-a="menu">Назад</button></div>`),
   newGo:()=>colorPanel(false),
   pickColor:v=>{const c=PCOLORS[+v][1];const btn=sheet.querySelector(`.csw[data-v="${v}"]`);if(btn&&!colorPanel.change){sheet.querySelectorAll('.csw').forEach(b=>b.classList.toggle('on',b===btn));const box=btn.parentElement;if(box.classList.contains('picking'))return;box.classList.add('picking');{const ld=sheet.querySelector('.fload');if(ld){ld.hidden=false;const cb=sheet.querySelector('.facts .btn');if(cb)cb.disabled=true}else box.insertAdjacentHTML('afterend','<p class="pickmsg">Готуємо мапу…</p>')}SFX.play('click');setTimeout(()=>{pickedColor=c;ACT.pick('3')},380);return}if(colorPanel.change){G.color=c;applyColor();save();toast('Колір прапора змінено.');menuPanel()}else{pickedColor=c;ACT.pick('3')}},
@@ -3267,10 +3304,57 @@ const ACT={
 };
 const peaceCost=()=>200+150*G.towns.filter(t=>t.f===0).length;
 
-function armyPanel(keep){const st=sheet.scrollTop;initCamp();
-  const h=G.hero,rk=heroRank(),wage=ORDER.reduce((s,k)=>s+G.army[k]*TYPES[k].wage,0);
+// вікно «Армія»: вкладка «Воїни» — список загону, живий 3D-воїн, його сила й підвищення за золото;
+// вкладка «Герой» — звання, очки героя, походи отаманів і полонені
+const AV={tab:'troops',sel:null,yaw:-.45};
+const avTabs=()=>{const pts=G.hero.pts||0;return `<div class="avtabs"><button class="${AV.tab==='troops'?'on':''}" data-a="armyTab" data-v="troops">Воїни</button><button class="${AV.tab==='hero'?'on':''}" data-a="armyTab" data-v="hero">Герой і походи${pts?` <i class="avdot">${pts}</i>`:''}</button></div>`};
+function armyPanel(keep){if(AV.tab==='hero')heroArmyPanel(keep);else troopsPanel(keep)}
+function troopsPanel(keep){initCamp();const a=G.army,ks=ORDER.filter(k=>a[k]>0),ls=keep&&sheet.querySelector('.av-rows')?sheet.querySelector('.av-rows').scrollTop:0;
+  if(!ks.includes(AV.sel))AV.sel=ks[0]||null;
+  const k=AV.sel,T=k&&TYPES[k],up=k&&UPG[k]?UPG[k][0]:null,c=up?upgCost(k,up):0,all=up?Math.min(a[k],Math.floor(G.gold/c)):0,wage=ORDER.reduce((s,x)=>s+(a[x]||0)*TYPES[x].wage,0);
+  const MX=AV.mx||(AV.mx={hp:Math.max(...ORDER.map(x=>TYPES[x].hp)),atk:Math.max(...ORDER.map(x=>TYPES[x].atk)),spd:Math.max(...ORDER.map(x=>TYPES[x].spd)),mor:Math.max(...ORDER.map(x=>TYPES[x].mor))});
+  const bar=(n,v,max,txt)=>`<div class="avb"><span>${n}</span><i><b style="width:${Math.round(Math.min(1,v/max)*100)}%"></b></i><em>${txt??v}</em></div>`;
+  const rows=ks.map(x=>{const u=UPG[x]?UPG[x][0]:null,can=u&&G.gold>=upgCost(x,u);return `<button class="avr${x===k?' on':''}" data-a="armySel" data-v="${x}"><i class="${can?'up':u?'up off':''}">${u?'▲':''}</i><span>${TYPES[x].n}</span><b>${a[x]}</b></button>`}).join('');
+  show(`<div class="hw-head av-head"><div class="hw-rib" style="border-image-source:url(${UIART.ui_hw_rib})"><small>Ваш загін</small><b>Воїни · ${total(a)} з ${armyLimit()}</b></div>${avTabs()}</div>
+  <div class="av">
+    <div class="av-st">${T?`<h3>${T.n}</h3><small class="avtier">${['','Простий','Досвідчений','Елітний'][tierOf(k)]} рівень · ${tierOf(k)} з 3</small>
+      ${bar('Здоров’я',T.hp,MX.hp)}${bar('Удар',T.atk,MX.atk)}${bar('Захист',T.def,.6,Math.round(T.def*100)+'%')}${bar('Швидкість',T.spd,MX.spd)}${bar('Бойовий дух',T.mor,MX.mor)}
+      <p class="avm">${T.ranged?'Стріляють здалеку':'Б’ються зблизька'}${T.mounted?' · кіннота':''}<br>Платня ${T.wage} на день · найм ${T.cost}</p>
+      <button class="btn sm ghost" data-a="dismiss" data-v="${k}">Відпустити 1</button>`:'<p class="muted">У загоні поки нікого. Наймайте воїнів у містах і селах.</p>'}</div>
+    <div class="av-3d">${k?`<div class="av-up">${up?`<button class="btn sm gold" data-a="armyUp" data-v="${k}:1" ${G.gold>=c?'':'disabled'}>Підвищити · ${c}</button><button class="btn sm" data-a="armyUp" data-v="${k}:${all}" ${all>1?'':'disabled'}>Усіх · ${all>1?all*c:'—'}</button>`:'<span class="avtop">Найвищий рівень</span>'}</div>
+      <div class="av-cv" id="avCv"><img class="av-fb" src="${UIART[UTHUMB[baseOf(k)]]}" alt=""></div>${up?`<small class="av-to">Після підвищення: ${TYPES[up].n.toLowerCase()}</small>`:''}`:''}</div>
+    <div class="av-list"><div class="av-lh"><span>Золото <b>${Math.floor(G.gold)}</b></span><span>Платня <b>${wage}</b>/день</span></div><div class="av-rows">${rows||'<p class="muted">Нікого немає.</p>'}</div>
+      ${total(prisoners())?`<button class="btn sm" data-a="prisoners">Полонені · ${total(prisoners())}</button>`:''}</div>
+  </div>`,'hw army');
+  {const x=sheet.querySelector('.xbtn');if(x)x.style.setProperty('background-image',`url(${UIART.ui_hw_x})`,'important')}
+  if(ls)sheet.querySelector('.av-rows').scrollTop=ls;avAttach();
+}
+// живий 3D-воїн у вікні: та сама модель, що в бою; тягни пальцем — повертається; після підвищення — вихід із шаблею
+function avKind(k){return baseOf(k)==='musket'?'musket':tierOf(k)>=2?'vet':'base'}
+function avAttach(){const box=$('#avCv');if(!box||!AV.sel||!GL.ok||!window.THREE)return;
+  if(!AV.r){try{const c=document.createElement('canvas');c.className='av-c';const r=new THREE.WebGLRenderer({canvas:c,antialias:true,alpha:true});r.setPixelRatio(Math.min(2,window.devicePixelRatio||1));
+      const sc=new THREE.Scene();sc.add(new THREE.HemisphereLight('#dfe8ef','#5a5236',.6));const sun=new THREE.DirectionalLight('#fff3dc',.8);sun.position.set(-2,4,3);sc.add(sun);
+      const cam=new THREE.PerspectiveCamera(28,1,.1,50);cam.position.set(0,1,4);cam.lookAt(0,.9,0);
+      const sh=new THREE.Mesh(new THREE.CircleGeometry(.55,32),new THREE.MeshBasicMaterial({color:'#000',transparent:true,opacity:.35}));sh.rotation.x=-Math.PI/2;sh.position.y=.002;sc.add(sh);
+      Object.assign(AV,{r,c,sc,cam,m:null,mk:'',t:0});
+      let px=null;c.addEventListener('pointerdown',e=>{px=e.clientX;c.setPointerCapture&&c.setPointerCapture(e.pointerId)});c.addEventListener('pointermove',e=>{if(px==null)return;AV.yaw+=(e.clientX-px)*.012;px=e.clientX});
+      const end=()=>{px=null};c.addEventListener('pointerup',end);c.addEventListener('pointercancel',end)}catch(e){AV.r=null;return}}
+  box.appendChild(AV.c);loadU3D();m3dLoad('musket');m3dLoad('cossack');
+  if(!AV.raf){AV.t=performance.now();const loop=()=>{if(!uiOpen||!AV.c.isConnected){AV.raf=0;return}AV.raf=requestAnimationFrame(loop);avFrame()};AV.raf=requestAnimationFrame(loop)}}
+function avFrame(){const now=performance.now(),dt=Math.min(.1,(now-AV.t)/1000);AV.t=now;const k=AV.sel,kind=avKind(k),want=kind+':'+(kind==='base'?'':k);
+  if(AV.mk!==want){const ready=kind==='musket'?M3D.musket.st===2:kind==='vet'?u3vReady():U3D.state===2;
+    if(ready){if(AV.m)AV.sc.remove(AV.m.o);
+      if(kind==='musket'){const I=m3dInst('musket');AV.sc.add(I.o);AV.m={o:I.o,mx:I.mixer,play:(n,once)=>m3dPlay(I,n,once,1,once)}}
+      else{const m=u3dMake(AV.sc,kind);if(m.gun)m.gun.visible=false;if(m.sabre)m.sabre.visible=true;AV.m={o:m.o,mx:m.mx,play:(n,once)=>u3dPlay(m,n,once,1,once)}}
+      AV.m.o.position.set(0,0,0);AV.m.o.scale.setScalar(1);AV.m.play('Idle');AV.mk=want;AV.cheerT=0;const fb=$('#avCv .av-fb');if(fb)fb.hidden=true}}
+  const box=AV.c.parentElement,w=box.clientWidth,h=box.clientHeight;if(w&&h&&(AV.w!==w||AV.h!==h)){AV.w=w;AV.h=h;AV.r.setSize(w,h,false);AV.cam.aspect=w/h;AV.cam.updateProjectionMatrix()}
+  if(!AV.m)return;
+  if(AV.cheer){AV.cheer=0;AV.m.play('Entry',true);AV.cheerT=now+4200}else if(AV.cheerT&&now>AV.cheerT){AV.cheerT=0;AV.m.play('Idle')}
+  AV.m.o.rotation.y=AV.yaw;AV.m.mx.update(dt);AV.r.render(AV.sc,AV.cam)}
+function heroArmyPanel(keep){const st=sheet.scrollTop;initCamp();
+  const h=G.hero,rk=heroRank();
   const own=G.towns.filter(t=>t.f===0);
-  show(`<span class="eyebrow" style="color:var(--gold)">Ваш загін</span><h2>${RANKS[rk].n}, рівень ${h.lvl}</h2>
+  show(`${avTabs()}<span class="eyebrow" style="color:var(--gold)">Ваш загін</span><h2>${RANKS[rk].n}, рівень ${h.lvl}</h2>
   <p class="muted">${FAC[G.pf].name}</p>
   <div class="cpbox">${campaignsSection()}</div>
   <div class="ranks r3">${RANKS.map((r,k)=>`<div class="rank${k===rk?' on':''}${k>rk?' locked':''}"><img src="${portrait(G.pf,k)}" alt="${r.n}" class="${portraitCut(G.pf)?'cut':''}"><b>${r.n}</b><small>${k?`з рівня ${r.lvl} · +${r.hp} здоров’я · +${r.atk} удар · +${r.lead} воїнів · швидша хода`:'початкове звання'}</small>${k===rk?'<span class="rk-on">Зараз</span>':k>rk?`<span class="rk-lv">Рівень ${r.lvl}</span>`:'<span class="rk-lv done">Пройдено</span>'}</div>`).join('')}</div>
@@ -3289,8 +3373,7 @@ function armyPanel(keep){const st=sheet.scrollTop;initCamp();
   </div>
   <p class="muted">${Object.keys(GEAR).map(k=>gearItem(k).n).join(' · ')}. Поранені одужують у таборі (кнопка «Табір» ліворуч) чи в місті.</p>
   ${total(prisoners())?`<div class="trainrow"><span>Полонені: <b>${total(prisoners())}</b> — можна безкоштовно взяти на службу</span><button class="btn sm gold" data-a="prisoners">Полонені</button></div>`:''}
-  <h3>Воїни · платня ${wage} на день</h3>${armyRows(G.army,k=>`<button class="btn sm ghost" data-a="dismiss" data-v="${k}">Відпустити 1</button>`)}
-  <div class="acts"><button class="btn gold" data-a="close">Закрити</button></div>`);if(keep)sheet.scrollTop=st;
+  <div class="acts"><button class="btn" data-a="armyTab" data-v="troops">До воїнів</button><button class="btn gold" data-a="close">Закрити</button></div>`);if(keep)sheet.scrollTop=st;
 }
 function colorPanel(change){
   colorPanel.change=change;const cur=(change&&G&&G.color)||'';
