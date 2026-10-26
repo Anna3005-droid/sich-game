@@ -1185,7 +1185,7 @@ body.qlow .avv>video{display:none}
     <button class="hs round" data-t="lang" style="left:86.1%;top:2.6%;width:3.4%;height:6%" aria-label="Мова"></button>
     <button class="hs round" data-t="sound" style="left:90.6%;top:2.6%;width:3.4%;height:6%" aria-label="Звук"></button>
     <button class="hs round" data-t="music" style="left:95.1%;top:2.6%;width:3.4%;height:6%" aria-label="Музика"></button>
-    <div class="tver">Версія 21.10.29</div>
+    <div class="tver">Версія 21.10.30</div>
     <div class="tload" id="tload"><span id="tloadTxt">Завантаження…</span><i><b id="tbar"></b></i></div>
   </div>
 </div>
@@ -2370,7 +2370,7 @@ function fishView(msg){
 function fishPanel(){
   if(!hasRod()){show(`<span class="eyebrow" style="color:var(--gold)">Риболовля</span><h2>Немає вудки</h2><p>Тут добре клює, але потрібна вудка. Купіть її на ринку будь-якого міста — проста коштує 80 золотих.</p><div class="acts"><button class="btn gold" data-a="close">Зрозуміло</button></div>`);return}
   if(!nearWater()){toast('Підійдіть ближче до річки чи озера.',true);return}
-  FS.st='idle';CUR=null;G.target=null;G.path=null;advTell('fish',ADVT.fish,{face:0,now:1,when:()=>!uiOpen||sheet.classList.contains('fish')});
+  FS.st='idle';CUR=null;G.target=null;G.path=null;advTell('fish',ADVT.fish,{face:0,now:1,v:'fish',when:()=>!uiOpen||sheet.classList.contains('fish')});
   const boat=terAt(G.x,G.y)===T_WATER;
   show(`<span class="eyebrow" style="color:var(--gold)">Риболовля · ${RODS[G.rod].n}</span><h2>${boat?'З човна':'Біля води'}</h2>
   <div class="pond" id="pond">${REEDS}<i class="rp r1"></i><i class="rp r2"></i><i class="rp r3"></i><span class="ln"></span><span class="bob"><i></i></span><img class="catch" id="fCatchImg" alt=""></div>
@@ -2639,7 +2639,7 @@ const flagIdx=f=>{const c=FAC[f].color,h=x=>[1,3,5].map(i=>parseInt(x.slice(i,i+
 const EXIT_IC=`<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 4H6v16h8M10 12h10m-3-3 3 3-3 3"/></svg>`;
 function openTown(t,tab){
   const same=CUR&&CUR.town===t,prevTab=CUR&&CUR.tab,tb=$('.tbody'),keep=same&&tb?tb.scrollTop:0;
-  CUR={town:t,tab:tab||same&&CUR.tab||'hire'};G.waiting=false;tab=CUR.tab;if(tab==='market')advTell('market',ADVT.market,{face:2,now:1,when:()=>uiOpen&&CUR&&CUR.tab==='market',exp:60000});
+  CUR={town:t,tab:tab||same&&CUR.tab||'hire'};G.waiting=false;tab=CUR.tab;if(tab==='market')advTell('market',ADVT.market,{face:2,now:1,v:'market',when:()=>uiOpen&&CUR&&CUR.tab==='market',exp:60000});
   const own=t.f===0,enemy=t.f>0&&G.war[t.f];
   const head=`<div class="cityhead" style="background-image:url(${tab==='market'?UIART.ui_hd_market:UIART.ui_hd_fort})"><button class="xbtn" data-a="close" aria-label="Закрити">✕</button><div class="nm"><span class="cbanner pf"><img src="${UIART['ui_fl'+flagIdx(t.f)]}" alt=""></span><span>${fbadge(t.f)}<h2>${esc(t.name)}</h2>
     <span class="muted">${TYPE_N[t.type]}${own?` · дохід +${townIncome(t)} на день`:''}</span></span></div></div>${townStrip(t)}`;
@@ -2892,11 +2892,11 @@ const advInTown=()=>G.towns.some(t=>dist(t,G)<TR(t)+40);
 // періодична перевірка стану — лише справжні, доречні зараз поради
 function advCheck(){const A=advSt();
   if(!A.met){if(!G.tut)advTell('meet',ADVT.helloOld,{now:1,modal:1});return}
-  {const rk=heroRank();if(A.rk==null)A.rk=rk;if(rk>A.rk){A.rk=rk;advTell('rank'+rk,ADVT.rank,{face:2,now:1})}}
+  {const rk=heroRank();if(A.rk==null)A.rk=rk;if(rk>A.rk){A.rk=rk;advTell('rank'+rk,ADVT.rank,{face:2,now:1,v:'rank'})}}
   if(uiOpen)return;
   const st=advStage(),N=total(G.army),Wd=total(G.wounded||{}),inT=advInTown(),onW=terAt(G.x,G.y)===T_WATER;
-  if(!A.seen.fish&&nearWater())advTell('fish',ADVT.fish,{face:0,ok:()=>nearWater()});
-  if(!A.seen.camp&&!G.camp&&!inT&&!onW&&(Wd>=3||G.hero.hp<G.hero.maxHp*.5||(G.spirit??80)<55))advTell('camp',ADVT.camp,{face:4,ok:()=>!G.camp&&!advInTown()});
+  if(!A.seen.fish&&nearWater())advTell('fish',ADVT.fish,{face:0,v:'fish',ok:()=>nearWater()});
+  if(!A.seen.camp&&!G.camp&&!inT&&!onW&&(Wd>=3||G.hero.hp<G.hero.maxHp*.5||(G.spirit??80)<55))advTell('camp',ADVT.camp,{face:4,v:'camp',ok:()=>!G.camp&&!advInTown()});
   if(A.seen.camp&&Wd>=4&&Wd>=(N+Wd)*.3&&!G.camp&&G.target&&!inT)advTell('hurt',ADVT.hurt,{face:1,rep:1,gap:48,ok:()=>!G.camp&&total(G.wounded||{})>=4});
   if(hasRod()&&!biteNow()&&BITE.some(([a])=>G.hour>=a-1&&G.hour<a))advTell('bite',ADVT.bite,{face:5,rep:1,gap:40,ok:()=>!biteNow()&&hasRod()});
   {const t=G.towns.find(t=>t.f===0&&dist(t,G)<TR(t)+700&&dist(t,G)>TR(t)+40&&garWeak(t));if(t)advTell('weak:'+t.id,ADVT.weak(t),{face:1,rep:1,gap:72,ok:()=>t.f===0&&garWeak(t)})}
@@ -2948,18 +2948,18 @@ function advAnswer(i){const st=advStage(),own=G.towns.filter(t=>t.f===0),N=total
     if(it)n.push(`у рюкзаку ${it} ${it>1&&it<5?'речі':it===1?'річ':'речей'} — неси на ринок`);
     if(!hasRod()&&tier<2)n.push('вудку купиш на ринку — проста коштує 80 золотих');
     if(own.length&&G.tribute)n.push(`минулого разу данина дала тобі ${G.tribute.net>=0?'+'+G.tribute.net:G.tribute.net}`)}
-  else if(i===1){say=['Сила — не лише в кількості, козаче! Наймай воїнів у містах, купуй у коваля кращу шаблю й броню, а після бою давай хлопцям відпочити. Поранений вояка — то ще не вояка.',ADVT.army1,`Військо сильне не числом, а порядком. Кінноту тримай для удару, стрільців — позаду, піхоту — стіною. Будуй казарми й стайні у своїх містах, вишколюй гарнізони, а полонених бери на службу — чого добру пропадати?`][tier];v=[null,'army1',null][tier];
+  else if(i===1){say=['Сила — не лише в кількості, козаче! Наймай воїнів у містах, купуй у коваля кращу шаблю й броню, а після бою давай хлопцям відпочити. Поранений вояка — то ще не вояка.',ADVT.army1,`Військо сильне не числом, а порядком. Кінноту тримай для удару, стрільців — позаду, піхоту — стіною. Будуй казарми й стайні у своїх містах, вишколюй гарнізони, а полонених бери на службу — чого добру пропадати?`][tier];v=['army0','army1',null][tier];
     if(Wd)n.push(`поранених ${Wd} — дай їм одужати в таборі чи у своєму місті`);
     if(N<armyLimit())n.push(`у загоні ще є місце на ${armyLimit()-N} воїнів`);
     if(total(prisoners()))n.push(`полонених ${total(prisoners())} — бери їх на службу задарма`)}
-  else if(i===2){if(!own.length)say='Поки що, козаче, тобі й захищати нічого — хіба що власну шкуру! Як візьмеш перше село, залиш там добрий гарнізон, бо ворог прийде по своє.';
+  else if(i===2){if(!own.length){say='Поки що, козаче, тобі й захищати нічого — хіба що власну шкуру! Як візьмеш перше село, залиш там добрий гарнізон, бо ворог прийде по своє.';v='def0'}
     else{say=[ADVT.def1,ADVT.def1,`Мури, мури й ще раз мури! Будуй укріплення й казарми, тримай у містах добрі гарнізони, а ті села, що під боком у ворога, бережи найпильніше. А з тим, кого не подужаєш, краще замиритися, поки сили набираєш.`][tier];v=tier<2?'def1':null;
       const weak=own.filter(garWeak).sort((x,y)=>total(x.garrison)-total(y.garrison))[0];
       n.push(weak?`найслабше — ${weak.name}: там лише ${total(weak.garrison)} воїнів`:AIF.some(f=>G.war[f])?'твої гарнізони тримаються добре':'ти ні з ким не воюєш — та мир не вічний, тож гарнізони не розпускай')}}
   else if(i===3){say=ADVT.fish3;v='fish3';
     n.push(hasRod()?`вудка в тебе є — ${RODS[G.rod].n.toLowerCase()}${G.rod<RODS.length-1?'; краща вудка — то й риба більша':''}`:'вудки нема — купи на ринку, проста коштує 80 золотих');
     n.push(biteNow()?'саме клює — не гай часу!':`наступне клювання — о ${String(nextBite()%24).padStart(2,'0')}:00`)}
-  else if(i===5){initDiplo();say=ADVT.diplo;
+  else if(i===5){initDiplo();say=ADVT.diplo;v='diplo';
     const wars=AIF.filter(f=>G.war[f]).map(f=>FAC[f].name);n.push(wars.length?`воюєш із: ${wars.join(', ')} — мир купують золотом у «Дипломатії»`:'ти ні з ким не воюєш');
     const fr=AIF.filter(f=>!G.war[f]).sort((a,b)=>G.rel[b]-G.rel[a])[0];
     if(fr!=null){const r=G.rel[fr],nm=FAC[fr].name;
@@ -2971,7 +2971,7 @@ function advAnswer(i){const st=advStage(),own=G.towns.filter(t=>t.f===0),N=total
 function advDlg(sel){const el=$('#advDlg');ADV.sel=sel;if(ADV.cur)advHide();
   const st=advStage(),RK=['новачок','бувалий козак','отаман','гетьман'][st];
   let body;
-  if(sel<0){let g=ADV.greet;if(g==null){const cur=advCurrent();g=cur||(st<2?(ADV.opens>2&&Math.random()<.3?ADVT.joke:ADVT.listen):['','','А, отамане! Сідай, люльку запалимо. Про що хочеш порадитися?','Гетьмане, вся Україна на тебе дивиться — а ти до старого по пораду. Ну, питай!'][st]);ADV.greet=g;if(g===ADVT.listen)voxSay('listen');else voxStop()}
+  if(sel<0){let g=ADV.greet;if(g==null){const cur=advCurrent();g=cur||(st<2?(ADV.opens>2&&Math.random()<.3?ADVT.joke:ADVT.listen):['','','А, отамане! Сідай, люльку запалимо. Про що хочеш порадитися?','Гетьмане, вся Україна на тебе дивиться — а ти до старого по пораду. Ну, питай!'][st]);ADV.greet=g;if(g===ADVT.listen)voxSay('listen');else if(g===ADVT.joke)voxSay('joke');else voxStop()}
     body=`<p class="adg">${esc(g)}</p><div class="aqs">${ADVQ.map(([ic,q],i)=>`<button class="aq" data-q="${i}"><img src="${UIART[ic]}" alt="">${q}</button>`).join('')}</div>`}
   else{var ans=advAnswer(sel);body=`<button class="aq on" data-q="-1"><img src="${UIART[ADVQ[sel][0]]}" alt="">${ADVQ[sel][1]}</button><p class="aans">${esc(ans.say)}</p>${ans.note.length?`<div class="anote"><b>Зараз</b><ul>${ans.note.map(x=>`<li>${esc(x[0].toUpperCase()+x.slice(1))}</li>`).join('')}</ul></div>`:''}<button class="btn sm ghost" data-q="-1">‹ Інші питання</button>`}
   el.innerHTML=`<div class="adp" style="background-image:url(${sel<0?UIART.ui_av_vp:UIART.ui_av_vt})">${avVid(sel<0?'pipe':'talk')}</div><div class="adm"><div class="adh">Радник<small>${RK}</small></div>${body}</div><button class="atx" data-q="x" aria-label="Закрити">✕</button>`;
@@ -3039,14 +3039,14 @@ const TUTS={
   v_close:{w:'modal',say:'Добре! Тепер повертаймося на мапу.',goal:'Закрий вікно бою',ring:()=>[sheet.querySelector('.vacts [data-a="rewardAll"],.vacts [data-a="close"]')?'.vacts [data-a="rewardAll"],.vacts [data-a="close"]':'.xbar .xbtn'],btn:'Гаразд'},
   town:{w:'map',say:'Ходімо до поселення. Там трофеї продамо, воїнів підлікуємо й до нового походу підготуємося.',goal:()=>`Дійди до поселення: ${tutTown()?tutTown().name:''}`,ring:()=>{const t=tutTown();return t?[{pt:t,r:52}]:[]},btn:'Гаразд'},
   t_market:{w:'modal',say:'Тут, на ринку, продаси трофеї. Зазирни на «Ринок».',goal:'Відкрий «Ринок»',ring:()=>['.tabs [data-v="market"]'],btn:'Гаразд'},
-  t_sell:{w:'modal',say:'Ось твій рюкзак: трофеї й риба — на продаж. Продаси, коли схочеш.',goal:'Глянь на рюкзак',ring:()=>['.mkbag'],next:'Далі',face:5},
+  t_sell:{v:'t_sell',w:'modal',say:'Ось твій рюкзак: трофеї й риба — на продаж. Продаси, коли схочеш.',goal:'Глянь на рюкзак',ring:()=>['.mkbag'],next:'Далі',face:5},
   t_hire:{w:'modal',say:'А в «Наймі» беруть воїнів — за золото, звісно.',goal:'Відкрий «Найм»',ring:()=>['.tabs [data-v="hire"]'],btn:'Гаразд'},
   t_rest:{w:'modal',say:'А в «Розвитку» — відпочинок: поранені одужують, і ти сили набираєш.',goal:'Відкрий «Розвиток»',ring:()=>['.tabs [data-v="dev"]'],btn:'Гаразд'},
-  t_rest2:{w:'modal',say:'Ось тут. У своєму місті — задарма, в чужому — за кілька монет.',goal:'Знайди «Відпочити»',ring:()=>['.tbody [data-a="rest"]'],next:'Далі',face:5},
-  final:{w:'any',say:'Ну що ж, козаче, основи вже знаєш! Далі шлях обирай сам. А як потрібна порада — тисни на мій портрет праворуч угорі.',next:'Дякую, діду!',end:1,face:2},
+  t_rest2:{v:'t_rest2',w:'modal',say:'Ось тут. У своєму місті — задарма, в чужому — за кілька монет.',goal:'Знайди «Відпочити»',ring:()=>['.tbody [data-a="rest"]'],next:'Далі',face:5},
+  final:{v:'final',w:'any',say:'Ну що ж, козаче, основи вже знаєш! Далі шлях обирай сам. А як потрібна порада — тисни на мій портрет праворуч угорі.',next:'Дякую, діду!',end:1,face:2},
   lose:{w:'map',v:'lose',say:'Ех, буває, козаче... Важко, та ще оговтаємося. Дай пораненим одужати, зберемо військо й спробуємо знову.',next:'Далі',face:4},
   lose2:{w:'map',v:'again',say:'Спробуємо ще раз? Тепер уже знаєш, із якого боку шаблю тримати. Можемо повторити навчальний бій або рушити далі — як скажеш.',goal:'Повторити бій чи рушити далі',acts:[['retry','Повторити бій'],['end','Рушити далі']],face:0},
-  fled:{w:'map',say:'Не бійся, козаче — розбійників лише жменька! Спробуймо ще раз?',goal:'Повернися до бою',acts:[['retry','До бою'],['end','Завершити навчання']],face:5},
+  fled:{v:'fled',w:'map',say:'Не бійся, козаче — розбійників лише жменька! Спробуймо ще раз?',goal:'Повернися до бою',acts:[['retry','До бою'],['end','Завершити навчання']],face:5},
 };
 const tutWhere=w=>w==='any'?true:w==='battle'?scene==='battle'&&!!B&&!B.over:w==='modal'?uiOpen&&scene==='map':scene==='map'&&!uiOpen&&$('#title').hidden;
 // бій стоїть, поки відкрита репліка
@@ -3555,7 +3555,7 @@ function addRel(f,n){initDiplo();if(!AIF.includes(f))return;G.rel[f]=clamp(G.rel
 const isFriend=f=>AIF.includes(f)&&(G.ally&&G.ally[f]||G.liege===f);
 function canKingdom(){const own=G.towns.filter(t=>t.f===0);return !G.kingdom&&(G.fame||0)>=200&&own.length>=3&&own.some(t=>t.type!=='village')}
 function diplomacyPanel(){
-  initDiplo();advTell('diplo',ADVT.diplo,{face:2,now:1,when:()=>uiOpen&&sheet.classList.contains('dipl'),exp:60000});
+  initDiplo();advTell('diplo',ADVT.diplo,{face:2,now:1,v:'diplo',when:()=>uiOpen&&sheet.classList.contains('dipl'),exp:60000});
   const rows=AIF.map(f=>{const n=G.towns.filter(t=>t.f===f).length,r=G.rel[f],war=G.war[f],ally=G.ally[f],liege=G.liege===f;
     const st=war?'війна':liege?'служите їм':ally?'союз':'мир',stc=war?'var(--blood)':ally||liege?'var(--gold)':'var(--good)';
     let acts='';
