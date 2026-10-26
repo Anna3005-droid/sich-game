@@ -1184,7 +1184,7 @@ body.qlow .avv>video{display:none}
     <button class="hs round" data-t="lang" style="left:86.1%;top:2.6%;width:3.4%;height:6%" aria-label="Мова"></button>
     <button class="hs round" data-t="sound" style="left:90.6%;top:2.6%;width:3.4%;height:6%" aria-label="Звук"></button>
     <button class="hs round" data-t="music" style="left:95.1%;top:2.6%;width:3.4%;height:6%" aria-label="Музика"></button>
-    <div class="tver">Версія 21.10.27</div>
+    <div class="tver">Версія 21.10.28</div>
     <div class="tload" id="tload"><span id="tloadTxt">Завантаження…</span><i><b id="tbar"></b></i></div>
   </div>
 </div>
@@ -2063,6 +2063,8 @@ void main(){
   float rim=smoothstep(.40,.52,m.r)*(1.-smoothstep(.52,.7,m.r));col=mix(col,uFoam,rim*(.28+.12*sin(uTime*1.7+vW.x*.05+vW.z*.04))*(1.-uIce*.5));
   float alpha=a*mix(.62,.93,deep);if(uIce>.5){col=mix(col,vec3(.86,.92,.96),.55);alpha=a*.96;}
   gl_FragColor=vec4(col,alpha);
+#include <tonemapping_fragment>
+#include <encodings_fragment>
 #include <fog_fragment>
 }`;
 // карта течії: колір — напрям (до моря, на південь), синій канал — що тут річка
@@ -2133,7 +2135,7 @@ function coverTex(kind,SE){
 function makeCover(SE){
   const geo=crossGeo(),g=new THREE.Group(),sm=GL.small;
   const mk=(kind,cap,amp)=>{const mat=new THREE.MeshLambertMaterial({map:coverTex(kind,SE),alphaTest:.42});addWind(mat,amp,'cover');
-    const m=new THREE.InstancedMesh(geo,mat,cap);m.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(cap*3),3);m.count=0;m.frustumCulled=false;m.receiveShadow=true;g.add(m);return m};
+    const m=new THREE.InstancedMesh(geo,mat,cap);m.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(cap*3),3);m.count=0;m.frustumCulled=false;m.receiveShadow=kind!=='bush';g.add(m);return m};   // кущі самі себе не затінюють — інакше чорніють
   return{g,grass:mk('grass',sm?7000:12000,.2),flower:SE.snow?null:mk('flower',sm?1500:2800,.24),bush:mk('bush',sm?900:1600,.06),reed:mk('reed',sm?1200:2000,.16),c:null};
 }
 function fillCover(C,cx,cy){
@@ -3332,8 +3334,8 @@ function troopsPanel(keep){initCamp();const a=G.army,ks=ORDER.filter(k=>a[k]>0),
 // живий 3D-воїн у вікні: та сама модель, що в бою; тягни пальцем — повертається; після підвищення — вихід із шаблею
 function avKind(k){return baseOf(k)==='musket'?'musket':tierOf(k)>=2?'vet':'base'}
 function avAttach(){const box=$('#avCv');if(!box||!AV.sel||!GL.ok||!window.THREE)return;
-  if(!AV.r){try{const c=document.createElement('canvas');c.className='av-c';const r=new THREE.WebGLRenderer({canvas:c,antialias:true,alpha:true});r.setPixelRatio(Math.min(2,window.devicePixelRatio||1));
-      const sc=new THREE.Scene();sc.add(new THREE.HemisphereLight('#dfe8ef','#5a5236',.6));const sun=new THREE.DirectionalLight('#fff3dc',.8);sun.position.set(-2,4,3);sc.add(sun);
+  if(!AV.r){try{const c=document.createElement('canvas');c.className='av-c';const r=gfxRenderer(new THREE.WebGLRenderer({canvas:c,antialias:true,alpha:true}));r.setPixelRatio(Math.min(2,window.devicePixelRatio||1));
+      const sc=new THREE.Scene();sc.add(linL(new THREE.HemisphereLight('#dfe8ef','#5a5236',GFX.hemi*1.7)));const sun=linL(new THREE.DirectionalLight('#fff3dc',GFX.sun*1.5));const rim=linL(new THREE.DirectionalLight('#cfe0ff',.6));rim.position.set(2.5,2.5,-3);sc.add(rim);sun.position.set(-2,4,3);sc.add(sun);
       const cam=new THREE.PerspectiveCamera(28,1,.1,50);cam.position.set(0,1,4);cam.lookAt(0,.9,0);
       const sh=new THREE.Mesh(new THREE.CircleGeometry(.55,32),new THREE.MeshBasicMaterial({color:'#000',transparent:true,opacity:.35}));sh.rotation.x=-Math.PI/2;sh.position.y=.002;sc.add(sh);
       Object.assign(AV,{r,c,sc,cam,m:null,mk:'',t:0});
@@ -4393,7 +4395,7 @@ const VIEW={map:{d:1900,pitch:.74,yaw:0},battle:{d:1250,pitch:.8,yaw:0,hero:fals
 function initGL(){
   if(!window.THREE)return;
   try{const r=new THREE.WebGLRenderer({canvas:$('#gl'),antialias:gq()!=='low',powerPreference:'high-performance'});
-    r.setPixelRatio(qDPR());r.shadowMap.enabled=gq()!=='low';r.shadowMap.type=THREE.PCFSoftShadowMap;
+    gfxRenderer(r);r.setPixelRatio(qDPR());r.shadowMap.enabled=gq()!=='low';r.shadowMap.type=THREE.PCFSoftShadowMap;
     GL.r=r;GL.cam=new THREE.PerspectiveCamera(40,1,4,16000);GL.ray=new THREE.Raycaster();GL.v3=new THREE.Vector3();GL.ok=true;sizeGL();
     GL.small=Math.min(screen.width,screen.height)<700;
   }catch(e){GL.ok=false}
@@ -4416,13 +4418,30 @@ function qWatch(now){const d=now-QW.t;QW.t=now;
 function texOf(c,flip){const key=flip?(c._flip||(c._flip={})):c;let t=GL.tex.get(key);if(!t){t=new THREE.CanvasTexture(c);if(flip){t.repeat.x=-1;t.offset.x=1}GL.tex.set(key,t)}return t}
 function proj(x,y,h){const v=GL.v3.set(x,h,y).project(GL.cam);return{x:(v.x+1)/2*VW,y:(1-v.y)/2*VH,ok:v.z>-1&&v.z<1}}
 function placeCam(v,yaw,tx,ty,tz){const cp=Math.cos(v.pitch);GL.cam.position.set(tx+v.d*cp*Math.sin(yaw),ty+v.d*Math.sin(v.pitch),tz+v.d*cp*Math.cos(yaw));GL.cam.lookAt(tx,ty,tz)}
+// кольори як у сучасних іграх: текстури й кольори — sRGB, світло рахується лінійно, на екран — знову в sRGB.
+// Кольори в коді лишаються звичними #hex: кожен матеріал переводимо один раз, перед першим показом
+const LIN=new WeakSet(),LING=new WeakSet(),GFX={hemi:.5,sun:.72,fill:.45};
+function linMat(m,g){if(!m||LIN.has(m))return;LIN.add(m);
+  if(m.color&&!m.isShaderMaterial)m.color.convertSRGBToLinear();
+  if(m.emissive)m.emissive.convertSRGBToLinear();
+  for(const k of['map','emissiveMap'])if(m[k]&&m[k].encoding!==THREE.sRGBEncoding){m[k].encoding=THREE.sRGBEncoding;m[k].needsUpdate=true}
+  if(m.isShaderMaterial&&m.uniforms)for(const k in m.uniforms){const v=m.uniforms[k].value;if(v&&v.isColor&&!/^fog/.test(k))v.convertSRGBToLinear()}
+  if(m.vertexColors&&g&&g.attributes&&g.attributes.color&&!LING.has(g)){LING.add(g);const a=g.attributes.color;for(let i=0;i<a.array.length;i++){const c=a.array[i];a.array[i]=c<=.04045?c/12.92:Math.pow((c+.055)/1.055,2.4)}a.needsUpdate=true}
+  m.needsUpdate=true}
+if(window.THREE)THREE.Object3D.prototype.onBeforeRender=function(r,s,c,g,m){if(m&&!LIN.has(m)){if(Array.isArray(m))m.forEach(x=>linMat(x,g));else linMat(m,g)}};
+const linSet=(m,c)=>{m.color.set(c).convertSRGBToLinear();LIN.add(m)};   // новий колір матеріалу, який уже показували
+function gfxRenderer(r){r.outputEncoding=THREE.sRGBEncoding;return r}
+// м'яке світло з боку камери, майже горизонтальне: обличчя й одяг бійців видно, навіть коли сонце світить їм у спину, а землю воно майже не чіпає
+function aimFill(sc,tx,ty,tz){const f=sc.userData.fill;if(!f)return;const c=GL.cam.position,dx=c.x-tx,dz=c.z-tz,l=Math.hypot(dx,dz)||1;f.position.set(tx+dx/l*100,ty+30,tz+dz/l*100);f.target.position.set(tx,ty,tz)}
 const camVecs=yaw=>({rx:Math.cos(yaw),rz:-Math.sin(yaw),fx:-Math.sin(yaw),fz:-Math.cos(yaw)});
 // денне світло, м'які тіні й легкий туман на горизонті
+const linL=l=>{l.color.convertSRGBToLinear();if(l.groundColor)l.groundColor.convertSRGBToLinear();return l};
 function makeScene(SE){
   const sc=new THREE.Scene(),hor=new THREE.Color(SE.sky);sc.background=hor;sc.fog=new THREE.Fog(hor,800,3000);
-  sc.add(new THREE.HemisphereLight(SE.snow?'#e8eef2':'#dfe8ef',SE.snow?'#8a8e90':'#5a5236',.55));
-  const sun=new THREE.DirectionalLight(SE.n==='Осінь'?'#ffe2b8':'#fff3dc',.75);sun.castShadow=gq()!=='low';const ms=shMap();sun.shadow.mapSize.set(ms,ms);
-  sun.shadow.bias=-.0006;sun.shadow.normalBias=.8;sun.shadow.radius=3;sc.add(sun);sc.add(sun.target);return{sc,sun};
+  sc.add(linL(new THREE.HemisphereLight(SE.snow?'#e8eef2':'#dfe8ef',SE.snow?'#8a8e90':'#5a5236',GFX.hemi)));
+  const sun=linL(new THREE.DirectionalLight(SE.n==='Осінь'?'#ffe2b8':'#fff3dc',GFX.sun));sun.castShadow=gq()!=='low';const ms=shMap();sun.shadow.mapSize.set(ms,ms);
+  sun.shadow.bias=-.0006;sun.shadow.normalBias=.8;sun.shadow.radius=3;sc.add(sun);sc.add(sun.target);
+  const fill=linL(new THREE.DirectionalLight('#fff6e8',GFX.fill));sc.add(fill);sc.add(fill.target);sc.userData.fill=fill;return{sc,sun};
 }
 function fitSun(sun,tx,ty,tz,ext){sun.position.set(tx-ext*.55,ty+ext*1.3,tz-ext*.75);sun.target.position.set(tx,ty,tz);const s=sun.shadow.camera;s.left=-ext;s.right=ext;s.top=ext;s.bottom=-ext;s.near=10;s.far=ext*5;s.updateProjectionMatrix()}
 function terrainMesh(w,h,cols,rows,hf,canvas,ox=0,oz=0){
@@ -4441,7 +4460,7 @@ function forestMesh(trees,SE,hf,scale=1){
       I.push(b,b+1,b+2,b,b+2,b+3)}}
   const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.BufferAttribute(P,3));geo.setAttribute('normal',new THREE.BufferAttribute(N,3));geo.setAttribute('uv',new THREE.BufferAttribute(U,2));geo.setAttribute('wc',new THREE.BufferAttribute(WC,2));geo.setIndex(I);
   const tx=new THREE.CanvasTexture(atlas);
-  const m=new THREE.Mesh(geo,new THREE.MeshLambertMaterial({map:tx,alphaTest:.5,side:THREE.DoubleSide}));m.castShadow=true;m.receiveShadow=true;
+  const m=new THREE.Mesh(geo,new THREE.MeshLambertMaterial({map:tx,alphaTest:.5,side:THREE.DoubleSide}));m.castShadow=true;m.receiveShadow=false;   // тінь на землю кидає, а сам себе не затінює — інакше хрестик із площин чорніє
   m.customDepthMaterial=new THREE.MeshDepthMaterial({depthPacking:THREE.RGBADepthPacking,map:tx,alphaTest:.5});addWind(m.material,1.7*scale,'tree');addWind(m.customDepthMaterial,1.7*scale,'tree');return m;
 }
 // маленькі 3D-моделі міст: будинки, дахи, стіни, вежі, бані — усе з кількох інстансованих фігур
@@ -4453,7 +4472,7 @@ function makeKit(cap){
   const cone=new THREE.ConeGeometry(1,1,10);cone.translate(0,.5,0);
   const dome=new THREE.SphereGeometry(1,12,8,0,Math.PI*2,0,Math.PI/2);
   const K={box:mk(box),roof:mk(roof),cyl:mk(cyl),cone:mk(cone),dome:mk(dome)},M=new THREE.Matrix4(),Q=new THREE.Quaternion(),E=new THREE.Euler(),Sv=new THREE.Vector3(),Pv=new THREE.Vector3(),C=new THREE.Color();
-  K.add=(t,x,y,z,sx,sy,sz,ry,col)=>{const m=K[t];if(m.count>=cap)return;E.set(0,ry||0,0);Q.setFromEuler(E);M.compose(Pv.set(x,y,z),Q,Sv.set(sx,sy,sz));m.setMatrixAt(m.count,M);m.setColorAt(m.count,C.set(col));m.count++};
+  K.add=(t,x,y,z,sx,sy,sz,ry,col)=>{const m=K[t];if(m.count>=cap)return;E.set(0,ry||0,0);Q.setFromEuler(E);M.compose(Pv.set(x,y,z),Q,Sv.set(sx,sy,sz));m.setMatrixAt(m.count,M);m.setColorAt(m.count,C.set(col).convertSRGBToLinear());m.count++};   // колір будівлі — у тій самій схемі, що й решта
   K.done=()=>['box','roof','cyl','cone','dome'].forEach(k=>{K[k].instanceMatrix.needsUpdate=true;if(K[k].instanceColor)K[k].instanceColor.needsUpdate=true});
   K.group=new THREE.Group();['box','roof','cyl','cone','dome'].forEach(k=>K.group.add(K[k]));return K;
 }
@@ -4600,8 +4619,8 @@ const HERO3D_H=12;   // зріст героя на мапі — такий са�
 function m3dLoad(k){const m=M3D[k];if(m.st)return m.st===2;if(!THREE.GLTFLoader||!THREE.SkeletonUtils)return false;m.st=1;
   glbLoad(m.url,g=>{
     // матеріал як у решти мапи (Lambert, без перетворення кольорів) і трохи власного світла — щоб не був темнішим за мальованих бійців
-    g.scene.traverse(x=>{if(x.isMesh){x.castShadow=true;x.frustumCulled=false;const map=x.material.map;if(map)map.encoding=THREE.LinearEncoding;
-      x.material=new THREE.MeshLambertMaterial({map,color:map?'#ffffff':x.material.color,skinning:!!x.isSkinnedMesh,emissive:map?'#ffffff':'#000000',emissiveMap:map,emissiveIntensity:.4})}});
+    g.scene.traverse(x=>{if(x.isMesh){x.castShadow=true;x.frustumCulled=false;const map=x.material.map;
+      x.material=new THREE.MeshLambertMaterial({map,color:map?'#ffffff':x.material.color,skinning:!!x.isSkinnedMesh})}});
     m.g=g;m.st=2},e=>{m.st=3;console.warn('Не вдалося завантажити 3D-модель',m.url,e)});
   return false}
 // окремий екземпляр моделі зі своїм скелетом і рухами
@@ -4704,12 +4723,12 @@ const is3DUnit=u=>!u.hero;
 // відтінок сторони: колір фракції, розбавлений білим (розбійники — просто темніші)
 const u3dFacTint=f=>f===4?'#8f8a80':'#'+new THREE.Color('#ffffff').lerp(new THREE.Color(FAC[f].color),.45).getHexString();
 function u3dTint(m,tint){if(m.tint===tint)return;m.tint=tint;const S=m.kind==='vet'?U3V:U3D;
-  const mats=tint?S.mats[tint]||(S.mats[tint]=S.src.map(x=>{const n=x.clone(),c=new THREE.Color(tint);n.color.copy(c);n.emissive.copy(c);return n})):S.src;
+  const mats=tint?S.mats[tint]||(S.mats[tint]=S.src.map(x=>{const n=x.clone(),c=new THREE.Color(tint);n.color.copy(c);return n})):S.src;
   let i=0;m.o.traverse(o=>{if(o.isMesh&&!o.userData.sab)o.material=mats[i++]})}
 function loadU3D(){if(U3D.state||!window.THREE||!THREE.GLTFLoader||!THREE.SkeletonUtils)return;U3D.state=1;
   glbLoad('assets/units/kozak_prostyi.glb',g=>{
-    g.scene.traverse(m=>{if(m.isMesh){const map=m.material.map;if(map)map.encoding=THREE.LinearEncoding;
-      m.material=new THREE.MeshLambertMaterial({map,color:map?'#ffffff':m.material.color,skinning:!!m.isSkinnedMesh,emissive:'#ffffff',emissiveMap:map,emissiveIntensity:.4});U3D.src.push(m.material);m.geometry.userData.keep=1}});
+    g.scene.traverse(m=>{if(m.isMesh){const map=m.material.map;
+      m.material=new THREE.MeshLambertMaterial({map,color:map?'#ffffff':m.material.color,skinning:!!m.isSkinnedMesh});U3D.src.push(m.material);m.geometry.userData.keep=1}});
     g.animations.forEach(c=>U3D.clips[c.name]=c);U3D.g=g;U3D.state=2},e=>{U3D.state=3;console.warn('Не вдалося завантажити 3D-воїнів',e)})}
 // досвідчені й елітні воїни — у вигляді досвідченого героя (легка модель пищальника), рухи ті самі, що в козака;
 // пищальник тримає самопал, решта — шаблю козака в правій руці
@@ -4719,7 +4738,7 @@ function u3vReady(){if(U3D.state!==2||!m3dLoad('musket'))return false;
     g.scene.traverse(x=>{if(x.isMesh){U3V.src.push(x.material);x.geometry.userData.keep=1}})}
   return true}
 const u3dPool=(Bt,k)=>Bt.m3pool[k]||(Bt.m3pool[k]=[]);
-function u3dMake(sc,kind){const vet=kind==='vet',o=THREE.SkeletonUtils.clone(vet?M3D.musket.g.scene:U3D.g.scene);o.traverse(m=>{if(m.isMesh)m.frustumCulled=false});sc.add(o);
+function u3dMake(sc,kind){const vet=kind==='vet',o=THREE.SkeletonUtils.clone(vet?M3D.musket.g.scene:U3D.g.scene);o.traverse(m=>{if(m.isMesh){m.frustumCulled=false;m.castShadow=gq()!=='low'}});sc.add(o);
   const mx=new THREE.AnimationMixer(o),acts={},clips=vet?U3V.clips:U3D.clips;for(const n in clips)acts[n]=mx.clipAction(clips[n]);
   let sabre=o.getObjectByName('Cossack_Sabre_Hand'),gun=null;
   if(vet){gun=o.getObjectByName('Veteran_Musket');const hand=o.getObjectByName('mixamorigRightHand'),s0=U3D.g.scene.getObjectByName('Cossack_Sabre_Hand');
@@ -4795,10 +4814,10 @@ function drawMap3D(dt){
   const M=GL.map;if(!M)return;
   const v=VIEW.map;if(cam.follow){cam.x=G.x;cam.y=G.y}cam.x=clamp(cam.x,0,W);cam.y=clamp(cam.y,0,H);
   if(!HERO.cam)v.pitch=Math.max(v.pitch,mapPitchMin(v.d));
-  const ty=Math.max(0,heightAt(cam.x,cam.y))+(v.ly||0);placeCam(v,v.yaw,cam.x,ty,cam.y);
+  const ty=Math.max(0,heightAt(cam.x,cam.y))+(v.ly||0);placeCam(v,v.yaw,cam.x,ty,cam.y);aimFill(M.sc,cam.x,ty,cam.y);
   {const c=GL.cam,nr=Math.max(4,v.d*.04),fr=Math.max(16000,v.d*6);if(c.near!==nr||c.far!==fr){c.near=nr;c.far=fr;c.updateProjectionMatrix()}}
   {const fd=Math.max(v.d,400);M.sc.fog.near=fd*(fd>3500?1.5:1.1);M.sc.fog.far=fd*(fd>3500?3.6:3.2)}fitSun(M.sun,cam.x,ty,cam.y,Math.min(3200,v.d*1.15));
-  M.flags.forEach(f=>{const fc=FAC[f.t.f].color;if(f.c!==fc){f.c=fc;f.flag.material.color.set(fc)}f.flag.rotation.y=Math.sin(performance.now()/500+f.t.id)*.25});
+  M.flags.forEach(f=>{const fc=FAC[f.t.f].color;if(f.c!==fc){f.c=fc;linSet(f.flag.material,fc)}f.flag.rotation.y=Math.sin(performance.now()/500+f.t.id)*.25});
   const {rx,rz}=camVecs(v.yaw),seen=new Set(),now=performance.now();
   if(!U3D.state)loadU3D();u3dMapPick(M,v);
   const put=(key,x,y,i,kind,moving,dirx,diry,Hw,P)=>{let F=M.figs.get(key);if(!F){F=figSprite(M.sc);M.figs.set(key,F)}seen.add(key);
@@ -5001,14 +5020,14 @@ function drawBattle3D(dt){
     cl.d+=(190-cl.d)*k;cl.p+=(.4-cl.p)*k;cl.ly+=(22-cl.ly)*k}
   else if(v.hero){const want=Math.atan2(-Math.cos(h.face),-Math.sin(h.face));let d=want-v.cyaw;d=Math.atan2(Math.sin(d),Math.cos(d));v.cyaw+=d*Math.min(1,dt*2.6)}else v.cyaw=v.yaw;
   const vv=cl?{d:cl.d,pitch:cl.p}:v.hero?{d:clamp(v.d*.26,140,520),pitch:Math.min(v.pitch,.42)}:v,ty=battleHeight(hx,hy)+(cl?cl.ly:v.hero?34:10);
-  placeCam(vv,v.cyaw,hx+(Math.random()-.5)*(B.shake||0),ty,hy+(Math.random()-.5)*(B.shake||0));
+  placeCam(vv,v.cyaw,hx+(Math.random()-.5)*(B.shake||0),ty,hy+(Math.random()-.5)*(B.shake||0));aimFill(Bt.sc,hx,ty,hy);
   Bt.sc.fog.near=v.hero||cl?900:vv.d*1.05;Bt.sc.fog.far=v.hero||cl?3400:vv.d*2.9;fitSun(Bt.sun,hx,ty,hy,Math.max(500,vv.d*1.2));
   const {rx,rz}=camVecs(v.cyaw),seen=new Set();
   if(Bt.gate)Bt.gate.visible=!B.gate.open;if(Bt.ram&&B.ram){Bt.ram.position.set(B.ram.x,battleHeight(B.ram.x,B.ram.y),B.ram.y);if(B.ram.at&&!B.gate.open)Bt.ram.position.x+=Math.sin(performance.now()/120)*4}
   const now3=performance.now(),seen3=new Set(),U3=Bt.units3d||(Bt.units3d=new Map());m3dLoad('musket');
   if(!U3D.state)loadU3D();if(!Bt.m3all){Bt.m3all=[];Bt.m3pool={};Bt.m3n=0;Bt.fid=0}Bt.fid++;
   if(sprReady()){
-    for(const u of B.units){let F=Bt.figs.get(u.id);if(!F){F=poolFig(Bt);F.ring.material.color.set(u.team?'#e65c4e':u.hero?'#ffe08a':FAC[0].color);F.cmp=null;Bt.figs.set(u.id,F)}
+    for(const u of B.units){let F=Bt.figs.get(u.id);if(!F){F=poolFig(Bt);linSet(F.ring.material,u.team?'#e65c4e':u.hero?'#ffe08a':FAC[0].color);F.cmp=null;Bt.figs.set(u.id,F)}
       seen.add(u.id);const set=aniSet(sprIndex(u),u.team===0?'p':B.f===4?'b':'e'),H=uH(u)*1.15,gh=battleHeight(u.x,u.y);
       // поза камерою анімацію не рахуємо, далеких малюємо простіше (без тіні, кола й переходу між рухами)
       const qv=proj(u.x,u.y,gh+H*.5),off=!qv.ok||qv.x<-80||qv.x>VW+80||qv.y<-120||qv.y>VH+120;F.s.visible=!off;F.ring.visible=!off;
