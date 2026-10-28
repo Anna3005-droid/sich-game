@@ -81,7 +81,9 @@
 ## План
 
 0. Перевір, що встановлено: Unity 6 LTS з Android Build Support (OpenJDK, Android SDK & NDK), Git, Git LFS.
-1. Створи проєкт `SichUnity` з шаблону Universal 3D у «Документи».
+1. Створи проєкт з шаблону Universal 3D у `D:\SichUnity`.
+   - Тільки латиниця й без пробілів у шляху, бо збірка для Android ламається на кирилиці.
+   - Unity встановлено на диск D: (там 48 ГБ вільно). На C: місця мало, тож великі кеші теж клади на D:.
    - Зроби `git init`, додай Unity `.gitignore` і LFS для `.fbx .glb .png .psd .wav .mp3 .tga`.
    - Спитай авторку і створи на її GitHub (Anna3005-droid) репозиторій `sich-unity`.
 2. Підключи Unity MCP, щоб керувати редактором самому. Наприклад, «MCP for Unity» від CoplayDev; перевір свіжу інструкцію встановлення.
