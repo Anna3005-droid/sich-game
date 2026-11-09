@@ -1185,7 +1185,7 @@ body.qlow .avv>video{display:none}
     <button class="hs round" data-t="lang" style="left:86.1%;top:2.6%;width:3.4%;height:6%" aria-label="Мова"></button>
     <button class="hs round" data-t="sound" style="left:90.6%;top:2.6%;width:3.4%;height:6%" aria-label="Звук"></button>
     <button class="hs round" data-t="music" style="left:95.1%;top:2.6%;width:3.4%;height:6%" aria-label="Музика"></button>
-    <div class="tver">Версія 21.10.30</div>
+    <div class="tver">Версія 21.11.1</div>
     <div class="tload" id="tload"><span id="tloadTxt">Завантаження…</span><i><b id="tbar"></b></i></div>
   </div>
 </div>
@@ -3335,7 +3335,7 @@ function troopsPanel(keep){initCamp();const a=G.army,ks=ORDER.filter(k=>a[k]>0),
   if(ls)sheet.querySelector('.av-rows').scrollTop=ls;avAttach();
 }
 // живий 3D-воїн у вікні: та сама модель, що в бою; тягни пальцем — повертається; після підвищення — вихід із шаблею
-function avKind(k){return baseOf(k)==='musket'?'musket':tierOf(k)>=2?'vet':'base'}
+function avKind(k){return tierOf(k)>=2?'vet':'base'}
 function avAttach(){const box=$('#avCv');if(!box||!AV.sel||!GL.ok||!window.THREE)return;
   if(!AV.r){try{const c=document.createElement('canvas');c.className='av-c';const r=gfxRenderer(new THREE.WebGLRenderer({canvas:c,antialias:true,alpha:true}));r.setPixelRatio(Math.min(2,window.devicePixelRatio||1));
       const sc=new THREE.Scene();sc.add(linL(new THREE.HemisphereLight('#dfe8ef','#5a5236',GFX.hemi*1.7)));const sun=linL(new THREE.DirectionalLight('#fff3dc',GFX.sun*1.5));const rim=linL(new THREE.DirectionalLight('#cfe0ff',.6));rim.position.set(2.5,2.5,-3);sc.add(rim);sun.position.set(-2,4,3);sc.add(sun);
@@ -3344,13 +3344,12 @@ function avAttach(){const box=$('#avCv');if(!box||!AV.sel||!GL.ok||!window.THREE
       Object.assign(AV,{r,c,sc,cam,m:null,mk:'',t:0});
       let px=null;c.addEventListener('pointerdown',e=>{px=e.clientX;c.setPointerCapture&&c.setPointerCapture(e.pointerId)});c.addEventListener('pointermove',e=>{if(px==null)return;AV.yaw+=(e.clientX-px)*.012;px=e.clientX});
       const end=()=>{px=null};c.addEventListener('pointerup',end);c.addEventListener('pointercancel',end)}catch(e){AV.r=null;return}}
-  box.appendChild(AV.c);loadU3D();m3dLoad('musket');m3dLoad('cossack');
+  box.appendChild(AV.c);loadU3D();
   if(!AV.raf){AV.t=performance.now();const loop=()=>{if(!uiOpen||!AV.c.isConnected){AV.raf=0;return}AV.raf=requestAnimationFrame(loop);avFrame()};AV.raf=requestAnimationFrame(loop)}}
 function avFrame(){const now=performance.now(),dt=Math.min(.1,(now-AV.t)/1000);AV.t=now;const k=AV.sel,kind=avKind(k),want=kind+':'+(kind==='base'?'':k);
-  if(AV.mk!==want){const ready=kind==='musket'?M3D.musket.st===2:kind==='vet'?u3vReady():U3D.state===2;
-    if(ready){if(AV.m)AV.sc.remove(AV.m.o);
-      if(kind==='musket'){const I=m3dInst('musket');AV.sc.add(I.o);AV.m={o:I.o,mx:I.mixer,play:(n,once)=>m3dPlay(I,n,once,1,once)}}
-      else{const m=u3dMake(AV.sc,kind);if(m.gun)m.gun.visible=false;if(m.sabre)m.sabre.visible=true;AV.m={o:m.o,mx:m.mx,play:(n,once)=>u3dPlay(m,n,once,1,once)}}
+  if(AV.mk!==want){
+    if(U3D.state===2){if(AV.m)AV.sc.remove(AV.m.o);
+      {const m=u3dMake(AV.sc,kind);qDress(m.o,soldierLook(kind,k));if(m.sabre)m.sabre.visible=!(TYPES[k]&&TYPES[k].ranged);AV.m={o:m.o,mx:m.mx,play:(n,once)=>u3dPlay(m,n,once,1,once)}}
       AV.m.o.position.set(0,0,0);AV.m.o.scale.setScalar(1);AV.m.play('Idle');AV.mk=want;AV.cheerT=0;const fb=$('#avCv .av-fb');if(fb)fb.hidden=true}}
   const box=AV.c.parentElement,w=box.clientWidth,h=box.clientHeight;if(w&&h&&(AV.w!==w||AV.h!==h)){AV.w=w;AV.h=h;AV.r.setSize(w,h,false);AV.cam.aspect=w/h;AV.cam.updateProjectionMatrix()}
   if(!AV.m)return;
@@ -3883,7 +3882,7 @@ function bUpdate(dt){
     // смерть товариша знижує дух поруч, перемога над ворогом — піднімає
     near(u.x,u.y,150,o=>{if(o===u)return;if(o.team===u.team)moraleHit(o,u.hero?0:7);else o.mor=Math.min(o.morMax,o.mor+3)});
     if(u.hero)B.units.forEach(o=>{if(o.team===0)moraleHit(o,30)});
-    if(sprReady()){const c={x:u.x,y:u.y,sx:u.sx,fall:u.vx>=0?1:-1,set:aniSet(sprIndex(u),'e'),H:uH(u),t:0,m3d:GL.bat&&((unit3D(u)&&M3D.musket.st===2)||(u.hero&&!!HERO.I))};B.corpses.push(c);   // m3d — падає сама 3D-модель героя чи пищальника
+    if(sprReady()){const c={x:u.x,y:u.y,sx:u.sx,fall:u.vx>=0?1:-1,set:aniSet(sprIndex(u),'e'),H:uH(u),t:0,m3d:GL.bat&&u.hero&&!!HERO.I};B.corpses.push(c);   // m3d — падає сама 3D-модель героя
       if(u.m3&&B.corpses.filter(q=>q.m3).length<24){c.m3=u.m3;u.m3.owner=null;u.m3=null;if(GL.bat)GL.bat.m3n--}}
     else B.decals.push({x:u.x,y:u.y,r:u.r,team:u.team});
     U.splice(i,1)}
@@ -4627,11 +4626,10 @@ function animBoat(bt,moving,now){
 // 3D-моделі .glb; де такі файли не віддають (перегляд у Claude) — та сама модель текстом base64 поруч, у файлі .glb.txt
 function glbLoad(url,ok,fail){const L=new THREE.GLTFLoader();
   L.load(url,ok,undefined,()=>fetch(url+'.txt').then(r=>r.ok?r.text():Promise.reject(r.status)).then(t=>L.load('data:application/octet-stream;base64,'+t.trim(),ok,undefined,fail)).catch(fail))}
-/* ---------- об'ємні 3D-моделі з анімаціями Mixamo: головний герой і пищальники ---------- */
-// cossack — герой «Простий воїн» (шабля), veteran — герой від звання «Досвідчений воїн» (самопал),
-// musket — спрощений досвідчений воїн для пищальників у бою (їх багато, тому легша модель)
-const M3D={cossack:{url:'assets/hero/cossack.glb',weapon:'Cossack_Sabre_Hand'},veteran:{url:'assets/hero/veteran.glb',weapon:'Veteran_Musket'},musket:{url:'assets/hero/musketeer.glb',weapon:'Veteran_Musket'},
-  hetman:{url:'assets/hero/hetman.glb',weapon:'Hetman_Sabre_Hand'},anims:{url:'assets/hero/anims_extra.glb'}};   // hetman — герой зі званням «Гетьман»; anims — лише скелет зі спільними рухами (поразка)
+/* ---------- об'ємні 3D-козаки (набори Quaternius, CC0): герой і воїни ---------- */
+// q — герой: усе вбрання частинами в одній моделі, видно те, що на ньому (сорочка чи жупан, чоботи, наплічник, наручі, каптур);
+// шабля — в правій руці, рухи — під назви гри (Idle, Run_Map, Attack_Slash, Dance, Entry, Defeated…)
+const M3D={q:{url:'assets/q/kozak.glb',weapon:'Sabre'}};
 const HERO3D_H=12;   // зріст героя на мапі — такий самий, як у загонів
 // st: 0 — не вантажили, 1 — вантажиться, 2 — готово, 3 — помилка; повертає true, коли модель готова
 function m3dLoad(k){const m=M3D[k];if(m.st)return m.st===2;if(!THREE.GLTFLoader||!THREE.SkeletonUtils)return false;m.st=1;
@@ -4642,25 +4640,18 @@ function m3dLoad(k){const m=M3D[k];if(m.st)return m.st===2;if(!THREE.GLTFLoader|
     m.g=g;m.st=2},e=>{m.st=3;console.warn('Не вдалося завантажити 3D-модель',m.url,e)});
   return false}
 // окремий екземпляр моделі зі своїм скелетом і рухами
+// L: vest — жупан (замість сорочки), belts — пояси, pauldron — наплічник, bracer — наручі, boots — чоботи (замість постолів), hood — каптур
+const Q_PARTS=L=>({Peasant_Body:!L.vest,Chest:!L.vest,Peasant_Arms:!L.vest,Peasant_Legs:!L.vest,Undershirt:L.vest,Ranger_Body:L.vest,Ranger_Arms:L.vest,Ranger_Legs:L.vest,
+  Ranger_Body_Belt_1:L.vest&&L.belts,Ranger_Body_Belt_2:L.vest&&L.belts,Ranger_Acc_Pauldron:L.pauldron,Ranger_Arms_Bracer:L.bracer,
+  Peasant_Feet:!L.boots,Ranger_Feet_Boots:L.boots,Ranger_Head_Hood:L.hood,Oseledets:!L.hood});
+function qDress(o,L){const key=JSON.stringify(L);if(o.userData.look===key)return;o.userData.look=key;
+  const P=Q_PARTS(L);o.traverse(x=>{if(x.name in P)x.visible=P[x.name]})}
+// на героєві — те, що купив у коваля: обладунок — жупан, далі пояси, наплічник, наручі; чоботи; шапка — каптур
+const heroLook=()=>{const a=gearLv('armor');return{vest:a>=1,belts:a>=2,pauldron:a>=3,bracer:a>=4,boots:gearLv('boots')>=1,hood:gearLv('helm')>=1}};
 function m3dInst(k){const m=M3D[k],o=THREE.SkeletonUtils.clone(m.g.scene),mixer=new THREE.AnimationMixer(o),acts={};
-  m.g.animations.forEach(c=>acts[c.name]=mixer.clipAction(c));o.traverse(x=>{if(x.isMesh){x.frustumCulled=false;if(PHONE&&k==='musket')x.castShadow=false}});o.userData.m3d=1;
+  m.g.animations.forEach(c=>acts[c.name]=mixer.clipAction(c));o.traverse(x=>{if(x.isMesh)x.frustumCulled=false});o.userData.m3d=1;
   return{k,o,mixer,acts,cur:null,t:0,weapon:o.getObjectByName(m.weapon)}}
-// рух з іншої моделі: скелети Mixamo однакові за назвами кісток, але кістки іншої довжини —
-// беремо лише повороти, а зсув стегон підганяємо під зріст
-const RT=new Map();
-function retarget(c,from,to){const key=c.uuid+'>'+to.uuid;let r=RT.get(key);if(r)return r;
-  const hs=from.getObjectByName('mixamorigHips'),ht=to.getObjectByName('mixamorigHips'),sc=hs&&ht&&hs.position.length()>1e-3?ht.position.length()/hs.position.length():1;
-  // кістки, якої в цій моделі немає (скажімо, пальців), пропускаємо — інакше three.js крутить нею всю фігуру
-  const has=n=>!!to.getObjectByName(n.slice(0,n.lastIndexOf('.')));
-  r=new THREE.AnimationClip(c.name,c.duration,c.tracks.filter(t=>(/\.quaternion$/.test(t.name)||/Hips\.position$/.test(t.name))&&has(t.name)).map(t=>{
-    if(!/\.position$/.test(t.name)||!hs||!ht)return t;const v=Float32Array.from(t.values),a=hs.position,b=ht.position;
-    for(let i=0;i<v.length;i+=3){v[i]=b.x+(v[i]-a.x)*sc;v[i+1]=b.y+(v[i+1]-a.y)*sc;v[i+2]=b.z+(v[i+2]-a.z)*sc}
-    return new THREE.VectorKeyframeTrack(t.name,t.times,v)}));
-  RT.set(key,r);return r}
-// рух, якого немає в цієї моделі, позичаємо в іншої
-function m3dAct(I,n){if(I.acts[n])return I.acts[n];
-  for(const k in M3D){const m=M3D[k],c=m.g&&m.g.animations.find(c=>c.name===n);if(c)return I.acts[n]=I.mixer.clipAction(retarget(c,m.g.scene,M3D[I.k].g.scene))}
-  return null}
+function m3dAct(I,n){return I.acts[n]||null}
 const m3dDur=(I,n)=>{const a=m3dAct(I,n);return a?a.getClip().duration*1000:0};
 const m3dHas=(I,n)=>!!m3dAct(I,n);
 // рух моделі: once — зіграти раз і завмерти в кінці; restart — почати спочатку, навіть якщо вже грає
@@ -4674,15 +4665,11 @@ function m3dPlace(I,sc,x,h,y,H,rot,weapon){const o=I.o;if(o.parent!==sc)sc.add(o
 function m3dTick(I,now){const t=now/1000,dt=I.t?Math.min(.1,t-I.t):0;I.t=t;I.mixer.update(dt)}
 // перед закриттям бою сцену звільняють — наші моделі ще знадобляться, тож забираємо їх
 function m3dDetach(sc){sc.children.filter(o=>o.userData.m3d).forEach(o=>sc.remove(o))}
-const unit3D=u=>u.team===0&&!u.hero&&baseOf(u.t)==='musket';
 
-// ---- головний герой: модель залежить від звання
+// ---- головний герой: одна модель, вигляд — від спорядження
 const HERO={I:null,dance:0,danceReq:0,cam:null,party:'Dance'};
-function heroI(){const r=heroRank(),k=r>=2?'hetman':r>=1?'veteran':'cossack';m3dLoad('anims');
-  if(k!=='cossack')m3dLoad('cossack');   // спільні рухи (вихід із шаблею…) лежать у моделі першого козака
-  if(!m3dLoad(k)){if(k!=='cossack'&&!HERO.I&&m3dLoad('cossack'))HERO.I=m3dInst('cossack');return HERO.I}   // поки нова модель вантажиться — стара
-  if(!HERO.I||HERO.I.k!==k){if(HERO.I&&HERO.I.o.parent)HERO.I.o.parent.remove(HERO.I.o);HERO.I=m3dInst(k)}
-  return HERO.I}
+function heroI(){if(!HERO.I){if(!m3dLoad('q'))return null;HERO.I=m3dInst('q')}
+  qDress(HERO.I.o,heroLook());return HERO.I}
 // камера під час танцю: плавно наїжджає на героя, потім повертається туди, де була; гравець потягнув чи покрутив — віддаємо йому
 function danceCam(on,dt){const v=VIEW.map,k=Math.min(1,dt*2.2);
   if(on&&!HERO.cam){HERO.cam={d:v.d,pitch:v.pitch,back:false};cam.follow=true}
@@ -4704,7 +4691,7 @@ function hero3D(M,now,dt){
   if(moving||uiOpen)HERO.dance=0;
   const dancing=HERO.dance&&now-HERO.dance<m3dDur(I,HERO.party);if(!dancing)HERO.dance=0;
   const show=!!dancing;   // у святі — зі зброєю в руці; у дорозі — без
-  m3dPlace(I,M.sc,G.x,tt===T_BRIDGE?Math.max(heightAt(G.x,G.y),5):heightAt(G.x,G.y),G.y,HERO3D_H,Math.abs(dx)+Math.abs(dy)>.5?Math.atan2(dx,dy):null,I.k==='veteran'||show);   // самопал завжди за плечима, шабля — лише у святі
+  m3dPlace(I,M.sc,G.x,tt===T_BRIDGE?Math.max(heightAt(G.x,G.y),5):heightAt(G.x,G.y),G.y,HERO3D_H,Math.abs(dx)+Math.abs(dy)>.5?Math.atan2(dx,dy):null,show);   // шабля — лише у святі
   if(tt===T_WATER)I.o.visible=false;   // на воді — лише чайка
   // мапою ходить спокійно: звичайний біг і спокійна стійка (бойові рухи — лише в бою)
   if(moving)m3dPlay(I,m3dHas(I,'Run_Map')?'Run_Map':'Run');
@@ -4715,57 +4702,41 @@ function hero3D(M,now,dt){
 }
 // герой у бою: рух моделі за станом бійця (удар/постріл, блок, поранення, біг, загибель)
 function hero3DBattle(I,u,gh,H,now){
-  const sp=Math.hypot(u.vx||0,u.vy||0),gun=I.k==='veteran';
+  const sp=Math.hypot(u.vx||0,u.vy||0);
   if(B.cele&&u.hp>0)m3dPlay(I,HERO.party,HERO.party!=='Sad_Idle');
-  else if(u.hp<=0)m3dPlay(I,m3dHas(I,'Dying')&&!gun?'Dying':'Death',true);
-  else if(u.at>=0){if(gun)m3dPlay(I,'Aim');else if(!(I.lastAt>=0)||u.at<I.lastAt){const c=m3dAct(I,'Attack_Slash');m3dPlay(I,'Attack_Slash',true,c?c.getClip().duration/(ATK_T*1.8):1,true)}}
-  else if(u.hurt>0&&m3dHas(I,'Hit')&&I.cur!==I.acts.Hit)m3dPlay(I,'Hit',true,1.6,true);
-  else if(u.hurt>0&&m3dHas(I,'Hit')){}
-  else if(u.blocking)m3dPlay(I,gun?'Crouch_Aim':'Block_Idle');
+  else if(u.hp<=0)m3dPlay(I,'Dying',true);
+  else if(u.at>=0){if(!(I.lastAt>=0)||u.at<I.lastAt){const c=m3dAct(I,'Attack_Slash');m3dPlay(I,'Attack_Slash',true,c?c.getClip().duration/(ATK_T*1.8):1,true)}}
+  else if(u.hurt>0){if(I.cur!==I.acts.Hit)m3dPlay(I,'Hit',true,1.6,true)}
+  else if(u.blocking)m3dPlay(I,'Block_Idle');
   else if(u.st<.08)m3dPlay(I,'Idle');
   else m3dPlay(I,sp>105?'Run':'Walk');
   I.lastAt=u.at;I.dead3=0;
   m3dPlace(I,GL.bat.sc,u.x,gh,u.y,H,Math.atan2(Math.cos(u.face),Math.sin(u.face)),true);m3dTick(I,now);
 }
-// пищальник у бою: цілиться, коли стріляє; падає, коли гине (модель лишається лежати до кінця бою)
-function unit3DBattle(I,u,gh,H,now){
-  const sp=Math.hypot(u.vx||0,u.vy||0);
-  if(u.at>=0)m3dPlay(I,'Aim');else if(u.st<.08){if(B.cele){const n=celePick(u,now,n=>m3dDur(I,n));m3dPlay(I,n,n!=='Stand'&&n!=='Sad_Idle')}else m3dPlay(I,'Idle')}else m3dPlay(I,sp>105?'Run':'Walk');
-  m3dPlace(I,GL.bat.sc,u.x,gh,u.y,H,Math.atan2(Math.cos(u.face),Math.sin(u.face)),true);m3dTick(I,now);
-}
-/* ---------- усі воїни й загони — той самий 3D-козак, легка модель (≈5 тис. трикутників) ---------- */
-// поки немає окремих моделей лучників, досвідчених, елітних — у всіх цей козак; чужі підфарбовані в колір своєї сторони.
+/* ---------- усі воїни й загони — легкий 3D-козак (≈5½ тис. трикутників), вбрання як у героя ---------- */
+// прості — у сорочці, досвідчені й елітні — у жупані; чоботи, наручі, наплічник, каптур — у кожного свої; чужі підфарбовані в колір своєї сторони.
 // кожен — копія з власним скелетом і рухами; поки модель вантажиться й на низькій якості — плаский спрайт
 const U3D={state:0,g:null,clips:{},src:[],mats:{}},U3D_MAX=PHONE?{hi:40,mid:18,low:0}:{hi:64,mid:24,low:0},U3D_MAP=PHONE?{hi:16,mid:8,low:0}:{hi:30,mid:12,low:0};
 const is3DUnit=u=>!u.hero;
 // відтінок сторони: колір фракції, розбавлений білим (розбійники — просто темніші)
 const u3dFacTint=f=>f===4?'#8f8a80':'#'+new THREE.Color('#ffffff').lerp(new THREE.Color(FAC[f].color),.45).getHexString();
-function u3dTint(m,tint){if(m.tint===tint)return;m.tint=tint;const S=m.kind==='vet'?U3V:U3D;
+function u3dTint(m,tint){if(m.tint===tint)return;m.tint=tint;const S=U3D;
   const mats=tint?S.mats[tint]||(S.mats[tint]=S.src.map(x=>{const n=x.clone(),c=new THREE.Color(tint);n.color.copy(c);return n})):S.src;
   let i=0;m.o.traverse(o=>{if(o.isMesh&&!o.userData.sab)o.material=mats[i++]})}
 function loadU3D(){if(U3D.state||!window.THREE||!THREE.GLTFLoader||!THREE.SkeletonUtils)return;U3D.state=1;
-  glbLoad('assets/units/kozak_prostyi.glb',g=>{
-    g.scene.traverse(m=>{if(m.isMesh){const map=m.material.map;
-      m.material=new THREE.MeshLambertMaterial({map,color:map?'#ffffff':m.material.color,skinning:!!m.isSkinnedMesh});U3D.src.push(m.material);m.geometry.userData.keep=1}});
+  glbLoad('assets/q/voin.glb',g=>{
+    g.scene.traverse(m=>{if(m.isMesh){const map=m.material.map;m.userData.sab=/^Sabre/.test(m.name);   // шаблю не підфарбовуємо
+      m.material=new THREE.MeshLambertMaterial({map,color:map?'#ffffff':m.material.color,skinning:!!m.isSkinnedMesh});if(!m.userData.sab)U3D.src.push(m.material);m.geometry.userData.keep=1}});
     g.animations.forEach(c=>U3D.clips[c.name]=c);U3D.g=g;U3D.state=2},e=>{U3D.state=3;console.warn('Не вдалося завантажити 3D-воїнів',e)})}
-// досвідчені й елітні воїни — у вигляді досвідченого героя (легка модель пищальника), рухи ті самі, що в козака;
-// пищальник тримає самопал, решта — шаблю козака в правій руці
-const U3V={src:[],mats:{},clips:null};
-function u3vReady(){if(U3D.state!==2||!m3dLoad('musket'))return false;
-  if(!U3V.clips){const g=M3D.musket.g;U3V.clips={};for(const n in U3D.clips)U3V.clips[n]=retarget(U3D.clips[n],U3D.g.scene,g.scene);
-    g.scene.traverse(x=>{if(x.isMesh){U3V.src.push(x.material);x.geometry.userData.keep=1}})}
-  return true}
+// вигляд воїна: сталий для кожного (за номером), щоб не перевдягався від кадру до кадру
+function soldierLook(kind,id){let h=2166136261;for(const c of String(id)){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}const r=k=>((Math.imul(h^k*40503,2654435761)>>>0)%1000)/1000;
+  return kind==='vet'?{vest:true,belts:r(1)<.7,pauldron:r(2)<.5,bracer:r(3)<.6,boots:true,hood:r(4)<.3}
+    :{vest:false,belts:false,pauldron:r(2)<.12,bracer:r(3)<.25,boots:r(5)<.45,hood:false}}
 const u3dPool=(Bt,k)=>Bt.m3pool[k]||(Bt.m3pool[k]=[]);
-function u3dMake(sc,kind){const vet=kind==='vet',o=THREE.SkeletonUtils.clone(vet?M3D.musket.g.scene:U3D.g.scene);o.traverse(m=>{if(m.isMesh){m.frustumCulled=false;m.castShadow=gq()==='hi'&&!PHONE}});sc.add(o);
-  const mx=new THREE.AnimationMixer(o),acts={},clips=vet?U3V.clips:U3D.clips;for(const n in clips)acts[n]=mx.clipAction(clips[n]);
-  let sabre=o.getObjectByName('Cossack_Sabre_Hand'),gun=null;
-  if(vet){gun=o.getObjectByName('Veteran_Musket');const hand=o.getObjectByName('mixamorigRightHand'),s0=U3D.g.scene.getObjectByName('Cossack_Sabre_Hand');
-    if(hand&&s0){sabre=s0.clone();sabre.traverse(x=>{x.userData.sab=1;if(x.isMesh)x.frustumCulled=false});hand.add(sabre)}}
-  return{o,mx,acts,kind:vet?'vet':'base',cur:null,lastAt:-1,owner:null,corpse:false,fid:0,tint:'',sabre,gun}}
-// рух, якого в легкій моделі немає (свято, поразка), — з моделі героя чи бібліотеки рухів; чужий скелет — лише повороти кісток
-function u3dAct(m,n){if(m.acts[n])return m.acts[n];const to=m.kind==='vet'?M3D.musket.g.scene:U3D.g.scene;
-  for(const k of['cossack','anims']){const g=M3D[k].g,c=g&&g.animations.find(c=>c.name===n);if(c)return m.acts[n]=m.mx.clipAction(m.kind==='vet'||k!=='cossack'?retarget(c,g.scene,to):c)}
-  return null}
+function u3dMake(sc,kind){const o=THREE.SkeletonUtils.clone(U3D.g.scene);o.traverse(m=>{if(m.isMesh){m.frustumCulled=false;m.castShadow=gq()==='hi'&&!PHONE}});sc.add(o);
+  const mx=new THREE.AnimationMixer(o),acts={};for(const n in U3D.clips)acts[n]=mx.clipAction(U3D.clips[n]);
+  return{o,mx,acts,kind:kind==='vet'?'vet':'base',cur:null,lastAt:-1,owner:null,corpse:false,fid:0,tint:'',sabre:o.getObjectByName('Sabre')}}
+function u3dAct(m,n){return m.acts[n]||null}
 function u3dPlay(m,n,once,speed,restart){const a=u3dAct(m,n);if(!a)return;if(m.cur===a&&!restart)return;
   a.setLoop(once?THREE.LoopOnce:n==='Stand'?THREE.LoopPingPong:THREE.LoopRepeat,Infinity);a.clampWhenFinished=!!once;a.timeScale=speed||1;a.reset().play();
   if(!once&&!m.cur)a.time=Math.random()*a.getClip().duration;   // щоб загін не рухався як один
@@ -4773,11 +4744,11 @@ function u3dPlay(m,n,once,speed,restart){const a=u3dAct(m,n);if(!a)return;if(m.c
 // воїн у 3D: модель на місці спрайта, рух за станом бійця; false — малюємо як раніше, спрайтом
 function u3dUnit(Bt,u,F,gh,H,dt){
   if(!is3DUnit(u)||U3D.state!==2||gq()==='low')return false;
-  const kind=tierOf(u.t)>=2&&u3vReady()?'vet':'base';   // досвідчені й елітні — як досвідчений герой
+  const kind=tierOf(u.t)>=2?'vet':'base';   // досвідчені й елітні — у жупані
   if(u.m3&&u.m3.kind!==kind){const o=u.m3;o.o.visible=false;o.owner=null;u3dPool(Bt,o.kind).push(o);u.m3=null;Bt.m3n--}
   if(!u.m3){if(Bt.m3n>=(U3D_MAX[gq()]||0))return false;const m=u3dPool(Bt,kind).pop()||(m0=>(Bt.m3all.push(m0),m0))(u3dMake(Bt.sc,kind));m.owner=u;m.corpse=false;m.cur=null;m.lastAt=-1;u.m3=m;Bt.m3n++}
-  const m=u.m3,sp=Math.hypot(u.vx||0,u.vy||0);m.fid=Bt.fid;u3dTint(m,u.team?u3dFacTint(B.f):'');if(m.gun)m.gun.visible=baseOf(u.t)==='musket';if(m.sabre)m.sabre.visible=!(m.gun&&m.gun.visible);
-  if(u.at>=0){if(m.lastAt<0||u.at<m.lastAt){const an=TYPES[u.t]&&TYPES[u.t].ranged?'Attack':'Attack_Slash',c=m.acts[an];u3dPlay(m,an,true,c?c.getClip().duration/(ATK_T*1.8):1,true)}}
+  const m=u.m3,sp=Math.hypot(u.vx||0,u.vy||0),ranged=TYPES[u.t]&&TYPES[u.t].ranged;m.fid=Bt.fid;u3dTint(m,u.team?u3dFacTint(B.f):'');qDress(m.o,soldierLook(kind,u.team+':'+u.id));if(m.sabre)m.sabre.visible=!ranged;
+  if(u.at>=0){if(m.lastAt<0||u.at<m.lastAt){const an=ranged?'Attack':'Attack_Slash',c=m.acts[an];u3dPlay(m,an,true,c?c.getClip().duration/(ATK_T*1.8):1,true)}}
   else if(u.hurt>0){if(m.cur!==m.acts.Hit)u3dPlay(m,'Hit',true,1.6,true)}
   else if(u.blocking)u3dPlay(m,'Block_Idle');
   else if(sp<8){if(B.cele){const n=celePick(u,performance.now(),n=>{const a=u3dAct(m,n);return a?a.getClip().duration*1000:0});u3dPlay(m,n,n!=='Stand'&&n!=='Sad_Idle')}else u3dPlay(m,'Idle')}
@@ -4795,7 +4766,7 @@ function u3dCorpse(Bt,c,F,dt){const m=c.m3;if(!m||!m.o||gq()==='low')return fals
 function u3dParty(M,p,x,gh,y,moving,dx,dy,H,F,dt){
   if(!M.p3||!M.p3near.has(p.id))return false;
   let m=M.p3.get(p.id);if(!m){m=M.p3pool.pop()||(m0=>(M.p3all.push(m0),m0))(u3dMake(M.sc));m.cur=null;M.p3.set(p.id,m)}
-  m.fid=M.p3fid;u3dTint(m,p.kind==='mine'?'':u3dFacTint(p.f));if(m.sabre)m.sabre.visible=false;
+  m.fid=M.p3fid;u3dTint(m,p.kind==='mine'?'':u3dFacTint(p.f));qDress(m.o,soldierLook('base',p.id));if(m.sabre)m.sabre.visible=false;
   const o=m.o;o.visible=true;o.position.set(x,gh,y);o.scale.setScalar(H/1.8);
   if(Math.abs(dx)+Math.abs(dy)>.5){let d=Math.atan2(dx,dy)-o.rotation.y;d=Math.atan2(Math.sin(d),Math.cos(d));o.rotation.y+=d*.25}
   u3dPlay(m,moving?(m.acts.Run_Map?'Run_Map':'Walk'):m.acts.Stand?'Stand':'Idle');m.mx.update(dt);F.s.visible=F.sh.visible=false;return true}
@@ -5043,7 +5014,7 @@ function drawBattle3D(dt){
   Bt.sc.fog.near=v.hero||cl?900:vv.d*1.05;Bt.sc.fog.far=v.hero||cl?3400:vv.d*2.9;fitSun(Bt.sun,hx,ty,hy,Math.max(500,vv.d*1.2));
   const {rx,rz}=camVecs(v.cyaw),seen=new Set();
   if(Bt.gate)Bt.gate.visible=!B.gate.open;if(Bt.ram&&B.ram){Bt.ram.position.set(B.ram.x,battleHeight(B.ram.x,B.ram.y),B.ram.y);if(B.ram.at&&!B.gate.open)Bt.ram.position.x+=Math.sin(performance.now()/120)*4}
-  const now3=performance.now(),seen3=new Set(),U3=Bt.units3d||(Bt.units3d=new Map());m3dLoad('musket');
+  const now3=performance.now(),seen3=new Set();
   if(!U3D.state)loadU3D();if(!Bt.m3all){Bt.m3all=[];Bt.m3pool={};Bt.m3n=0;Bt.fid=0}Bt.fid++;
   if(sprReady()){
     for(const u of B.units){let F=Bt.figs.get(u.id);if(!F){F=poolFig(Bt);linSet(F.ring.material,u.team?'#e65c4e':u.hero?'#ffe08a':FAC[0].color);F.cmp=null;Bt.figs.set(u.id,F)}
@@ -5065,8 +5036,8 @@ function drawBattle3D(dt){
         F.ghost.s.visible=true;F.ghost.s.material.opacity=fa*.9;setFig(F.ghost,u.prevFr,u.x,u.y,gh,H*(fr.h/fr.h),false,msx)}else if(F.ghost)F.ghost.s.visible=false;
       F.s.material.color.setScalar(u.hitT>0?1.6:1);F.ring.position.set(u.x,gh+.8,u.y);F.ring.scale.set(H*.36,1,H*.36);
       // герой і наші пищальники — об'ємні моделі замість плаского спрайта
-      let I3=null;if(u.hero)I3=heroI();else if(unit3D(u)&&M3D.musket.st===2){I3=U3.get(u.id);if(!I3){I3=m3dInst('musket');U3.set(u.id,I3)}}
-      if(I3){F.s.visible=F.sh.visible=false;if(F.ghost)F.ghost.s.visible=false;seen3.add(u.id);I3.last=[u.x,gh,u.y,H];if(u.hero){I3.bat=1;hero3DBattle(I3,u,gh,H,now3)}else unit3DBattle(I3,u,gh,H,now3)}
+      const I3=u.hero?heroI():null;
+      if(I3){F.s.visible=F.sh.visible=false;if(F.ghost)F.ghost.s.visible=false;seen3.add(u.id);I3.last=[u.x,gh,u.y,H];I3.bat=1;hero3DBattle(I3,u,gh,H,now3)}
       else if(!u.hero)u3dUnit(Bt,u,F,gh,H,dt)}
     // загиблі падають і лягають на землю
     for(const c of B.corpses){if(c.m3d)continue;const key='c'+c.x.toFixed(1)+c.y.toFixed(1);let F=Bt.figs.get(key);if(!F){F=poolFig(Bt);F.ring.visible=false;Bt.figs.set(key,F)}seen.add(key);
@@ -5075,9 +5046,8 @@ function drawBattle3D(dt){
   }
   // невикористані фігури не видаляємо, а ховаємо й повертаємо в запас для наступних бійців
   for(const[k,F]of Bt.figs)if(!seen.has(k)){F.s.visible=F.sh.visible=F.ring.visible=false;if(F.ghost)F.ghost.s.visible=false;F.s.material.rotation=0;F.s.material.color.setScalar(1);F.fr=null;F.sx=undefined;(Bt.pool||(Bt.pool=[])).push(F);Bt.figs.delete(k)}
-  // загиблий пищальник: модель падає і лежить; героя, якого немає серед бійців, ховаємо
-  for(const[id,I]of U3)if(!seen3.has(id)){if(!I.dead){I.dead=1;m3dPlay(I,'Death',true)}m3dTick(I,now3)}
-  if(HERO.I&&HERO.I.o.parent===Bt.sc&&!B.units.some(u=>u.hero)){const I=HERO.I;if(!I.dead3){I.dead3=1;m3dPlay(I,I.k!=='veteran'&&m3dHas(I,'Dying')?'Dying':'Death',true)}m3dTick(I,now3)}
+  // загиблий герой: модель падає і лежить
+  if(HERO.I&&HERO.I.o.parent===Bt.sc&&!B.units.some(u=>u.hero)){const I=HERO.I;if(!I.dead3){I.dead3=1;m3dPlay(I,'Dying',true)}m3dTick(I,now3)}
   u3dSweep(Bt,seen);
   Bt.dirty-=dt;if(Bt.dirty<=0&&B.groundDirty){Bt.gm.material.map.needsUpdate=true;B.groundDirty=false;Bt.dirty=.3}
   GL.r.render(Bt.sc,GL.cam);
