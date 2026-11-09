@@ -6,6 +6,7 @@ import {ALL_EXTENSIONS} from '@gltf-transform/extensions';
 import {mergeDocuments,prune,dedup,weld,textureCompress,simplify,resample} from '@gltf-transform/functions';
 import {MeshoptSimplifier} from 'meshoptimizer';
 import sharp from 'sharp';
+import {buildItems} from './qitems.mjs';
 const [,,cfgP,out]=process.argv;const C=JSON.parse(fs.readFileSync(cfgP,'utf8'));
 const io=new NodeIO().registerExtensions(ALL_EXTENSIONS);
 const doc=await io.read(C.base),R=doc.getRoot();
@@ -50,29 +51,8 @@ for(const p of C.parts)await addPart(p);
 // назви сіток: без префікса статі
 for(const n of R.listNodes())if(n.getMesh()){const nm=n.getName().replace(/^Male_/,'');n.setName(nm);n.getMesh().setName(nm)}
 
-// шабля: вигнутий клинок, гарда, руків'я — дитина кисті
-if(C.sabre){const S=C.sabre,buf0=R.listBuffers()[0];
-  const mat=(n,c)=>doc.createMaterial(n).setBaseColorFactor(c).setMetallicFactor(0).setRoughnessFactor(.6).setDoubleSided(true);
-  const P=[],N=[],I=[],parts=[];
-  function quad(a,b,c,d){const i=P.length/3;P.push(...a,...b,...c,...d);for(let k=0;k<4;k++)N.push(0,0,1);I.push(i,i+1,i+2,i,i+2,i+3)}
-  function box(x0,x1,y0,y1,z0,z1){const v=[[x0,y0,z0],[x1,y0,z0],[x1,y1,z0],[x0,y1,z0],[x0,y0,z1],[x1,y0,z1],[x1,y1,z1],[x0,y1,z1]];
-    [[0,1,2,3],[5,4,7,6],[4,0,3,7],[1,5,6,2],[3,2,6,7],[4,5,1,0]].forEach(f=>quad(...f.map(i=>v[i])))}
-  const mk=(name,color,build)=>{P.length=N.length=I.length=0;build();
-    const prim=doc.createPrimitive().setMaterial(mat(name,color))
-      .setAttribute('POSITION',doc.createAccessor().setType('VEC3').setArray(new Float32Array(P)).setBuffer(buf0))
-      .setAttribute('NORMAL',doc.createAccessor().setType('VEC3').setArray(new Float32Array(N)).setBuffer(buf0))
-      .setIndices(doc.createAccessor().setType('SCALAR').setArray(new Uint16Array(I)).setBuffer(buf0));
-    parts.push(doc.createMesh(name).addPrimitive(prim))};
-  // клинок уздовж +X від гарди: ширина звужується, кінець загинається (+Y)
-  mk('Sabre_Blade',[.78,.8,.84,1],()=>{const L=.78,n=10,sh=x=>.045*(x/L)**2;
-    for(let i=0;i<n;i++){const x0=.06+L*i/n,x1=.06+L*(i+1)/n,w0=.034*(1-.55*i/n),w1=.034*(1-.55*(i+1)/n),y0=sh(x0-.06),y1=sh(x1-.06);
-      const tip=i===n-1,t=.004,b0=[x0,y0,0],b1=[x1,y1,0],e0=[x0,y0+w0,0],e1=[x1,y1+(tip?0:w1),0],m0=[x0,y0+w0*.35,t],m1=[x1,y1+(tip?0:w1*.35),t],n0=[x0,y0+w0*.35,-t],n1=[x1,y1+(tip?0:w1*.35),-t];
-      quad(b0,b1,m1,m0);quad(m0,m1,e1,e0);quad(b1,b0,n0,n1);quad(n1,n0,e0,e1)}});   // ромбоподібний переріз — видно з будь-якого боку
-  mk('Sabre_Guard',[.62,.5,.24,1],()=>{box(.045,.065,-.03,.06,-.012,.012)});
-  mk('Sabre_Grip',[.22,.13,.08,1],()=>{box(-.07,.045,0,.026,-.012,.012);box(-.095,-.07,-.006,.032,-.015,.015)});
-  const g=doc.createNode('Sabre').setTranslation(S.t).setRotation(S.r).setScale([S.s||1,S.s||1,S.s||1]);
-  for(const m of parts)g.addChild(doc.createNode(m.getName()).setMesh(m));
-  byName.get('hand_r').addChild(g)}
+// речі з крамниці: зброя в правій руці, щит на лівому передпліччі, шапки й шоломи на голові (див. qitems.mjs)
+if(C.items)buildItems(doc,byName,C.items);
 
 // рухи під назви гри; частини послідовності зшиваються (між ними — коротке перетікання)
 const buf=R.listBuffers()[0],libs={};

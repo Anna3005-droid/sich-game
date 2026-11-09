@@ -3349,7 +3349,7 @@ function avAttach(){const box=$('#avCv');if(!box||!AV.sel||!GL.ok||!window.THREE
 function avFrame(){const now=performance.now(),dt=Math.min(.1,(now-AV.t)/1000);AV.t=now;const k=AV.sel,kind=avKind(k),want=kind+':'+(kind==='base'?'':k);
   if(AV.mk!==want){
     if(U3D.state===2){if(AV.m)AV.sc.remove(AV.m.o);
-      {const m=u3dMake(AV.sc,kind);qDress(m.o,soldierLook(kind,k));if(m.sabre)m.sabre.visible=!(TYPES[k]&&TYPES[k].ranged);AV.m={o:m.o,mx:m.mx,play:(n,once)=>u3dPlay(m,n,once,1,once)}}
+      {const m=u3dMake(AV.sc,kind);qDress(m.o,soldierLook(kind,k,k));if(m.sabre)m.sabre.visible=!(TYPES[k]&&TYPES[k].ranged);AV.m={o:m.o,mx:m.mx,play:(n,once)=>u3dPlay(m,n,once,1,once)}}
       AV.m.o.position.set(0,0,0);AV.m.o.scale.setScalar(1);AV.m.play('Idle');AV.mk=want;AV.cheerT=0;const fb=$('#avCv .av-fb');if(fb)fb.hidden=true}}
   const box=AV.c.parentElement,w=box.clientWidth,h=box.clientHeight;if(w&&h&&(AV.w!==w||AV.h!==h)){AV.w=w;AV.h=h;AV.r.setSize(w,h,false);AV.cam.aspect=w/h;AV.cam.updateProjectionMatrix()}
   if(!AV.m)return;
@@ -4629,25 +4629,33 @@ function glbLoad(url,ok,fail){const L=new THREE.GLTFLoader();
 /* ---------- об'ємні 3D-козаки (набори Quaternius, CC0): герой і воїни ---------- */
 // q — герой: усе вбрання частинами в одній моделі, видно те, що на ньому (сорочка чи жупан, чоботи, наплічник, наручі, каптур);
 // шабля — в правій руці, рухи — під назви гри (Idle, Run_Map, Attack_Slash, Dance, Entry, Defeated…)
-const M3D={q:{url:'assets/q/kozak.glb',weapon:'Sabre'}};
+const M3D={q:{url:'assets/q/kozak.glb',weapon:'Weapon'}};
 const HERO3D_H=12;   // зріст героя на мапі — такий самий, як у загонів
 // st: 0 — не вантажили, 1 — вантажиться, 2 — готово, 3 — помилка; повертає true, коли модель готова
 function m3dLoad(k){const m=M3D[k];if(m.st)return m.st===2;if(!THREE.GLTFLoader||!THREE.SkeletonUtils)return false;m.st=1;
   glbLoad(m.url,g=>{
     // матеріал як у решти мапи (Lambert, без перетворення кольорів) і трохи власного світла — щоб не був темнішим за мальованих бійців
     g.scene.traverse(x=>{if(x.isMesh){x.castShadow=true;x.frustumCulled=false;const map=x.material.map;
-      x.material=new THREE.MeshLambertMaterial({map,color:map?'#ffffff':x.material.color,skinning:!!x.isSkinnedMesh})}});
+      x.material=new THREE.MeshLambertMaterial({map,color:map?'#ffffff':x.material.color,skinning:!!x.isSkinnedMesh,name:x.material.name});
+      if(Q_TINT.test(x.name)||Q_TINT.test(x.parent&&x.parent.name))x.material=x.material.clone()}});
     m.g=g;m.st=2},e=>{m.st=3;console.warn('Не вдалося завантажити 3D-модель',m.url,e)});
   return false}
 // окремий екземпляр моделі зі своїм скелетом і рухами
 // L: vest — жупан (замість сорочки), belts — пояси, pauldron — наплічник, bracer — наручі, boots — чоботи (замість постолів), hood — каптур
-const Q_PARTS=L=>({Peasant_Body:!L.vest,Chest:!L.vest,Peasant_Arms:!L.vest,Peasant_Legs:!L.vest,Undershirt:L.vest,Ranger_Body:L.vest,Ranger_Arms:L.vest,Ranger_Legs:L.vest,
+// w — зброя (0 шабля, 1 меч, 2 сокира, 3 лицарський меч, 4 клинок короля), sh — щит (-1 без щита), helm — 0 без, 1 козацька шапка, 2 залізний шолом, 3 шишак
+const Q_PARTS=L=>{const P={Peasant_Body:!L.vest,Chest:!L.vest,Peasant_Arms:!L.vest,Peasant_Legs:!L.vest,Undershirt:L.vest,Ranger_Body:L.vest,Ranger_Arms:L.vest,Ranger_Legs:L.vest,
   Ranger_Body_Belt_1:L.vest&&L.belts,Ranger_Body_Belt_2:L.vest&&L.belts,Ranger_Acc_Pauldron:L.pauldron,Ranger_Arms_Bracer:L.bracer,
-  Peasant_Feet:!L.boots,Ranger_Feet_Boots:L.boots,Ranger_Head_Hood:L.hood,Oseledets:!L.hood});
+  Peasant_Feet:!L.boots,Ranger_Feet_Boots:L.boots,Ranger_Head_Hood:!!L.hood&&!L.helm};
+  for(let i=0;i<5;i++)P['Wpn_'+i]=i===(L.w|0);for(let i=0;i<3;i++)P['Shield_'+i]=i===L.sh;for(let i=1;i<4;i++)P['Helm_'+i]=i===L.helm;return P};
+// чоботи: шкіряні — як є, козацькі — червоні, сап'янові — жовті; обладунок: кольчуга — сірі рукави, ламелярний і латний — сталевий жупан
+const Q_TINT=/^(Ranger_Feet_Boots|Ranger_Arms|Ranger_Body)$/,Q_BOOT=['#ffffff','#ffffff','#e2685c','#f2c95e'],Q_SLEEVE=['#ffffff','#ffffff','#a9b2bd','#a9b2bd','#bcc5cf'],Q_VEST=['#ffffff','#ffffff','#ffffff','#cfc2ad','#b4bdc8'];
+function qTint(o,name,col){const x=o.getObjectByName(name);if(!x)return;x.traverse(m=>{if(m.isMesh&&m.material.name==='MI_Ranger'&&m.material.userData.tint!==col){m.material.userData.tint=col;linSet(m.material,col)}})}
 function qDress(o,L){const key=JSON.stringify(L);if(o.userData.look===key)return;o.userData.look=key;
-  const P=Q_PARTS(L);o.traverse(x=>{if(x.name in P)x.visible=P[x.name]})}
-// на героєві — те, що купив у коваля: обладунок — жупан, далі пояси, наплічник, наручі; чоботи; шапка — каптур
-const heroLook=()=>{const a=gearLv('armor');return{vest:a>=1,belts:a>=2,pauldron:a>=3,bracer:a>=4,boots:gearLv('boots')>=1,hood:gearLv('helm')>=1}};
+  const P=Q_PARTS(L);o.traverse(x=>{if(x.name in P)x.visible=P[x.name]});
+  if(L.bootC!==undefined){qTint(o,'Ranger_Feet_Boots',Q_BOOT[L.bootC]||'#ffffff');qTint(o,'Ranger_Arms',Q_SLEEVE[L.armC]||'#ffffff');qTint(o,'Ranger_Body',Q_VEST[L.armC]||'#ffffff')}}
+// на героєві — усе, що купив у коваля: обладунок — жупан, далі пояси, наплічник, наручі (і колір); чоботи; шапка чи шолом; зброя; щит
+const heroLook=()=>{const a=gearLv('armor');return{vest:a>=1,belts:a>=2,pauldron:a>=3,bracer:a>=4,boots:gearLv('boots')>=1,hood:false,
+  w:gearLv('weapon'),sh:gearLv('shield'),helm:gearLv('helm'),bootC:gearLv('boots'),armC:a}};
 function m3dInst(k){const m=M3D[k],o=THREE.SkeletonUtils.clone(m.g.scene),mixer=new THREE.AnimationMixer(o),acts={};
   m.g.animations.forEach(c=>acts[c.name]=mixer.clipAction(c));o.traverse(x=>{if(x.isMesh)x.frustumCulled=false});o.userData.m3d=1;
   return{k,o,mixer,acts,cur:null,t:0,weapon:o.getObjectByName(m.weapon)}}
@@ -4725,17 +4733,18 @@ function u3dTint(m,tint){if(m.tint===tint)return;m.tint=tint;const S=U3D;
   let i=0;m.o.traverse(o=>{if(o.isMesh&&!o.userData.sab)o.material=mats[i++]})}
 function loadU3D(){if(U3D.state||!window.THREE||!THREE.GLTFLoader||!THREE.SkeletonUtils)return;U3D.state=1;
   glbLoad('assets/q/voin.glb',g=>{
-    g.scene.traverse(m=>{if(m.isMesh){const map=m.material.map;m.userData.sab=/^Sabre/.test(m.name);   // шаблю не підфарбовуємо
+    g.scene.traverse(m=>{if(m.isMesh){const map=m.material.map;m.userData.sab=/^IT_/.test(m.material.name);   // зброю, щити й шоломи не підфарбовуємо
       m.material=new THREE.MeshLambertMaterial({map,color:map?'#ffffff':m.material.color,skinning:!!m.isSkinnedMesh});if(!m.userData.sab)U3D.src.push(m.material);m.geometry.userData.keep=1}});
     g.animations.forEach(c=>U3D.clips[c.name]=c);U3D.g=g;U3D.state=2},e=>{U3D.state=3;console.warn('Не вдалося завантажити 3D-воїнів',e)})}
 // вигляд воїна: сталий для кожного (за номером), щоб не перевдягався від кадру до кадру
-function soldierLook(kind,id){let h=2166136261;for(const c of String(id)){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}const r=k=>((Math.imul(h^k*40503,2654435761)>>>0)%1000)/1000;
-  return kind==='vet'?{vest:true,belts:r(1)<.7,pauldron:r(2)<.5,bracer:r(3)<.6,boots:true,hood:r(4)<.3}
-    :{vest:false,belts:false,pauldron:r(2)<.12,bracer:r(3)<.25,boots:r(5)<.45,hood:false}}
+function soldierLook(kind,id,t){let h=2166136261;for(const c of String(id)){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}const r=k=>((Math.imul(h^k*40503,2654435761)>>>0)%1000)/1000;
+  const b=t?baseOf(t):'',w=b==='axe'?2:b==='knight'?3:0,melee=!(t&&TYPES[t]&&TYPES[t].ranged),sh=melee&&(b==='knight'||(kind==='vet'&&r(6)<.5)||r(6)<.15)?(kind==='vet'&&r(7)<.5?1:0):-1;
+  return kind==='vet'?{vest:true,belts:r(1)<.7,pauldron:r(2)<.5,bracer:r(3)<.6,boots:true,hood:r(4)<.3,w,sh,helm:r(8)<.35?2:0}
+    :{vest:false,belts:false,pauldron:r(2)<.12,bracer:r(3)<.25,boots:r(5)<.45,hood:false,w,sh,helm:r(8)<.3?1:0}}
 const u3dPool=(Bt,k)=>Bt.m3pool[k]||(Bt.m3pool[k]=[]);
 function u3dMake(sc,kind){const o=THREE.SkeletonUtils.clone(U3D.g.scene);o.traverse(m=>{if(m.isMesh){m.frustumCulled=false;m.castShadow=gq()==='hi'&&!PHONE}});sc.add(o);
   const mx=new THREE.AnimationMixer(o),acts={};for(const n in U3D.clips)acts[n]=mx.clipAction(U3D.clips[n]);
-  return{o,mx,acts,kind:kind==='vet'?'vet':'base',cur:null,lastAt:-1,owner:null,corpse:false,fid:0,tint:'',sabre:o.getObjectByName('Sabre')}}
+  return{o,mx,acts,kind:kind==='vet'?'vet':'base',cur:null,lastAt:-1,owner:null,corpse:false,fid:0,tint:'',sabre:o.getObjectByName('Weapon')}}
 function u3dAct(m,n){return m.acts[n]||null}
 function u3dPlay(m,n,once,speed,restart){const a=u3dAct(m,n);if(!a)return;if(m.cur===a&&!restart)return;
   a.setLoop(once?THREE.LoopOnce:n==='Stand'?THREE.LoopPingPong:THREE.LoopRepeat,Infinity);a.clampWhenFinished=!!once;a.timeScale=speed||1;a.reset().play();
@@ -4747,7 +4756,7 @@ function u3dUnit(Bt,u,F,gh,H,dt){
   const kind=tierOf(u.t)>=2?'vet':'base';   // досвідчені й елітні — у жупані
   if(u.m3&&u.m3.kind!==kind){const o=u.m3;o.o.visible=false;o.owner=null;u3dPool(Bt,o.kind).push(o);u.m3=null;Bt.m3n--}
   if(!u.m3){if(Bt.m3n>=(U3D_MAX[gq()]||0))return false;const m=u3dPool(Bt,kind).pop()||(m0=>(Bt.m3all.push(m0),m0))(u3dMake(Bt.sc,kind));m.owner=u;m.corpse=false;m.cur=null;m.lastAt=-1;u.m3=m;Bt.m3n++}
-  const m=u.m3,sp=Math.hypot(u.vx||0,u.vy||0),ranged=TYPES[u.t]&&TYPES[u.t].ranged;m.fid=Bt.fid;u3dTint(m,u.team?u3dFacTint(B.f):'');qDress(m.o,soldierLook(kind,u.team+':'+u.id));if(m.sabre)m.sabre.visible=!ranged;
+  const m=u.m3,sp=Math.hypot(u.vx||0,u.vy||0),ranged=TYPES[u.t]&&TYPES[u.t].ranged;m.fid=Bt.fid;u3dTint(m,u.team?u3dFacTint(B.f):'');qDress(m.o,soldierLook(kind,u.team+':'+u.id,u.t));if(m.sabre)m.sabre.visible=!ranged;
   if(u.at>=0){if(m.lastAt<0||u.at<m.lastAt){const an=ranged?'Attack':'Attack_Slash',c=m.acts[an];u3dPlay(m,an,true,c?c.getClip().duration/(ATK_T*1.8):1,true)}}
   else if(u.hurt>0){if(m.cur!==m.acts.Hit)u3dPlay(m,'Hit',true,1.6,true)}
   else if(u.blocking)u3dPlay(m,'Block_Idle');
