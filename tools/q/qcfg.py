@@ -25,5 +25,5 @@ c={'base':O+'/Outfits/Male_Peasant.gltf',
 if mode=='soldier':c['items'][3]['list']=[['Usy','usy']];c['items'][0]['list']=[['Wpn_0','sabre'],['Wpn_2','axe'],['Wpn_3','knight'],['Wpn_5','spear']];c['items'][1]['list']=c['items'][1]['list'][:2];c.update({'tex':512,'texSmall':128,'simplify':.2,'simplifyErr':.01,'resTol':5e-4});c['chest']={'yMin':1.36,'shrink':.032}
 if mode!='soldier':
   c['parts']+= [{'path':H+'/'+f+'.gltf','name':nm} for f,nm in [('Hair_Buzzed','Hair_Short'),('Hair_Long','Hair_Long'),('Hair_SimpleParted','Hair_Parted'),('Hair_Beard','Beard')]]
-  c['hair']=[1,1,1];c['morphs']=True
+  c['hair']=[1,1,1];c['morphs']=True;c['eyes']=[S+'/qb/T_Eye_'+e+'.png' for e in ['Dark','Gray','Blue','Green']]
 print(json.dumps(c))

@@ -7,7 +7,7 @@ import {mergeDocuments,prune,dedup,weld,textureCompress,simplify,resample} from 
 import {MeshoptSimplifier} from 'meshoptimizer';
 import sharp from 'sharp';
 import {buildItems} from './qitems.mjs';
-import {shirtSwap,sharovary,sash,faceMorphs} from './qcossack.mjs';
+import {shirtSwap,sharovary,sash,faceMorphs,eyeVariants} from './qcossack.mjs';
 const [,,cfgP,out]=process.argv;const C=JSON.parse(fs.readFileSync(cfgP,'utf8'));
 const io=new NodeIO().registerExtensions(ALL_EXTENSIONS);
 const doc=await io.read(C.base),R=doc.getRoot();
@@ -59,6 +59,7 @@ for(const n of R.listNodes())if(n.getMesh()){const nm=n.getName().replace(/^Male
 if(C.cossack){const k=C.cossack,h=host||scene;shirtSwap(doc,['Peasant_Body','Peasant_Arms','Undershirt'],'MI_Peasant','MI_Shirt',k.shirt);
   sharovary(doc,skin,h,'Peasant_Legs',k.pants,k.shar);sash(doc,skin,h,'Peasant_Body','SashS',.955,1.035,.014,k.sash);sash(doc,skin,h,'Ranger_Body','SashV',.955,1.035,.012,k.sash)}
 if(C.morphs)console.log('morphs',faceMorphs(doc,skin,jName).join(','));
+if(C.eyes)eyeVariants(doc,C.eyes);
 // голова в системі кістки голови (через обернену матрицю прив'язки) — по ній шиємо шоломи, щоб сиділи щільно
 function headSpace(){const ji=jName.indexOf('Head'),m=[];skin.getInverseBindMatrices().getElement(ji,m);let prim=null;
   for(const n of R.listNodes()){const me=n.getMesh();if(!me||n.getName()!=='Head')continue;for(const p of me.listPrimitives())if(/Superhero|Regular/.test(p.getMaterial()?.getName()||''))prim=p}

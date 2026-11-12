@@ -192,13 +192,18 @@ input[type=text]{width:100%;font:inherit;font-size:18px;padding:10px 12px;border
 .hw-body{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);grid-template-areas:"por slots" "stats stats";gap:10px 12px}
 .hw-por{grid-area:por;border:2px solid #a07b33;border-radius:7px;overflow:hidden;background:radial-gradient(ellipse at 50% 40%,#3a3024,#0b0d10 75%);min-height:0;position:relative;touch-action:none}
 .hw-t.pick{cursor:pointer}
-.fc{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:14px;min-height:0}
-.fc-cv{position:relative;min-height:300px;border:2px solid #a07b33;border-radius:7px;overflow:hidden;background:radial-gradient(ellipse at 50% 40%,#3a3024,#0b0d10 75%);touch-action:none}
-.fc-cv .av-fb{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.fc-ctl{display:flex;flex-direction:column;gap:8px;min-width:0}.fc-g small{display:block;color:var(--gold);font-family:var(--f-head);text-transform:uppercase;letter-spacing:.04em;font-size:12px;margin-bottom:4px}
-.fc-ch{display:flex;flex-wrap:wrap;gap:5px}.fc-ch .btn{min-height:30px}.fc-ch .sw{display:inline-block;width:12px;height:12px;border-radius:50%;background:var(--sw);margin-right:5px;vertical-align:-1px;border:1px solid #000}
-.fc-sl{display:grid;grid-template-columns:120px minmax(0,1fr);align-items:center;gap:8px;font-size:13px;margin:2px 0}.fc-sl input{width:100%;accent-color:#e0aa3e}
-@media (max-width:700px){.fc{grid-template-columns:1fr}.fc-cv{min-height:220px}}
+.fcw .fc-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin:0 40px 6px 0}.fcw .fc-head h2{margin:0}.fcw .fc-head .eyebrow{color:var(--gold)}
+.fc{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);gap:12px;height:clamp(190px,calc(100dvh - 170px),470px)}
+.fc-cv{position:relative;height:100%;min-height:0;border:2px solid #a07b33;border-radius:7px;overflow:hidden;background:radial-gradient(ellipse at 50% 40%,#3a3024,#0b0d10 75%);touch-action:none}
+.fc-cv .av-fb{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.fc-side{display:flex;flex-direction:column;min-height:0;min-width:0}
+.fc-tabs{display:flex;gap:4px;margin-bottom:8px}.fc-tab{flex:1;padding:7px 4px;border:1px solid #6b5426;border-radius:6px;background:#1a1712;color:var(--ash);font:700 13px var(--f-head);cursor:pointer}.fc-tab.on{background:linear-gradient(#e0b04e,#a87a26);color:#1a1205;border-color:#e0b04e}
+.fc-ctl{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:8px;padding-right:4px}.fc-g small{display:block;color:var(--gold);font-family:var(--f-head);text-transform:uppercase;letter-spacing:.04em;font-size:12px;margin-bottom:4px}
+.fc-ch{display:flex;flex-wrap:wrap;gap:5px}.fc-ch .btn{min-height:30px}.fc-ch .sw{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:5px;vertical-align:-1px;border:1px solid #000}
+.fc-sl{display:grid;grid-template-columns:118px minmax(0,1fr);align-items:center;gap:8px;font-size:13px}.fc-sl input{width:100%;accent-color:#e0aa3e}
+.fcw .fc-acts{margin-top:10px}
+@media (max-height:520px){.fcw .fc-head .eyebrow{display:none}.fc-ch .btn{min-height:28px;padding:3px 9px;font-size:12px}.fc-tab{padding:5px 3px;font-size:12px}.fcw .fc-acts{margin-top:6px}}
+@media (max-width:700px) and (orientation:portrait){.fc{grid-template-columns:1fr;height:auto}.fc-cv{height:36vh}.fc-ctl{max-height:none}}
 .smh{display:flex;align-items:center;gap:8px;margin:12px 0 4px;color:var(--gold);font-family:var(--f-head);text-transform:uppercase;letter-spacing:.04em;font-size:13px}.smh .ic{width:22px;height:22px}
 .rows .row.on{background:rgba(224,170,62,.12)}.rows .row.dim{opacity:.55}.hw-t.pick:hover{filter:brightness(1.15)}
 .hw-por img{display:block;width:100%;height:100%;object-fit:cover;object-position:50% 10%}
@@ -2725,16 +2730,20 @@ function fvFrame(){const now=performance.now(),dt=Math.min(.1,(now-FV.t)/1000);F
   if(!FV.m&&M3D.q.st===2){FV.m=m3dInst('q');FV.sc.add(FV.m.o);FV.m.acts.Idle.play();if(FV.m.weapon)FV.m.weapon.visible=false}
   if(FV.m){const fb=$('#fcCv .av-fb');if(fb)fb.remove()}
   view3DSize(FV);if(!FV.m)return;qDress(FV.m.o,{...heroLook(),helm:0});
-  FV.cam.position.set(0,1.67,.92);FV.cam.lookAt(0,1.63,0);FV.m.o.rotation.y=FV.yaw;FV.m.mixer.update(dt);FV.r.render(FV.sc,FV.cam)}
-function facePanel(start){facePanel.start=start;const F=heroFace();
-  const chips=k=>{const [n,L]=FACE_OPT[k];return`<div class="fc-g"><small>${n}</small><div class="fc-ch">${L.map(([t,v],i)=>`<button class="btn sm${F[k]===i?' gold':''}" data-a="faceSet" data-v="${k}:${i}"${k==='hc'?` style="--sw:${v}"`:''}>${k==='hc'?'<i class="sw"></i>':''}${t}</button>`).join('')}</div></div>`};
-  show(`<span class="eyebrow" style="color:var(--gold)">${start?'Новий козак':'Цирульник'}</span><h2>Обличчя героя</h2>
+  {const t=Math.tan(FV.cam.fov*Math.PI/360),d=Math.max(.2/t,.17/(t*FV.cam.aspect));FV.cam.position.set(0,1.66,d);FV.cam.lookAt(0,1.645,0)}   // голова з шиєю — завжди цілком
+  FV.m.o.rotation.y=FV.yaw;FV.m.mixer.update(dt);FV.r.render(FV.sc,FV.cam)}
+function facePanel(start){facePanel.start=start;facePanel.tab=facePanel.tab||'look';
+  show(`<div class="fc-head"><h2>Обличчя героя</h2><span class="eyebrow">${start?'Новий козак':'Цирульник'} · тягніть пальцем, щоб повернути</span></div>
   <div class="fc"><div class="fc-cv" id="fcCv"><img class="av-fb" src="${UIART.ui_qf||UIART.ui_q0}" alt=""></div>
-    <div class="fc-ctl">${['skin','hair','hc','usy','beard'].map(chips).join('')}
-      <div class="fc-g"><small>Форма обличчя</small>${FACE_MORPH.map(([k,n])=>`<label class="fc-sl"><span>${n}</span><input type="range" min="-100" max="100" step="5" value="${Math.round(((F.m||{})[k]||0)*100)}" data-m="${k}"></label>`).join('')}</div></div></div>
-  <div class="acts"><button class="btn" data-a="faceRnd">Навмання</button><button class="btn gold" data-a="faceDone">${start?'Готово — у путь!':'Готово'}</button></div>`,'wide');
-  sheet.querySelectorAll('input[data-m]').forEach(inp=>inp.addEventListener('input',()=>{const F=heroFace();F.m=F.m||{};F.m[inp.dataset.m]=+inp.value/100}));
-  fvAttach()}
+    <div class="fc-side"><div class="fc-tabs">${[['look','Шкіра й очі'],['hair','Волосся'],['shape','Форма']].map(([k,n])=>`<button class="fc-tab" data-a="faceTab" data-v="${k}">${n}</button>`).join('')}</div><div class="fc-ctl"></div></div></div>
+  <div class="acts fc-acts"><button class="btn" data-a="faceRnd">Навмання</button><button class="btn gold" data-a="faceDone">${start?'Готово — у путь!':'Готово'}</button></div>`,'wide fcw');
+  fcCtl();fvAttach()}
+function fcCtl(){const F=heroFace(),t=facePanel.tab,box=sheet.querySelector('.fc-ctl');if(!box)return;
+  const chips=k=>{const [n,L]=FACE_OPT[k],sw=FACE_SW[k];return`<div class="fc-g"><small>${n}</small><div class="fc-ch">${L.map(([tt],i)=>`<button class="btn sm${(F[k]|0)===i?' gold':''}" data-a="faceSet" data-v="${k}:${i}">${sw?`<i class="sw" style="background:${sw[i]}"></i>`:''}${tt}</button>`).join('')}</div></div>`};
+  box.innerHTML=t==='look'?chips('skin')+chips('eye'):t==='hair'?chips('hair')+chips('hc')+chips('usy')+chips('beard')
+    :FACE_MORPH.map(([k,n])=>`<label class="fc-sl"><span>${n}</span><input type="range" min="-100" max="100" step="5" value="${Math.round(((F.m||{})[k]||0)*100)}" data-m="${k}"></label>`).join('')+'<button class="btn sm" data-a="faceZero">Звичайна форма</button>';
+  box.querySelectorAll('input[data-m]').forEach(inp=>inp.addEventListener('input',()=>{const F=heroFace();F.m=F.m||{};F.m[inp.dataset.m]=+inp.value/100}));
+  sheet.querySelectorAll('.fc-tab').forEach(b=>b.classList.toggle('on',b.dataset.v===t))}
 const HV={yaw:-.35};
 function hvAttach(){const box=$('#hwCv');if(!box||!GL.ok||!window.THREE)return;m3dLoad('q');view3D(HV,box,hvFrame)}
 function hvFrame(){const now=performance.now(),dt=Math.min(.1,(now-HV.t)/1000);HV.t=now;
@@ -3337,7 +3346,9 @@ const ACT={
   heroWin:()=>equipPanel(),
   gearSlot:k=>{if(GEAR[k])gearPanel(k)},
   faceSet:v=>{const [k,i]=v.split(':');if(!FACE_OPT[k])return;heroFace()[k]=+i;sheet.querySelectorAll(`[data-a="faceSet"][data-v^="${k}:"]`).forEach(b=>b.classList.toggle('gold',b.dataset.v===v))},
-  faceRnd:()=>{const F=heroFace(),r=n=>Math.floor(Math.random()*n);F.skin=r(4);F.hair=r(5);F.hc=r(5);F.usy=r(3)?0:1;F.beard=r(5)?0:1;F.m={};FACE_MORPH.forEach(([k])=>F.m[k]=Math.round((Math.random()*2-1)*12)/20);facePanel(facePanel.start)},
+  faceRnd:()=>{const F=heroFace(),r=n=>Math.floor(Math.random()*n);F.skin=r(4);F.hair=r(5);F.hc=r(5);F.eye=r(5);F.usy=r(3)?0:1;F.beard=r(5)?0:1;F.m={};FACE_MORPH.forEach(([k])=>F.m[k]=Math.round((Math.random()*2-1)*12)/20);fcCtl()},
+  faceTab:t=>{facePanel.tab=t;fcCtl()},
+  faceZero:()=>{heroFace().m={};fcCtl()},
   faceDone:()=>{save();if(facePanel.start)closeModal();else equipPanel()},
   faceWin:()=>facePanel(false),
   gearSet:v=>{const [k,i]=v.split(':');if(!GEAR[k]||!gearOwn(k).includes(+i))return;G.hero[k]=+i;save();SFX.play('loot');HV.cheer=1;toast(`Вдягнуто: ${GEAR[k].items[+i].n}`);sheet.querySelector('.smith')?smithPanel():equipPanel()},
@@ -4704,15 +4715,17 @@ const FACE_OPT={skin:['Шкіра',[['Світла',[1.1,1.06,1.02]],['Звич�
   hair:['Зачіска',[['Лиса голова',''],['Оселедець','Oseledets'],['Коротка','Hair_Short'],['Зачесана','Hair_Parted'],['Довга','Hair_Long']]],
   hc:['Колір волосся',[['Чорне','#241c18'],['Темне','#4a3222'],['Каштанове','#73482a'],['Русяве','#b8935e'],['Сиве','#cfcac2']]],
   usy:['Вуса',[['Довгі','Usy'],['Короткі','Usy_S'],['Без вусів','']]],
-  beard:['Борода',[['Без бороди',''],['Борода','Beard']]]};
-const faceDef=()=>({m:{},skin:1,hair:0,hc:1,usy:0,beard:0});
+  beard:['Борода',[['Без бороди',''],['Борода','Beard']]],
+  eye:['Очі',[['Карі','#6b3d1f'],['Темні','#2e1d12'],['Сірі','#8d969e'],['Блакитні','#4f86c6'],['Зелені','#5e8a4a']]]};
+const FACE_SW={skin:['#ecc6a6','#d39a74','#b07a55','#8a5a3c'],hc:FACE_OPT.hc[1].map(o=>o[1]),eye:FACE_OPT.eye[1].map(o=>o[1])};
+const faceDef=()=>({m:{},skin:1,hair:0,hc:1,usy:0,beard:0,eye:0});
 const heroFace=()=>G&&G.hero?(G.hero.face||(G.hero.face=faceDef())):faceDef();
 const Q_HAIR=['Oseledets','Hair_Short','Hair_Parted','Hair_Long'],Q_SKIN=/^MI_(Superhero|Regular)_Male$/,Q_HAIRM=/^(MI_Hair|IT_hair)/;
 function qFace(o,F,helm){const opt=(k,i)=>FACE_OPT[k][1][i]||FACE_OPT[k][1][0];
   const hair=opt('hair',F.hair)[1],usy=opt('usy',F.usy)[1],beard=opt('beard',F.beard)[1],sk=opt('skin',F.skin)[1],hc=new THREE.Color(opt('hc',F.hc)[1]).convertSRGBToLinear();
-  const skin=new THREE.Color().setRGB(...sk).convertSRGBToLinear(),hcT=hc.clone().multiplyScalar(2.6);   // текстура волосся сіра — підсилюємо
-  o.traverse(x=>{if(Q_HAIR.includes(x.name))x.visible=x.name===hair&&!helm;   // під шапкою чи шоломом волосся не видно
-    else if(x.name==='Usy'||x.name==='Usy_S')x.visible=x.name===usy;else if(x.name==='Beard')x.visible=!!beard;
+  const skin=new THREE.Color().setRGB(...sk).convertSRGBToLinear(),hcT=hc.clone().multiplyScalar(1.5);   // текстура волосся сіра — трохи підсилюємо
+  o.traverse(x=>{if(Q_HAIR.includes(x.name))x.visible=(x.name===hair||hair==='Hair_Long'&&x.name==='Hair_Short')&&!helm;   // під шапкою чи шоломом волосся не видно; під довгим — коротка стрижка, щоб маківка не світилась
+    else if(x.name==='Usy'||x.name==='Usy_S')x.visible=x.name===usy;else if(x.name==='Beard')x.visible=!!beard;else if(/^Eyes_\d$/.test(x.name))x.visible=x.name==='Eyes_'+(F.eye|0);
     if(x.morphTargetDictionary)for(const [k] of FACE_MORPH){const j=x.morphTargetDictionary[k];if(j!==undefined)x.morphTargetInfluences[j]=(F.m&&F.m[k])||0}
     if(x.isMesh){const m=x.material;if(Q_SKIN.test(m.name)){linMat(m);m.color.copy(skin)}else if(Q_HAIRM.test(m.name)){linMat(m);m.color.copy(m.map?hcT:hc)}}})}
 function qDress(o,L){const key=JSON.stringify(L);if(o.userData.look===key)return;o.userData.look=key;

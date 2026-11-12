@@ -78,3 +78,12 @@ export function faceMorphs(doc,skin,jName){const R=doc.getRoot(),buf=R.listBuffe
   mesh.setWeights(names.map(()=>0));mesh.setExtras({targetNames:names});
   // друга сітка «Head» (очі) — теж мусить мати стільки ж цілей, якщо в одному меші; тут очі — окремий меш, тож нічого
   return names}
+
+// кольори очей: вузли Eyes_0 (як є) … Eyes_n — та сама сітка, інша текстура райдужки
+export function eyeVariants(doc,pngs){const R=doc.getRoot();
+  const node=R.listNodes().find(n=>n.getMesh()&&n.getMesh().listPrimitives().some(p=>p.getMaterial()&&p.getMaterial().getName()==='MI_Eyes'));if(!node)throw 'no eyes';
+  const parent=R.listNodes().find(p=>p.listChildren().includes(node))||R.listScenes()[0],prim=node.getMesh().listPrimitives()[0],mat=prim.getMaterial();
+  node.setName('Eyes_0');node.getMesh().setName('Eyes_0');
+  pngs.forEach((f,i)=>{const nm=f.replace(/^.*T_Eye_|\.png$/g,''),t=doc.createTexture('T_Eye_'+nm).setImage(new Uint8Array(fs.readFileSync(f))).setMimeType('image/png').setURI('T_Eye_'+nm+'.png');
+    const m=mat.clone().setName('MI_Eyes').setBaseColorTexture(t),p=prim.clone().setMaterial(m);
+    const n=doc.createNode('Eyes_'+(i+1)).setMesh(doc.createMesh('Eyes_'+(i+1)).addPrimitive(p)).setSkin(node.getSkin());parent.addChild(n)})}
