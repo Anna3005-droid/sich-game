@@ -54,7 +54,15 @@ for(const p of C.parts)await addPart(p);
 for(const n of R.listNodes())if(n.getMesh()){const nm=n.getName().replace(/^Male_/,'');n.setName(nm);n.getMesh().setName(nm)}
 
 // речі з крамниці: зброя в правій руці, щит на лівому передпліччі, шапки й шоломи на голові (див. qitems.mjs)
-if(C.items)buildItems(doc,byName,C.items);
+// голова в системі кістки голови (через обернену матрицю прив'язки) — по ній шиємо шоломи, щоб сиділи щільно
+function headSpace(){const ji=jName.indexOf('Head'),m=[];skin.getInverseBindMatrices().getElement(ji,m);let prim=null;
+  for(const n of R.listNodes()){const me=n.getMesh();if(!me||n.getName()!=='Head')continue;for(const p of me.listPrimitives())if(/Superhero|Regular/.test(p.getMaterial()?.getName()||''))prim=p}
+  const P=prim.getAttribute('POSITION'),N=prim.getAttribute('NORMAL'),I=Array.from(prim.getIndices().getArray()),v=[0,0,0],n=[0,0,0],pos=[],nor=[];
+  for(let i=0;i<P.getCount();i++){P.getElement(i,v);N.getElement(i,n);
+    pos.push(m[0]*v[0]+m[4]*v[1]+m[8]*v[2]+m[12],m[1]*v[0]+m[5]*v[1]+m[9]*v[2]+m[13],m[2]*v[0]+m[6]*v[1]+m[10]*v[2]+m[14]);
+    const a=m[0]*n[0]+m[4]*n[1]+m[8]*n[2],b=m[1]*n[0]+m[5]*n[1]+m[9]*n[2],c=m[2]*n[0]+m[6]*n[1]+m[10]*n[2],l=Math.hypot(a,b,c)||1;nor.push(a/l,b/l,c/l)}
+  return{P:pos,N:nor,I}}
+if(C.items)buildItems(doc,byName,C.items,headSpace());
 
 // рухи під назви гри; частини послідовності зшиваються (між ними — коротке перетікання)
 const buf=R.listBuffers()[0],libs={};
@@ -81,7 +89,8 @@ if(C.hair){const done=new Set();for(const m of R.listMaterials())if(/Hair/.test(
   t.setImage(new Uint8Array(await sharp(Buffer.from(t.getImage())).removeAlpha().linear(C.hair,[0,0,0]).png().toBuffer())).setMimeType('image/png')}}
 for(const m of R.listMeshes())for(const p of m.listPrimitives())for(const k of p.listSemantics())if(!/^(POSITION|NORMAL|TEXCOORD_0|JOINTS_0|WEIGHTS_0)$/.test(k))p.setAttribute(k,null);
 // у грі світло Ламберта — потрібна лише кольорова текстура
-for(const m of R.listMaterials())m.setNormalTexture(null).setOcclusionTexture(null).setMetallicRoughnessTexture(null).setEmissiveTexture(null).setMetallicFactor(0).setRoughnessFactor(1);
+for(const m of R.listMaterials())if(!C.keepNormal||!m.getBaseColorTexture())m.setNormalTexture(null);
+for(const m of R.listMaterials())m.setOcclusionTexture(null).setMetallicRoughnessTexture(null).setEmissiveTexture(null).setMetallicFactor(0).setRoughnessFactor(1);
 const tf=[resample({tolerance:C.resTol||1e-4}),prune(),dedup(),weld()];
 if(C.simplify)tf.push(simplify({simplifier:MeshoptSimplifier,ratio:C.simplify,error:C.simplifyErr||.002,lockBorder:false}));
 tf.push(textureCompress({encoder:sharp,targetFormat:'jpeg',resize:[C.tex||1024,C.tex||1024],quality:C.q||80,pattern:/^(?!.*(Hair|Eye))/}));

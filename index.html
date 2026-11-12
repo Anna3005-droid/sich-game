@@ -4645,7 +4645,9 @@ function m3dLoad(k){const m=M3D[k];if(m.st)return m.st===2;if(!THREE.GLTFLoader|
   glbLoad(m.url,g=>{
     // матеріал як у решти мапи (Lambert, без перетворення кольорів) і трохи власного світла — щоб не був темнішим за мальованих бійців
     g.scene.traverse(x=>{if(x.isMesh){x.castShadow=true;x.frustumCulled=false;const map=x.material.map;
-      x.material=new THREE.MeshLambertMaterial({map,color:map?'#ffffff':x.material.color,skinning:!!x.isSkinnedMesh,name:x.material.name});
+      const nm=x.material.normalMap;   // у героя є карти рельєфу (складки, шви, м'язи) — для них матеріал, що вміє світло з рельєфом
+      x.material=nm?new THREE.MeshStandardMaterial({map,normalMap:nm,normalScale:x.material.normalScale.clone(),roughness:x.material.name==='MI_Mail'?.55:.85,metalness:0,skinning:!!x.isSkinnedMesh,name:x.material.name})
+        :new THREE.MeshLambertMaterial({map,color:map?'#ffffff':x.material.color,skinning:!!x.isSkinnedMesh,name:x.material.name});
       if(Q_TINT.test(x.name)||Q_TINT.test(x.parent&&x.parent.name))x.material=x.material.clone()}});
     m.g=g;m.st=2},e=>{m.st=3;console.warn('Не вдалося завантажити 3D-модель',m.url,e)});
   return false}

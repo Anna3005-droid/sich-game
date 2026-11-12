@@ -3,7 +3,7 @@
 const COL={steel:[.78,.8,.84],dsteel:[.45,.47,.5],wood:[.5,.31,.16],dwood:[.32,.19,.1],leather:[.36,.21,.11],gold:[.86,.66,.22],
   brass:[.74,.56,.26],red:[.66,.13,.11],fur:[.24,.16,.1],blue:[.14,.32,.66],gem:[.75,.08,.1],chain:[.5,.52,.55]};
 
-export function buildItems(doc,byName,items){
+export function buildItems(doc,byName,items,head){
   const buf=doc.getRoot().listBuffers()[0],mats={};
   const mat=n=>mats[n]||(mats[n]=doc.createMaterial('IT_'+n).setBaseColorFactor([...COL[n],1]).setMetallicFactor(0).setRoughnessFactor(.7).setDoubleSided(true));
   // одна сітка = кілька примітивів (по матеріалу)
@@ -35,6 +35,33 @@ export function buildItems(doc,byName,items){
   function blade(g,x0,L,w,curve,taper=.55,y0=0,t=.004,n=10){for(let i=0;i<n;i++){const xa=x0+L*i/n,xb=x0+L*(i+1)/n,sh=x=>curve*((x-x0)/L)**2,wa=w*(1-taper*i/n),wb=w*(1-taper*(i+1)/n),tip=i===n-1;
       const ya=y0+sh(xa),yb=y0+sh(xb),B0=[xa,ya-wa/2,0],B1=[xb,yb-(tip?0:wb/2),0],E0=[xa,ya+wa/2,0],E1=[xb,yb+(tip?0:wb/2),0],M0=[xa,ya,t],M1=[xb,yb,tip?0:t],N0=[xa,ya,-t],N1=[xb,yb,tip?0:-t];
       poly(g,[B0,B1,M1,M0]);poly(g,[M0,M1,E1,E0]);poly(g,[B1,B0,N0,N1]);poly(g,[N1,N0,E0,E1])}}
+  // голова, зварена за положенням (шви текстури не рвуть шолом)
+  const HW=head&&(()=>{const map=new Map(),can=[],P=[],N=[],nV=head.P.length/3;
+    for(let i=0;i<nV;i++){const k=Math.round(head.P[i*3]*2e3)+','+Math.round(head.P[i*3+1]*2e3)+','+Math.round(head.P[i*3+2]*2e3);let c=map.get(k);
+      if(c===undefined){c=P.length/3;map.set(k,c);P.push(head.P[i*3],head.P[i*3+1],head.P[i*3+2]);N.push(0,0,0)}can[i]=c;for(let q=0;q<3;q++)N[c*3+q]+=head.N[i*3+q]}
+    for(let c=0;c<P.length/3;c++){const l=Math.hypot(N[c*3],N[c*3+1],N[c*3+2])||1;for(let q=0;q<3;q++)N[c*3+q]/=l}
+    const T=[];for(let t=0;t<head.I.length;t+=3)T.push([can[head.I[t]],can[head.I[t+1]],can[head.I[t+2]]]);return{P,N,T}})();
+  // лінія, вище якої — шолом: над бровами спереду, нижче ззаду; над вухами плавно вища — вуха відкриті
+  const cut=(z,x)=>.1+.3*z+.03*Math.min(1,Math.max(0,(Math.abs(x)-.058)/.016));
+  // ділянка голови, де всі fs(x,y,z)>0; трикутники обрізаємо точно по лінії — край рівний, без сходинок
+  function region(fs){const P=HW.P.slice(),N=HW.N.slice(),cache=new Map(),val=(f,i)=>f(P[i*3],P[i*3+1],P[i*3+2]);
+    const mid=(fi,f,a,b)=>{const k=fi+':'+(a<b?a+'_'+b:b+'_'+a);let i=cache.get(k);if(i!==undefined)return i;const va=val(f,a),vb=val(f,b),t=va/(va-vb);i=P.length/3;
+      const n=[0,1,2].map(q=>N[a*3+q]+(N[b*3+q]-N[a*3+q])*t),l=Math.hypot(...n)||1;for(let q=0;q<3;q++){P.push(P[a*3+q]+(P[b*3+q]-P[a*3+q])*t);N.push(n[q]/l)}cache.set(k,i);return i};
+    let polys=HW.T.map(t=>t.slice());
+    fs.forEach((f,fi)=>{const out=[];for(const pg of polys){const r=[];for(let k=0;k<pg.length;k++){const a=pg[k],b=pg[(k+1)%pg.length],va=val(f,a),vb=val(f,b);if(va>0)r.push(a);if((va>0)!==(vb>0))r.push(mid(fi,f,a,b))}if(r.length>=3)out.push(r)}polys=out});
+    const tris=[];for(const pg of polys)for(let k=1;k<pg.length-1;k++)tris.push([pg[0],pg[k],pg[k+1]]);
+    const ec=new Map(),key=(a,b)=>a<b?a+'_'+b:b+'_'+a;for(const t of tris)for(let e=0;e<3;e++){const k=key(t[e],t[(e+1)%3]);ec.set(k,(ec.get(k)||0)+1)}
+    const edges=[];for(const t of tris)for(let e=0;e<3;e++){const a=t[e],b=t[(e+1)%3];if(ec.get(key(a,b))===1)edges.push([a,b])}
+    return{tris,edges,P,N,hp:(c,off,dy=0)=>[P[c*3]+N[c*3]*off,P[c*3+1]+N[c*3+1]*off+dy,P[c*3+2]+N[c*3+2]*off]}}
+  const above=d=>(x,y,z)=>y-cut(z,x)-d,below=d=>(x,y,z)=>cut(z,x)+d-y;
+  function shell(g,R,off,warp){const idx=new Map(),add=c=>{let i=idx.get(c);if(i===undefined){i=g.P.length/3;idx.set(c,i);const p=R.hp(c,off);g.P.push(...(warp?warp(p):p));g.N.push(R.N[c*3],R.N[c*3+1],R.N[c*3+2])}return i};
+    for(const t of R.tris)g.I.push(add(t[0]),add(t[1]),add(t[2]))}
+  // обідок по краю: товщина назовні й донизу
+  function rim(g,R,off,w,h){for(const [a,b] of R.edges){const A=R.hp(a,off),B=R.hp(b,off),A2=R.hp(a,off+w,-h),B2=R.hp(b,off+w,-h),A3=R.hp(a,off+w,h*.4),B3=R.hp(b,off+w,h*.4);poly(g,[A,B,B2,A2]);poly(g,[A3,B3,B,A]);poly(g,[A2,B2,B3,A3])}}
+  const crownY=R=>{let m=-9;for(const t of R.tris)for(const c of t)m=Math.max(m,R.P[c*3+1]);return m};
+  const crown=(R,off)=>{let best=null,m=-9;for(const t of R.tris)for(const c of t)if(R.P[c*3+1]>m){m=R.P[c*3+1];best=c}const p=R.hp(best,off);return[0,p[1],p[2]]};
+  // чоло над переніссям: найвища передня точка під лінією шолома
+  const front=()=>{let z=-9,y=0;for(let c=0;c<HW.P.length/3;c++){const X=HW.P[c*3],Y=HW.P[c*3+1],Z=HW.P[c*3+2];if(Math.abs(X)<.012&&Y<cut(Z,X)+.005&&Y>cut(Z,X)-.03&&Z>z){z=Z;y=Y}}return[0,y,z]};
   // шабля козака: клинок від гарди вгору загинається, гарда, руків'я
   const yc=.013;   // вісь руків'я (центр кулака)
   const B={
@@ -67,21 +94,20 @@ export function buildItems(doc,byName,items){
       T(-.15,.15,-.15,-.11);T(-.15,-.115,-.15,-.07);T(.115,.15,-.15,-.07);
       slab(au,[[-.115,-.11],[-.014,-.03],[-.014,0],[-.115,-.08]],z0,z1);slab(au,[[.115,-.08],[.014,0],[.014,-.03],[.115,-.11]],z0,z1);
       T(-.03,.03,-.2,-.15);return{blue:bl,gold:au}},
-    // шапки й шоломи — у системі кістки голови: Y вгору (брови ~0.11, маківка ~0.21), Z уперед; череп ~0.077 завширшки, ~0.096 від центру вперед-назад
-    helm1(){const f=G(),r=G(),c=[0,0,.006];   // козацька шапка: хутряний околиш і червоний верх зі шликом
-      lathe(f,[[.096,.118],[.11,.12],[.117,.16],[.116,.205],[.1,.215]],1,18,c,0,Math.PI*2,.9,1);
-      lathe(r,[[.1,.21],[.098,.24],[.082,.265],[.045,.28],[0,.284]],1,16,c,0,Math.PI*2,.9,1);
-      const pts=[[0,.275,-.01],[-.045,.26,-.075],[-.075,.21,-.105],[-.085,.155,-.11]];for(let k=0;k<pts.length-1;k++){const a=pts[k],b=pts[k+1],ra=.032*(1-k/3)+.01,rb=.032*(1-(k+1)/3)+.008;
-        const q=(p,rr,s)=>[p[0]+Math.cos(s)*rr,p[1],p[2]+Math.sin(s)*rr];for(let s=0;s<6;s++){const s0=s*Math.PI/3,s1=(s+1)*Math.PI/3;poly(r,[q(a,ra,s0),q(a,ra,s1),q(b,rb,s1),q(b,rb,s0)])}}
-      lathe(f,[[0,.155],[.018,.152],[.018,.14],[0,.135]],1,8,[-.085,0,-.11]);return{fur:f,red:r}},
-    helm2(){const s=G(),d=G(),c=[0,0,.008];   // залізний шолом-місюрка
-      lathe(s,[[.103,.125],[.105,.16],[.1,.195],[.083,.225],[.05,.245],[0,.252]],1,20,c,0,Math.PI*2,.86,1);
-      lathe(d,[[.107,.118],[.109,.123],[.109,.142],[.105,.146]],1,20,c,0,Math.PI*2,.86,1);lathe(d,[[0,.262],[.01,.258],[.012,.25]],1,8,c);return{steel:s,dsteel:d}},
-    helm3(){const s=G(),d=G(),ch=G(),c=[0,0,.008];   // шишак: гострий, з наносником і бармицею
-      lathe(s,[[.103,.125],[.105,.165],[.096,.2],[.07,.23],[.036,.257],[.012,.29],[0,.31]],1,20,c,0,Math.PI*2,.86,1);
-      lathe(d,[[.107,.118],[.109,.123],[.109,.142],[.105,.146]],1,20,c,0,Math.PI*2,.86,1);
-      box(d,-.011,.011,.045,.135,.108,.12);   // наносник
-      lathe(ch,[[.105,.125],[.108,.08],[.112,.035],[.12,0]],1,14,c,Math.PI*.8,Math.PI*2.2,.9,1);   // бармиця: ззаду й з боків
+    // шапки й шоломи шиємо по самій голові: шкіра вище лінії брів, відсунута назовні — сидять щільно в будь-якому русі
+    helm1(){const f=G(),r=G(),R1=region([above(0),below(.05)]),R2=region([above(.035)]);   // козацька шапка
+      shell(f,R1,.024);rim(f,R1,.024,.012,.012);
+      const top=crownY(R2);shell(r,R2,.017,p=>{const k=Math.max(0,(p[1]-(top-.07))/.07);return[p[0]*(1-.12*k),p[1]+.03*k*k,p[2]-.02*k*k]});   // верх — мішком, трохи назад
+      const c=crown(R2,.017);const pts=[[c[0],c[1]+.025,c[2]-.02],[c[0]-.04,c[1]+.01,c[2]-.08],[c[0]-.065,c[1]-.04,c[2]-.11],[c[0]-.07,c[1]-.09,c[2]-.115]];
+      for(let k=0;k<pts.length-1;k++){const a=pts[k],b=pts[k+1],ra=.03*(1-k/3)+.01,rb=.03*(1-(k+1)/3)+.008,q=(p,rr,s)=>[p[0]+Math.cos(s)*rr,p[1],p[2]+Math.sin(s)*rr];
+        for(let s=0;s<6;s++){const s0=s*Math.PI/3,s1=(s+1)*Math.PI/3;poly(r,[q(a,ra,s0),q(a,ra,s1),q(b,rb,s1),q(b,rb,s0)])}}
+      lathe(f,[[0,.012],[.017,.009],[.017,-.003],[0,-.006]],1,8,[pts[3][0],pts[3][1],pts[3][2]]);return{fur:f,red:r}},
+    helm2(){const s=G(),d=G(),R=region([above(0)]);shell(s,R,.011);rim(d,R,.011,.007,.012);   // залізний шолом-місюрка
+      const c=crown(R,.011);lathe(d,[[0,.014],[.01,.01],[.012,0]],1,8,c);return{steel:s,dsteel:d}},
+    helm3(){const s=G(),d=G(),ch=G(),R=region([above(0)]);shell(s,R,.012,p=>{const t=crownY(R)+.012,k=Math.max(0,(p[1]-(t-.06))/.06);return[p[0]*(1-.25*k*k),p[1]+.035*k*k,p[2]*(1-.25*k*k)]});   // шишак: верх витягнутий угору
+      rim(d,R,.012,.007,.012);const c=crown(R,.012);lathe(d,[[.012,.03],[.008,.06],[.003,.09],[0,.1]],1,8,c);   // шпиль
+      const F=front();box(d,-.009,.009,F[1]-.065,F[1]+.012,F[2]+.004,F[2]+.016);   // наносник
+      for(const [a,b] of R.edges){const A=R.hp(a,.012),B=R.hp(b,.012);if(A[2]>.035||B[2]>.035)continue;const o=(p,c)=>{const nx=R.N[c*3],nz=R.N[c*3+2],l=Math.hypot(nx,nz)||1;return[p[0]+nx/l*.018,p[1]-.085,p[2]+nz/l*.018]};poly(ch,[A,B,o(B,b),o(A,a)])}   // бармиця ззаду й з боків
       return{steel:s,dsteel:d,chain:ch}},
   };
   for(const it of items){const bone=byName.get(it.bone);if(!bone)throw 'no bone '+it.bone;
