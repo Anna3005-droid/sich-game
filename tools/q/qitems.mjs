@@ -82,6 +82,21 @@ export function buildItems(doc,byName,items,head){
         for(let k=0;k<pts.length-1;k++){const a=pts[k],b=pts[k+1],ring=(p,s)=>[p[0]+Math.cos(s)*p[3]*1.2,p[1]+Math.sin(s)*p[3]*.6,p[2]+Math.sin(s)*p[3]*.35];
           for(let s=0;s<6;s++){const s0=s*Math.PI/3,s1=(s+1)*Math.PI/3;poly(h,[ring(a,s0),ring(a,s1),ring(b,s1),ring(b,s0)])}}}
       return{hair:h}},
+    usyS(){const h=G(),path=[[.003,.037,.121,.006],[.017,.033,.116,.007],[.03,.026,.105,.006],[.038,.016,.096,.003]];   // короткі вуса
+      for(const sx of [1,-1]){const pts=path.map(([x,y,z,r])=>[x*sx,y,z,r]);for(let k=0;k<pts.length-1;k++){const a=pts[k],b=pts[k+1],ring=(p,s)=>[p[0]+Math.cos(s)*p[3]*1.2,p[1]+Math.sin(s)*p[3]*.6,p[2]+Math.sin(s)*p[3]*.35];
+        for(let s=0;s<6;s++){const s0=s*Math.PI/3,s1=(s+1)*Math.PI/3;poly(h,[ring(a,s0),ring(a,s1),ring(b,s1),ring(b,s0)])}}}return{hair:h}},
+    // оселедець: смуга волосся на маківці й довге пасмо, що спадає на лівий бік за вухо
+    oseledets(){const h=G(),R=region([(x,y,z)=>.03-Math.abs(x),above(.035),(x,y,z)=>.03-z,(x,y,z)=>z+.065]);shell(h,R,.008);
+      // пасмо лягає по голові: точки — на поверхні черепа в напрямках від маківки назад-ліворуч до вуха, далі вільно звисає
+      const c=[0,.13,.006],dirs=[[0,1,-.15],[.22,.95,-.35],[.5,.75,-.5],[.75,.45,-.55],[.88,.12,-.5]],surf=d=>{const l=Math.hypot(...d);let best=0,bd=-9;
+        for(let k=0;k<HW.P.length/3;k++){const v=[HW.P[k*3]-c[0],HW.P[k*3+1]-c[1],HW.P[k*3+2]-c[2]],vl=Math.hypot(...v)||1,dt=(v[0]*d[0]+v[1]*d[1]+v[2]*d[2])/(vl*l);if(dt>bd){bd=dt;best=k}}
+        return[[HW.P[best*3],HW.P[best*3+1],HW.P[best*3+2]],[HW.N[best*3],HW.N[best*3+1],HW.N[best*3+2]]]};
+      const rad=[.02,.019,.017,.014,.011,.008,.004],pts=dirs.map((d,k)=>{const [p,n]=surf(d);return{p:p.map((x,q)=>x+n[q]*(rad[k]*.5+.006)),n}});
+      const last=pts[pts.length-1];pts.push({p:[last.p[0]+.004,last.p[1]-.045,last.p[2]+.006],n:last.n},{p:[last.p[0]+.002,last.p[1]-.085,last.p[2]+.012],n:last.n});
+      const ring=(k,s)=>{const P=pts[k].p,N=pts[k].n,A=pts[Math.max(0,k-1)].p,Bq=pts[Math.min(pts.length-1,k+1)].p,T=nrm(sub(Bq,A)),Bn=nrm(cross(T,N)),r=rad[k];
+        return[0,1,2].map(q=>P[q]+Bn[q]*Math.cos(s)*r+N[q]*Math.sin(s)*r*.45)};
+      for(let k=0;k<pts.length-1;k++)for(let q=0;q<8;q++){const s0=q*Math.PI/4,s1=(q+1)*Math.PI/4;poly(h,[ring(k,s0),ring(k,s1),ring(k+1,s1),ring(k+1,s0)])}
+      return{hair:h}},
     // спис ополченця: довге ратище, тримають ближче до середини
     spear(){const w=G(),s=G();lathe(w,[[0,-.75],[.016,-.75],[.017,0],[.015,1.15],[0,1.15]],0,8,[0,yc,0]);
       slab(s,[[1.13,yc-.018],[1.22,yc-.035],[1.4,yc],[1.22,yc+.035],[1.13,yc+.018]],-.006,.006);lathe(s,[[.019,1.1],[.019,1.16]],0,8,[0,yc,0]);return{wood:w,steel:s}},

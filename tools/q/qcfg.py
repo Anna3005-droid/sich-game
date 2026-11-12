@@ -15,12 +15,15 @@ c={'base':O+'/Outfits/Male_Peasant.gltf',
  'texSwap':{'MI_Ranger':S+'/qb/T_Ranger_Brown.png'},
  'items':[{'name':'Weapon','bone':'hand_r','t':tr,'r':rot,'list':[['Wpn_0','sabre'],['Wpn_1','sword'],['Wpn_2','axe'],['Wpn_3','knight'],['Wpn_4','king']]},
    {'name':'Shield','bone':'lowerarm_l','t':[-.045,.13,0],'r':[.70711,0,-.70711,0],'list':[['Shield_0','shield0'],['Shield_1','shield1'],['Shield_2','shield2']]},
-   {'name':'Helm','bone':'Head','list':[['Helm_1','helm1'],['Helm_2','helm2'],['Helm_3','helm3']]},{'name':'Face','bone':'Head','list':[['Usy','usy']]}],
+   {'name':'Helm','bone':'Head','list':[['Helm_1','helm1'],['Helm_2','helm2'],['Helm_3','helm3']]},{'name':'Face','bone':'Head','list':[['Usy','usy'],['Usy_S','usyS'],['Oseledets','oseledets']]}],
  'anims':{'Idle':[[A1,'Idle_Loop']],'Stand':[[A2,'Idle_FoldArms_Loop']],'Walk':[[A1,'Walk_Loop']],'Run':[[A1,'Jog_Fwd_Loop']],'Run_Map':[[A1,'Jog_Fwd_Loop']],
    'Attack_Slash':[[A1,'Sword_Attack']],'Attack':[[A1,'Pistol_Shoot']],'Block_Idle':[[A2,'Idle_Shield_Loop']],'Hit':[[A1,'Hit_Chest']],
    'Dying':[[A1,'Death01']],'Death':[[A1,'Death01']],'Dance':[[A1,'Dance_Loop',9]],'Entry':[[A2,'Sword_Regular_Combo'],[A2,'Yes'],[A2,'Sword_Heavy_Combo']],
    'Defeated':[[A2,'Idle_No_Loop'],[A1,'Crouch_Idle_Loop',2]],'Sad_Idle':[[A2,'Idle_No_Loop']],'SwordIdle':[[A1,'Sword_Idle']]},
  'cossack':{'shirt':S+'/qb/T_Vysh.png','shar':S+'/qb/T_Shar.png','pants':[[.2,.32,.62],[.7,.14,.12],[.2,.42,.22],[.2,.17,.15],[.45,.1,.32]],'sash':[[.8,.12,.1],[.15,.3,.66],[.18,.5,.26],[.1,.09,.09],[.86,.66,.22]]},
  'tex':1024,'texSmall':256,'keepNormal':mode!='soldier'}
-if mode=='soldier':c['items'][0]['list']=[['Wpn_0','sabre'],['Wpn_2','axe'],['Wpn_3','knight'],['Wpn_5','spear']];c['items'][1]['list']=c['items'][1]['list'][:2];c.update({'tex':512,'texSmall':128,'simplify':.2,'simplifyErr':.01,'resTol':5e-4});c['chest']={'yMin':1.36,'shrink':.032}
+if mode=='soldier':c['items'][3]['list']=[['Usy','usy']];c['items'][0]['list']=[['Wpn_0','sabre'],['Wpn_2','axe'],['Wpn_3','knight'],['Wpn_5','spear']];c['items'][1]['list']=c['items'][1]['list'][:2];c.update({'tex':512,'texSmall':128,'simplify':.2,'simplifyErr':.01,'resTol':5e-4});c['chest']={'yMin':1.36,'shrink':.032}
+if mode!='soldier':
+  c['parts']+= [{'path':H+'/'+f+'.gltf','name':nm} for f,nm in [('Hair_Buzzed','Hair_Short'),('Hair_Long','Hair_Long'),('Hair_SimpleParted','Hair_Parted'),('Hair_Beard','Beard')]]
+  c['hair']=[1,1,1];c['morphs']=True
 print(json.dumps(c))
