@@ -40,6 +40,8 @@ async function addPart(o){const d2=await io.read(o.path),R2=d2.getRoot();
       if(o.shrink){const P=p.getAttribute('POSITION').clone(),N=p.getAttribute('NORMAL'),v=[0,0,0],n=[0,0,0];p.setAttribute('POSITION',P);   // підсорочка — трохи менша, щоб не лізла крізь верхній одяг
         for(let i=0;i<P.getCount();i++){P.getElement(i,v);N.getElement(i,n);P.setElement(i,[v[0]-n[0]*o.shrink,v[1]-n[1]*o.shrink,v[2]-n[2]*o.shrink])}}}
     if(o.name)m.setName(o.name)}
+  // інша текстура для частини (кольчуга з сорочки): власний матеріал, щоб не зачепити оригінал
+  if(o.tex)for(const m of R2.listMaterials())if(m.getName()===o.texMat){m.setName(o.matName);const t=m.getBaseColorTexture();if(t)t.setImage(new Uint8Array(fs.readFileSync(o.tex))).setMimeType('image/png').setURI(o.matName+'.png').setName(o.matName)}
   const before=new Set(R.listNodes());mergeDocuments(doc,d2);
   const added=R.listNodes().filter(n=>!before.has(n));
   for(const n of added)if(n.getMesh()&&n.getSkin()){if(!n.getMesh().listPrimitives().length){n.dispose();continue}

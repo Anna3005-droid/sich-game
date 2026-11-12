@@ -11,7 +11,7 @@ c={'base':O+'/Outfits/Male_Peasant.gltf',
    {'path':U+'/Base Characters/Godot - UE/Superhero_Male_FullBody.gltf','head':'chest','dropMat':'MI_Hair|MI_Eyes','name':'Chest'},
    {'path':H+'/Hair_Beard.gltf','name':'Moustache','box':[{'xMax':.05,'yMin':1.607,'yMax':1.65,'zMin':.07},{'xMin':.028,'xMax':.06,'yMin':1.57,'yMax':1.625,'zMin':.045}]},
    ]+
-   [{'path':O+'/Modular Parts/Male_Peasant_Body.gltf','name':'Undershirt','shrink':.022}]+[{'path':O+'/Outfits/Male_Ranger.gltf'}],
+   [{'path':O+'/Modular Parts/Male_Peasant_Body.gltf','name':'Undershirt','shrink':.022}]+[{'path':O+'/Modular Parts/Male_Peasant_'+src+'.gltf','name':nm,'shrink':sh,'tex':S+'/qb/T_Mail.png','texMat':'MI_Peasant','matName':'MI_Mail'} for src,nm,sh in [('Body','Mail_Body',0),('Arms','Mail_Arms',0),('Body','Mail_Under',.022)]]+[{'path':O+'/Outfits/Male_Ranger.gltf'}],
  'chest':{'yMin':1.25,'shrink':.032},'hair':[.3,.2,.13],
  'texSwap':{'MI_Ranger':S+'/qb/T_Ranger_Brown.png'},
  'items':[{'name':'Weapon','bone':'hand_r','t':tr,'r':rot,'list':[['Wpn_0','sabre'],['Wpn_1','sword'],['Wpn_2','axe'],['Wpn_3','knight'],['Wpn_4','king']]},
@@ -22,5 +22,5 @@ c={'base':O+'/Outfits/Male_Peasant.gltf',
    'Dying':[[A1,'Death01']],'Death':[[A1,'Death01']],'Dance':[[A1,'Dance_Loop',9]],'Entry':[[A2,'Sword_Regular_Combo'],[A2,'Yes'],[A2,'Sword_Heavy_Combo']],
    'Defeated':[[A2,'Idle_No_Loop'],[A1,'Crouch_Idle_Loop',2]],'Sad_Idle':[[A2,'Idle_No_Loop']],'SwordIdle':[[A1,'Sword_Idle']]},
  'tex':1024,'texSmall':256}
-if mode=='soldier':c['items'][0]['list']=c['items'][0]['list'][:4];c['items'][1]['list']=c['items'][1]['list'][:2];c['items'][2]['list']=c['items'][2]['list'][:2];c.update({'tex':512,'texSmall':128,'simplify':.2,'simplifyErr':.01,'resTol':5e-4});c['chest']={'yMin':1.36,'shrink':.032}
+if mode=='soldier':c['items'][0]['list']=[['Wpn_0','sabre'],['Wpn_2','axe'],['Wpn_3','knight'],['Wpn_5','spear']];c['items'][1]['list']=c['items'][1]['list'][:2];c.update({'tex':512,'texSmall':128,'simplify':.2,'simplifyErr':.01,'resTol':5e-4});c['chest']={'yMin':1.36,'shrink':.032}
 print(json.dumps(c))
