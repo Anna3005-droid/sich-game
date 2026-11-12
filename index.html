@@ -191,7 +191,9 @@ input[type=text]{width:100%;font:inherit;font-size:18px;padding:10px 12px;border
 .hw-rib b{font:700 clamp(17px,2.9vw,27px)/1.05 var(--f-head);color:#fbf3e4;text-shadow:0 2px 3px rgba(0,0,0,.85);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hw-body{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);grid-template-areas:"por slots" "stats stats";gap:10px 12px}
 .hw-por{grid-area:por;border:2px solid #a07b33;border-radius:7px;overflow:hidden;background:radial-gradient(ellipse at 50% 40%,#3a3024,#0b0d10 75%);min-height:0;position:relative;touch-action:none}
-.hw-t.pick{cursor:pointer}.hw-t.pick:hover{filter:brightness(1.15)}
+.hw-t.pick{cursor:pointer}
+.smh{display:flex;align-items:center;gap:8px;margin:12px 0 4px;color:var(--gold);font-family:var(--f-head);text-transform:uppercase;letter-spacing:.04em;font-size:13px}.smh .ic{width:22px;height:22px}
+.rows .row.on{background:rgba(224,170,62,.12)}.rows .row.dim{opacity:.55}.hw-t.pick:hover{filter:brightness(1.15)}
 .hw-por img{display:block;width:100%;height:100%;object-fit:cover;object-position:50% 10%}
 .hw-por.old img{object-fit:contain}
 .hw-slots{grid-area:slots;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;align-content:start}
@@ -1090,6 +1092,8 @@ body.qlow .avv>video{display:none}
   <symbol id="i-crowd" viewBox="0 0 24 24"><circle cx="12" cy="7" r="2.5"/><circle cx="5.5" cy="9" r="2"/><circle cx="18.5" cy="9" r="2"/><path d="M8 20c0-4 2-6.5 4-6.5s4 2.5 4 6.5M2 19c0-3 1.6-5 3.5-5M22 19c0-3-1.6-5-3.5-5"/></symbol>
   <symbol id="i-armor" viewBox="0 0 24 24"><path d="M8 3l4 2 4-2 4 3-2 4v10H6V10L4 6z"/><path d="M9 11h6M9 15h6"/></symbol>
   <symbol id="i-boot" viewBox="0 0 24 24"><path d="M8 3h6v10l6 3v4H6l1-7z"/></symbol>
+  <symbol id="i-pants" viewBox="0 0 24 24"><path d="M6 3h12l1 6c2 4 2 8 1 11l-4 1-2-2-2-7-2 7-2 2-4-1c-1-3-1-7 1-11z"/></symbol>
+  <symbol id="i-belt" viewBox="0 0 24 24"><path d="M2 9h20v6H2z"/><path d="M9 8h6v8H9z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M15 15l3 6 2-1-2-5z"/></symbol>
   <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20s-8-5-8-10.5A4.5 4.5 0 0112 7a4.5 4.5 0 018 2.5C20 15 12 20 12 20z"/></symbol>
   <symbol id="i-banner" viewBox="0 0 24 24"><path d="M6 3v18M6 4h12l-3 4 3 4H6"/></symbol>
   <symbol id="i-house" viewBox="0 0 24 24"><path d="M3 11l9-7 9 7M5 9.5V20h14V9.5M10 20v-5h4v5"/><path d="M7 13h2M15 13h2"/></symbol>
@@ -1540,7 +1544,7 @@ const TYPE_N={city:'Місто',castle:'Замок',village:'Село'};
 const TR=t=>t.art==='island'?40:t.type==='city'?150:t.type==='castle'?112:100;   // радіус забудови з посадом
 const INCOME={city:120,castle:60,village:40};
 const RECRUIT={city:['militia','sword','archer','musket'],castle:['sword','axe','archer','knight'],village:['militia','axe','archer']};
-const WEAPONS=[{n:'Старий меч',atk:0,cost:0},{n:'Сталевий меч',atk:4,cost:150},{n:'Бойова сокира',atk:8,cost:400},{n:'Лицарський меч',atk:13,cost:900},{n:'Клинок Короля',atk:20,cost:2000}];
+const WEAPONS=[{n:'Козацька шабля',atk:0,cost:0},{n:'Сталевий меч',atk:4,cost:150},{n:'Бойова сокира',atk:8,cost:400},{n:'Лицарський меч',atk:13,cost:900},{n:'Клинок Короля',atk:20,cost:2000}];
 const ARMORS=[{n:'Полотняна сорочка',def:.05,cost:0},{n:'Стьобаний гамбезон',def:.15,cost:120},{n:'Кольчуга',def:.25,cost:350},{n:'Ламелярний обладунок',def:.35,cost:800},{n:'Латний обладунок',def:.45,cost:1800}];
 const SAVE_KEY='korona-klynok-save-v1';
 
@@ -2684,23 +2688,30 @@ function devTab(t){
 const GEAR={
   weapon:{n:'Зброя',icon:'sword',items:WEAPONS,fx:i=>`удар +${i.atk}`},
   armor:{n:'Обладунок',icon:'armor',items:ARMORS,fx:i=>`захист ${Math.round(i.def*100)}%`},
-  helm:{n:'Шолом',icon:'helmet',items:[{n:'Без шолома',def:0,cost:0},{n:'Шкіряна шапка',def:.03,cost:80},{n:'Залізний шолом',def:.06,cost:260},{n:'Шолом-шишак',def:.09,cost:650}],fx:i=>`захист +${Math.round(i.def*100)}%`},
+  helm:{n:'Шолом',icon:'helmet',items:[{n:'Без шолома',def:0,cost:0},{n:'Козацька шапка',def:.03,cost:80},{n:'Залізний шолом',def:.06,cost:260},{n:'Шолом-шишак',def:.09,cost:650}],fx:i=>`захист +${Math.round(i.def*100)}%`},
   shield:{n:'Щит',icon:'shield',items:[{n:'Дерев’яний щит',def:.03,cost:0},{n:'Окутий щит',def:.07,cost:200},{n:'Щит із тризубом',def:.11,cost:600}],fx:i=>`захист +${Math.round(i.def*100)}%, блок`},
   boots:{n:'Чоботи',icon:'boot',items:[{n:'Постоли',spd:0,cost:0},{n:'Шкіряні чоботи',spd:.06,cost:90},{n:'Козацькі чоботи',spd:.12,cost:280},{n:'Сап’янові чоботи',spd:.18,cost:650}],fx:i=>`швидкість +${Math.round(i.spd*100)}%`},
+  pants:{n:'Шаровари',icon:'pants',items:[{n:'Сині шаровари',cost:0},{n:'Червоні шаровари',cost:60},{n:'Зелені шаровари',cost:60},{n:'Чорні шаровари',cost:90},{n:'Оксамитові шаровари',cost:240}],fx:()=>'для краси'},
+  belt:{n:'Пояс',icon:'belt',items:[{n:'Червоний кушак',cost:0},{n:'Синій кушак',cost:40},{n:'Зелений кушак',cost:40},{n:'Чорний кушак',cost:60},{n:'Золотий пояс',cost:260}],fx:()=>'для краси'},
 };
+// гардероб героя: усе куплене й здобуте лишається в нього; вдягнути можна будь-що з гардероба (старі збереження — усе до вдягнутого)
+const gearOwn=k=>{const h=G.hero,o=h.own||(h.own={});if(!o[k])o[k]=[...Array((h[k]||0)+1).keys()];return o[k]};
+function gearPut(k,i,wearIt){const o=gearOwn(k);if(!o.includes(i)){o.push(i);o.sort((a,b)=>a-b)}if(wearIt)G.hero[k]=i}
 const gearLv=k=>G.hero[k]||0,gearItem=k=>GEAR[k].items[gearLv(k)];
 const heroSpd=()=>(1+gearItem('boots').spd)*(1+.04*hst('spd'));
 const smithDiscount=t=>t?1-.1*bldOf(t).smith:1;
 function smithPanel(){
   const t=CUR.town,disc=smithDiscount(t);
-  const rows=Object.entries(GEAR).map(([k,S])=>{const cur=gearItem(k),nx=S.items[gearLv(k)+1],price=nx?Math.round(nx.cost*disc):0;
-    return `<div class="row"><span class="urow"><svg class="ic" style="width:30px;height:30px;color:var(--gold)"><use href="#i-${S.icon}"/></svg><span><b>${S.n}: ${cur.n}</b><span class="sub">${nx?`далі: ${nx.n}, ${S.fx(nx)}`:'найкраще, що є'}</span></span></span><span></span>
-    ${nx?`<button class="btn sm gold" data-a="buy" data-v="${k}" ${G.gold>=price?'':'disabled'}>${price} зол.</button>`:'<span></span>'}</div>`}).join('');
-  show(`<h2>Коваль</h2><p class="muted">Золото: ${Math.floor(G.gold)}${disc<1?` · кузня міста дає знижку ${Math.round((1-disc)*100)}%`:''}</p><div class="rows">${rows}</div>
+  const sect=([k,S])=>`<div class="smh"><svg class="ic"><use href="#i-${S.icon}"/></svg><b>${S.n}</b></div>`+S.items.map((it,i)=>{const on=gearLv(k)===i,has=gearOwn(k).includes(i),price=Math.round(it.cost*disc);
+    return `<div class="row${on?' on':''}"><span><b>${esc(it.n)}</b><span class="sub">${S.fx(it)}</span></span><span></span>
+    ${on?'<span class="muted">на герої</span>':has?`<button class="btn sm" data-a="gearSet" data-v="${k}:${i}">Вдягнути</button>`:`<button class="btn sm gold" data-a="buyGear" data-v="${k}:${i}" ${G.gold>=price?'':'disabled'}>${price} зол.</button>`}</div>`}).join('');
+  show(`<h2>Коваль і кравець</h2><p class="muted">Золото: ${Math.floor(G.gold)}${disc<1?` · кузня міста дає знижку ${Math.round((1-disc)*100)}%`:''}. Куплене лишається в гардеробі героя — перевдягнути можна будь-коли у вікні героя.</p>
+  <div class="rows smith">${Object.entries(GEAR).map(sect).join('')}</div>
   <div class="acts"><button class="btn ghost" data-a="backTown">Назад до міста</button></div>`);
 }
 // вікно героя — мальоване за макетом: стрічка зі званням, великий портрет, 8 клітинок спорядження, 4 показники.
-// У клітинці — малюнок речі (простої, поки не купили кращу) і її справжня назва; кінь, перстень і пояс — скоро
+// У клітинці — малюнок речі й її справжня назва; торкнувся — вибрати з гардероба; кінь — скоро
+UIART.ui_hw_t_s_pants='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><defs><radialGradient id="g" cx=".5" cy=".45" r=".7"><stop offset="0" stop-color="#3a3024"/><stop offset="1" stop-color="#0d0b08"/></radialGradient></defs><rect width="120" height="120" fill="url(#g)"/><path d="M38 30h44l4 30c6 12 10 24 8 34l-14 4-6-4-8-36-8 36-6 4-14-4c-2-10 2-22 8-34z" fill="#2f4f96" stroke="#14213f" stroke-width="2"/><path d="M36 26h48v9H36z" fill="#b51d1a"/><path d="M52 44c-2 10-4 18-3 26M68 44c2 10 4 18 3 26" stroke="#1d3266" stroke-width="2" fill="none"/></svg>').replace(/\(/g,'%28').replace(/\)/g,'%29');   // дужки ламають url() у CSS
 const HV={yaw:-.35};
 function hvAttach(){const box=$('#hwCv');if(!box||!GL.ok||!window.THREE)return;m3dLoad('q');view3D(HV,box,hvFrame)}
 function hvFrame(){const now=performance.now(),dt=Math.min(.1,(now-HV.t)/1000);HV.t=now;
@@ -2711,10 +2722,10 @@ function hvFrame(){const now=performance.now(),dt=Math.min(.1,(now-HV.t)/1000);H
   HV.m.o.rotation.y=HV.yaw;HV.m.mixer.update(dt);HV.r.render(HV.sc,HV.cam)}
 function equipPanel(){
   const rk=heroRank(),h=G.hero,por=portrait(G.pf,rk);
-  const HW_TOP={weapon:3,armor:3,shield:2,boots:3},pic=k=>!gearLv(k)?'s_':gearLv(k)>=(HW_TOP[k]||99)?'h_':'v_';   // найкращі речі — гетьманські
+  const HW_TOP={weapon:3,armor:3,shield:2,boots:3},pic=k=>!gearLv(k)||!HW_TOP[k]&&k!=='helm'?'s_':gearLv(k)>=(HW_TOP[k]||99)?'h_':'v_';   // найкращі речі — гетьманські; шаровари й пояс — один малюнок
   const tile=(img,label,off,tip,k)=>`<div class="hw-t${off?' off':''}${k?' pick':''}" title="${esc(tip)}" style="background-image:url(${img})"${k?` data-a="gearSlot" data-v="${k}" role="button"`:''}><span>${esc(label)}</span></div>`;
   const slots=Object.keys(GEAR).map(k=>tile(UIART['ui_hw_t_'+pic(k)+k],gearItem(k).n,k==='helm'&&!gearLv(k),GEAR[k].n+': '+gearItem(k).n+(gearLv(k)?' · '+GEAR[k].fx(gearItem(k)):''),k)).join('')
-    +[['horse','Кінь'],['ring','Перстень'],['belt','Пояс']].map(([k,n])=>tile(UIART['ui_hw_t_s_'+k],n,1,n+': скоро')).join('');
+    +tile(UIART.ui_hw_t_s_horse,'Кінь',1,'Кінь: скоро');
   const st=(i,v,n)=>`<div class="hw-s" title="${n}"><img src="${UIART['ui_hw_st'+i]}" alt=""><b>${v}</b><small>${n}</small></div>`;
   show(`<div class="hw-head"><div class="hw-rib" style="border-image-source:url(${UIART.ui_hw_rib})"><small>${esc(FAC[G.pf].name)}</small><b>${RANKS[rk].n}, рівень ${h.lvl}</b></div></div>
   <div class="hw-body"><div class="hw-por" id="hwCv"><img class="av-fb" src="${por}" alt="${RANKS[rk].n}"></div><div class="hw-slots">${slots}</div>
@@ -2723,20 +2734,15 @@ function equipPanel(){
   const x=sheet.querySelector('.xbtn');if(x)x.style.setProperty('background-image',`url(${UIART.ui_hw_x})`,'important');
   hvAttach();
 }
-// що вдягти в цю клітинку: речі з рюкзака; шолом можна зняти
-function gearPanel(k){const S=GEAR[k],lv=gearLv(k),opts=bag().map((o,i)=>[o,i]).filter(([o])=>!o.fish&&o.slot===k);
-  const row=(it,btn)=>`<div class="row"><span class="urow"><svg class="ic" style="width:30px;height:30px;color:var(--gold)"><use href="#i-${S.icon}"/></svg><span><b>${esc(it.n)}</b><span class="sub">${S.fx(it)}</span></span></span><span></span>${btn}</div>`;
-  const now=k==='helm'&&lv>0?`<button class="btn sm" data-a="gearOff" data-v="${k}" ${bagFree()?'':'disabled'}>Зняти</button>`:'<span class="muted">на герої</span>';
-  show(`<span class="eyebrow" style="color:var(--gold)">Спорядження</span><h2>${S.n}</h2>
-  <div class="rows">${row(gearItem(k),now)}${opts.map(([o,i])=>row(S.items[o.tier],`<button class="btn sm ${o.tier>lv?'gold':''}" data-a="gearWear" data-v="${i}">Вдягнути</button>`)).join('')}</div>
-  ${opts.length?'':`<p class="muted">У рюкзаку іншого немає: нове купують у коваля або здобувають у бою.</p>`}
+// що вдягти в цю клітинку: усе з гардероба героя й трофеї з рюкзака; чого ще нема — видно, скільки коштує в коваля
+function gearPanel(k){const S=GEAR[k],lv=gearLv(k),own=gearOwn(k),bagI=bag().map((o,i)=>[o,i]).filter(([o])=>!o.fish&&o.slot===k&&!own.includes(o.tier));
+  const row=(it,btn,dim)=>`<div class="row${dim?' dim':''}"><span class="urow"><svg class="ic" style="width:28px;height:28px;color:var(--gold)"><use href="#i-${S.icon}"/></svg><span><b>${esc(it.n)}</b><span class="sub">${S.fx(it)}</span></span></span><span></span>${btn}</div>`;
+  const rows=S.items.map((it,i)=>i===lv?row(it,'<span class="muted">на герої</span>'):own.includes(i)?row(it,`<button class="btn sm gold" data-a="gearSet" data-v="${k}:${i}">Вдягнути</button>`)
+    :bagI.some(([o])=>o.tier===i)?row(it,`<button class="btn sm gold" data-a="gearWear" data-v="${bagI.find(([o])=>o.tier===i)[1]}">Вдягнути з рюкзака</button>`)
+    :row(it,`<span class="muted">у коваля · ${it.cost} зол.</span>`,1)).join('');
+  show(`<span class="eyebrow" style="color:var(--gold)">Гардероб героя</span><h2>${S.n}</h2><div class="rows">${rows}</div>
+  <p class="muted">Нові речі продає коваль у місті; куплене лишається в гардеробі.</p>
   <div class="acts"><button class="btn gold" data-a="heroWin">Назад</button></div>`)}
-function renamePanel(t){
-  show(`<h2>Перейменувати</h2><p class="muted">${TYPE_N[t.type]} «${esc(t.name)}». Нова назва з’явиться на мапі одразу.</p>
-  <form id="renameForm" data-v="${t.id}"><input type="text" id="renameInput" maxlength="24" value="${esc(t.name)}" autocomplete="off">
-  <div class="acts"><button class="btn gold" type="submit">Зберегти</button><button class="btn ghost" type="button" data-a="${CUR&&CUR.town&&CUR.tab?'backTown':'close'}">Скасувати</button></div></form>`);
-  const i=$('#renameInput');setTimeout(()=>{i.focus();i.select()},50);
-}
 
 /* ================= encounters & battles ================= */
 const UNIT_IC={
@@ -3307,8 +3313,10 @@ const ACT={
   bag:()=>bagPanel(),
   heroWin:()=>equipPanel(),
   gearSlot:k=>{if(GEAR[k])gearPanel(k)},
+  gearSet:v=>{const [k,i]=v.split(':');if(!GEAR[k]||!gearOwn(k).includes(+i))return;G.hero[k]=+i;save();SFX.play('loot');HV.cheer=1;toast(`Вдягнуто: ${GEAR[k].items[+i].n}`);sheet.querySelector('.smith')?smithPanel():equipPanel()},
+  buyGear:v=>{const [k,i]=v.split(':'),it=GEAR[k]&&GEAR[k].items[+i];if(!it||gearOwn(k).includes(+i))return;const pr=Math.round(it.cost*smithDiscount(CUR.town));if(G.gold<pr)return;
+    G.gold-=pr;gearPut(k,+i,true);SFX.play('coin');toast(`Куплено й вдягнуто: ${it.n}`);save();smithPanel()},
   gearWear:i=>{const o=bag()[+i];if(!o||o.fish)return;bag().splice(+i,1);wear(o);save();HV.cheer=1;equipPanel()},
-  gearOff:k=>{const lv=gearLv(k);if(k!=='helm'||!lv)return;if(!bagFree()){toast('Рюкзак повний.');return}bag().push({slot:k,tier:lv});G.hero[k]=0;save();toast('Шолом знято — він у рюкзаку.');equipPanel()},
   bagWear:i=>{const o=bag()[+i];if(!o||o.fish)return;bag().splice(+i,1);wear(o);save();CUR&&CUR.tab==='market'?openTown(CUR.town,'market'):bagPanel()},
   bagDrop:i=>{bag().splice(+i,1);save();CUR&&CUR.tab==='market'?openTown(CUR.town,'market'):bagPanel()},
   bagSell:i=>{const o=bag()[+i],t=CUR.town;if(!o||!t)return;const pr=marketPrice(o,t);G.gold+=pr;bag().splice(+i,1);SFX.play('coin');toast(`Продано за ${pr}`);save();CUR.tab==='market'?openTown(t,'market'):bagPanel()},
@@ -3530,7 +3538,7 @@ function bagPanel(){
   ${bag().length?`<div class="lrows">${bagRows(t)}</div>`:''}
   <div class="acts">${t&&bag().length?`<button class="btn" data-a="bagSellAll">Продати все · ${bag().reduce((s,o)=>s+marketPrice(o,t),0)}</button>`:''}<button class="btn gold" data-a="${t?'backTown':'close'}">${t?'До міста':'Закрити'}</button></div>`);
 }
-function wear(o){const old=gearLv(o.slot);G.hero[o.slot]=o.tier;if(old>0){const back={slot:o.slot,tier:old};if(bagFree())bag().push(back);else{G.gold+=lootPrice(back);toast('Рюкзак повний: старе спорядження продано.')}}SFX.play('loot');toast(`Вдягнуто: ${GEAR[o.slot].items[o.tier].n}`)}
+function wear(o){gearPut(o.slot,o.tier,true);SFX.play('loot');toast(`Вдягнуто: ${GEAR[o.slot].items[o.tier].n} — попереднє лишилось у гардеробі`)}
 function lootPanel(){
   const L=CUR.loot||[];
   const rows=L.map((o,i)=>{const S=GEAR[o.slot],it=S.items[o.tier],cur=gearLv(o.slot),better=o.tier>cur;
@@ -4646,19 +4654,19 @@ function m3dLoad(k){const m=M3D[k];if(m.st)return m.st===2;if(!THREE.GLTFLoader|
     // матеріал як у решти мапи (Lambert, без перетворення кольорів) і трохи власного світла — щоб не був темнішим за мальованих бійців
     g.scene.traverse(x=>{if(x.isMesh){x.castShadow=true;x.frustumCulled=false;const map=x.material.map;
       const nm=x.material.normalMap;   // у героя є карти рельєфу (складки, шви, м'язи) — для них матеріал, що вміє світло з рельєфом
-      x.material=nm?new THREE.MeshStandardMaterial({map,normalMap:nm,normalScale:x.material.normalScale.clone(),roughness:x.material.name==='MI_Mail'?.55:.85,metalness:0,skinning:!!x.isSkinnedMesh,name:x.material.name})
-        :new THREE.MeshLambertMaterial({map,color:map?'#ffffff':x.material.color,skinning:!!x.isSkinnedMesh,name:x.material.name});
+      x.material=nm?new THREE.MeshStandardMaterial({map,color:x.material.color,normalMap:nm,normalScale:x.material.normalScale.clone(),roughness:x.material.name==='MI_Mail'?.55:.85,metalness:0,skinning:!!x.isSkinnedMesh,name:x.material.name})
+        :new THREE.MeshLambertMaterial({map,color:x.material.color,skinning:!!x.isSkinnedMesh,name:x.material.name});
       if(Q_TINT.test(x.name)||Q_TINT.test(x.parent&&x.parent.name))x.material=x.material.clone()}});
     m.g=g;m.st=2},e=>{m.st=3;console.warn('Не вдалося завантажити 3D-модель',m.url,e)});
   return false}
 // окремий екземпляр моделі зі своїм скелетом і рухами
 // L: vest — жупан (замість сорочки), belts — пояси, pauldron — наплічник, bracer — наручі, boots — чоботи (замість постолів), hood — каптур
-// vest — жупан, mail — кольчуга; w — зброя (0 шабля, 1 меч, 2 сокира, 3 лицарський меч, 4 клинок короля, 5 спис), sh — щит (-1 без щита), helm — 0 без, 1 козацька шапка, 2 залізний шолом, 3 шишак
-const Q_PARTS=L=>{const v=!!L.vest,m=!!L.mail,P={Peasant_Body:!v&&!m,Mail_Body:!v&&m,Chest:!v,Peasant_Arms:!v&&!m,Mail_Arms:m,Ranger_Arms:v&&!m,Peasant_Legs:!v,Ranger_Legs:v,
+// vest — жупан, mail — кольчуга, pants — шаровари (колір), belt — кушак (колір); w — зброя (0 шабля, 1 меч, 2 сокира, 3 лицарський меч, 4 клинок короля, 5 спис), sh — щит (-1 без щита), helm — 0 без, 1 козацька шапка, 2 залізний шолом, 3 шишак
+const Q_PARTS=L=>{const v=!!L.vest,m=!!L.mail,P={Peasant_Body:!v&&!m,Mail_Body:!v&&m,Chest:!v,Peasant_Arms:!v&&!m,Mail_Arms:m,Ranger_Arms:v&&!m,Peasant_Legs:!(L.pants>=0),Ranger_Legs:false,
   Undershirt:v&&!m,Mail_Under:v&&m,Ranger_Body:v,
   Ranger_Body_Belt_1:L.vest&&L.belts,Ranger_Body_Belt_2:L.vest&&L.belts,Ranger_Acc_Pauldron:L.pauldron,Ranger_Arms_Bracer:L.bracer,
   Peasant_Feet:!L.boots,Ranger_Feet_Boots:L.boots,Ranger_Head_Hood:!!L.hood&&!L.helm};
-  for(let i=0;i<6;i++)P['Wpn_'+i]=i===(L.w|0);for(let i=0;i<3;i++)P['Shield_'+i]=i===L.sh;for(let i=1;i<4;i++)P['Helm_'+i]=i===L.helm;return P};
+  for(let i=0;i<6;i++)P['Wpn_'+i]=i===(L.w|0);for(let i=0;i<3;i++)P['Shield_'+i]=i===L.sh;for(let i=1;i<4;i++)P['Helm_'+i]=i===L.helm;for(let i=0;i<5;i++){P['Shar_'+i]=i===L.pants;P['SashS_'+i]=!v&&i===L.belt;P['SashV_'+i]=v&&i===L.belt}return P};
 // чоботи: шкіряні — як є, козацькі — червоні, сап'янові — жовті; жупан ламелярного й латного обладунку — світліший, сталевий
 const Q_TINT=/^(Ranger_Feet_Boots|Ranger_Body)$/,Q_BOOT=['#ffffff','#ffffff','#e2685c','#f2c95e'],Q_VEST=['#ffffff','#ffffff','#ffffff','#cfc2ad','#b4bdc8'];
 function qTint(o,name,col){const x=o.getObjectByName(name);if(!x)return;x.traverse(m=>{if(m.isMesh&&m.material.name==='MI_Ranger'&&m.material.userData.tint!==col){m.material.userData.tint=col;linSet(m.material,col)}})}
@@ -4667,7 +4675,7 @@ function qDress(o,L){const key=JSON.stringify(L);if(o.userData.look===key)return
   if(L.bootC!==undefined){qTint(o,'Ranger_Feet_Boots',Q_BOOT[L.bootC]||'#ffffff');qTint(o,'Ranger_Body',Q_VEST[L.armC]||'#ffffff')}}
 // на героєві — усе, що купив у коваля: обладунок — сорочка, стьобаний жупан, кольчуга, кольчуга під жупаном з поясами й наплічником, далі ще й наручі (і сталевий колір); чоботи; шапка чи шолом; зброя; щит
 const heroLook=()=>{const a=gearLv('armor');return{vest:a===1||a>=3,mail:a>=2,belts:a>=3,pauldron:a>=3,bracer:a>=4,boots:gearLv('boots')>=1,hood:false,
-  w:gearLv('weapon'),sh:gearLv('shield'),helm:gearLv('helm'),bootC:gearLv('boots'),armC:a}};
+  w:gearLv('weapon'),sh:gearLv('shield'),helm:gearLv('helm'),pants:gearLv('pants'),belt:gearLv('belt'),bootC:gearLv('boots'),armC:a}};
 function m3dInst(k){const m=M3D[k],o=THREE.SkeletonUtils.clone(m.g.scene),mixer=new THREE.AnimationMixer(o),acts={};
   m.g.animations.forEach(c=>acts[c.name]=mixer.clipAction(c));o.traverse(x=>{if(x.isMesh)x.frustumCulled=false});o.userData.m3d=1;
   return{k,o,mixer,acts,cur:null,t:0,weapon:o.getObjectByName(m.weapon)}}
@@ -4735,7 +4743,7 @@ function hero3DBattle(I,u,gh,H,now){
 }
 /* ---------- знімки нових 3D-козаків замість мальованих картинок: мініатюри військ, звання, обличчя героя ---------- */
 const QS={r:null,sc:null,cam:null,u:0,rk:0,face:'',next:0};
-const RANK_LOOK=[{w:0,sh:0,helm:0},{vest:true,belts:true,boots:true,w:1,sh:1,helm:1},{mail:true,vest:true,belts:true,pauldron:true,bracer:true,boots:true,w:4,sh:2,helm:3}];
+const RANK_LOOK=[{w:0,sh:0,helm:0,pants:0,belt:0},{vest:true,belts:true,boots:true,w:1,sh:1,helm:1,pants:1,belt:1},{mail:true,vest:true,belts:true,pauldron:true,bracer:true,boots:true,w:4,sh:2,helm:3,pants:4,belt:4}];
 function qsInit(){if(QS.r)return true;if(!GL.ok||!window.THREE)return false;
   try{const r=gfxRenderer(new THREE.WebGLRenderer({antialias:true,alpha:true,preserveDrawingBuffer:true}));r.setPixelRatio(1);
     const sc=new THREE.Scene();sc.add(linL(new THREE.HemisphereLight('#dfe8ef','#5a5236',GFX.hemi*1.7)));const sun=linL(new THREE.DirectionalLight('#fff3dc',GFX.sun*1.5));sun.position.set(-2,4,3);sc.add(sun);
@@ -4767,17 +4775,18 @@ function u3dTint(m,tint){if(m.tint===tint)return;m.tint=tint;const S=U3D;
 function loadU3D(){if(U3D.state||!window.THREE||!THREE.GLTFLoader||!THREE.SkeletonUtils)return;U3D.state=1;
   glbLoad('assets/q/voin.glb',g=>{
     g.scene.traverse(m=>{if(m.isMesh){const map=m.material.map;m.userData.sab=/^IT_/.test(m.material.name);   // зброю, щити й шоломи не підфарбовуємо
-      m.material=new THREE.MeshLambertMaterial({map,color:map?'#ffffff':m.material.color,skinning:!!m.isSkinnedMesh});if(!m.userData.sab)U3D.src.push(m.material);m.geometry.userData.keep=1}});
+      m.material=new THREE.MeshLambertMaterial({map,color:m.material.color,skinning:!!m.isSkinnedMesh});if(!m.userData.sab)U3D.src.push(m.material);m.geometry.userData.keep=1}});
     g.animations.forEach(c=>U3D.clips[c.name]=c);U3D.g=g;U3D.state=2},e=>{U3D.state=3;console.warn('Не вдалося завантажити 3D-воїнів',e)})}
 // вигляд воїна: сталий для кожного (за номером), щоб не перевдягався від кадру до кадру
 function soldierLook(kind,id,t){let h=2166136261;for(const c of String(id)){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}const r=k=>((Math.imul(h^k*40503,2654435761)>>>0)%1000)/1000;
-  const b=t?baseOf(t):'sword',tr=t?tierOf(t):kind==='vet'?2:1,melee=!(t&&TYPES[t]&&TYPES[t].ranged),w=b==='axe'?2:b==='knight'?3:b==='militia'?5:0;
-  if(b==='sword')return tr===1?{boots:r(5)<.4,w,sh:-1,helm:0}   // шаблюки: прості — у сорочці, далі жупан, шапка, щит
+  const b=t?baseOf(t):'sword',tr=t?tierOf(t):kind==='vet'?2:1,melee=!(t&&TYPES[t]&&TYPES[t].ranged),w=b==='axe'?2:b==='knight'?3:b==='militia'?5:0,
+    C={pants:Math.floor(r(9)*3),belt:r(10)<.65?0:r(10)<.85?1:3};   // шаровари сині, червоні чи зелені; кушак здебільшого червоний
+  if(b==='sword')return{...C,...(tr===1?{boots:r(5)<.4,w,sh:-1,helm:r(8)<.2?1:0}   // шаблюки: прості — у вишиванці, далі жупан, шапка, щит
     :tr===2?{vest:true,belts:true,boots:true,bracer:r(3)<.3,w,sh:r(6)<.5?0:-1,helm:r(8)<.5?1:0}
-    :{vest:true,belts:true,pauldron:true,bracer:true,boots:true,w,sh:r(6)<.5?1:0,helm:r(8)<.75?1:0};
-  return tr===1?{mail:true,boots:r(5)<.5,w,sh:-1,helm:2}   // решта: кольчуга й шолом; досвідчені — жупан і шишак; елітні — ще наплічник, наручі, щит
+    :{vest:true,belts:true,pauldron:true,bracer:true,boots:true,w,sh:r(6)<.5?1:0,helm:r(8)<.75?1:0})};
+  return{...C,...(tr===1?{mail:true,boots:r(5)<.5,w,sh:-1,helm:2}   // решта: кольчуга й шолом; досвідчені — жупан і шишак; елітні — ще наплічник, наручі, щит
     :tr===2?{mail:true,vest:true,belts:true,boots:true,w,sh:melee&&r(6)<.4?0:-1,helm:3}
-    :{mail:true,vest:true,belts:true,pauldron:true,bracer:true,boots:true,w,sh:melee?1:-1,helm:3}}
+    :{mail:true,vest:true,belts:true,pauldron:true,bracer:true,boots:true,w,sh:melee?1:-1,helm:3})}}
 const u3dPool=(Bt,k)=>Bt.m3pool[k]||(Bt.m3pool[k]=[]);
 function u3dMake(sc,kind){const o=THREE.SkeletonUtils.clone(U3D.g.scene);o.traverse(m=>{if(m.isMesh){m.frustumCulled=false;m.castShadow=gq()==='hi'&&!PHONE}});sc.add(o);
   const mx=new THREE.AnimationMixer(o),acts={};for(const n in U3D.clips)acts[n]=mx.clipAction(U3D.clips[n]);
