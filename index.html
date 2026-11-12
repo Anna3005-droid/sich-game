@@ -193,7 +193,7 @@ input[type=text]{width:100%;font:inherit;font-size:18px;padding:10px 12px;border
 .hw-por{grid-area:por;border:2px solid #a07b33;border-radius:7px;overflow:hidden;background:radial-gradient(ellipse at 50% 40%,#3a3024,#0b0d10 75%);min-height:0;position:relative;touch-action:none}
 .hw-t.pick{cursor:pointer}
 .fcw .fc-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin:0 40px 6px 0}.fcw .fc-head h2{margin:0}.fcw .fc-head .eyebrow{color:var(--gold)}
-.fc{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);gap:12px;height:clamp(190px,calc(100dvh - 170px),470px)}
+.fc{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);gap:12px;height:clamp(190px,calc(100vh - 170px),470px);height:clamp(190px,calc(100dvh - 170px),470px)}   /* старі браузери не знають dvh — беруть першу висоту */
 .fc-cv{position:relative;height:100%;min-height:0;border:2px solid #a07b33;border-radius:7px;overflow:hidden;background:radial-gradient(ellipse at 50% 40%,#3a3024,#0b0d10 75%);touch-action:none}
 .fc-cv .av-fb{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
 .fc-side{display:flex;flex-direction:column;min-height:0;min-width:0}
@@ -2727,11 +2727,15 @@ UIART.ui_hw_t_s_pants='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http
 const FV={yaw:-.25};
 function fvAttach(){const box=$('#fcCv');if(!box||!GL.ok||!window.THREE)return;m3dLoad('q');view3D(FV,box,fvFrame)}
 function fvFrame(){const now=performance.now(),dt=Math.min(.1,(now-FV.t)/1000);FV.t=now;
-  if(!FV.m&&M3D.q.st===2){FV.m=m3dInst('q');FV.sc.add(FV.m.o);FV.m.acts.Idle.play();if(FV.m.weapon)FV.m.weapon.visible=false}
+  if(!FV.m&&M3D.q.st===2){FV.m=m3dInst('q');FV.sc.add(FV.m.o);FV.m.acts.Idle.play();if(FV.m.weapon)FV.m.weapon.visible=false;
+    let sk=null;FV.m.o.traverse(x=>{if(x.isSkinnedMesh&&!sk)sk=x.skeleton});const hb=sk&&sk.bones.find(b=>b.name==='Head');   // голова дивиться рівно вперед, як у позі спокою
+    if(hb){FV.m.o.updateMatrixWorld(true);FV.hb={b:hb,q:FV.m.o.getWorldQuaternion(new THREE.Quaternion()).invert().multiply(hb.getWorldQuaternion(new THREE.Quaternion()))}}}
   if(FV.m){const fb=$('#fcCv .av-fb');if(fb)fb.remove()}
   view3DSize(FV);if(!FV.m)return;qDress(FV.m.o,{...heroLook(),helm:0});
   {const t=Math.tan(FV.cam.fov*Math.PI/360),d=Math.max(.2/t,.17/(t*FV.cam.aspect));FV.cam.position.set(0,1.66,d);FV.cam.lookAt(0,1.645,0)}   // голова з шиєю — завжди цілком
-  FV.m.o.rotation.y=FV.yaw;FV.m.mixer.update(dt);FV.r.render(FV.sc,FV.cam)}
+  FV.m.o.rotation.y=FV.yaw;FV.m.mixer.update(dt);
+  if(FV.hb){const H=FV.hb,qo=FV.m.o.getWorldQuaternion(new THREE.Quaternion()),qp=H.b.parent.getWorldQuaternion(new THREE.Quaternion());H.b.quaternion.copy(qp.invert().multiply(qo.multiply(H.q)))}
+  FV.r.render(FV.sc,FV.cam)}
 function facePanel(start){facePanel.start=start;facePanel.tab=facePanel.tab||'look';
   show(`<div class="fc-head"><h2>Обличчя героя</h2><span class="eyebrow">${start?'Новий козак':'Цирульник'} · тягніть пальцем, щоб повернути</span></div>
   <div class="fc"><div class="fc-cv" id="fcCv"><img class="av-fb" src="${UIART.ui_qf||UIART.ui_q0}" alt=""></div>
@@ -4724,7 +4728,7 @@ const Q_HAIR=['Oseledets','Hair_Short','Hair_Parted','Hair_Long'],Q_SKIN=/^MI_(S
 function qFace(o,F,helm){const opt=(k,i)=>FACE_OPT[k][1][i]||FACE_OPT[k][1][0];
   const hair=opt('hair',F.hair)[1],usy=opt('usy',F.usy)[1],beard=opt('beard',F.beard)[1],sk=opt('skin',F.skin)[1],hc=new THREE.Color(opt('hc',F.hc)[1]).convertSRGBToLinear();
   const skin=new THREE.Color().setRGB(...sk).convertSRGBToLinear(),hcT=hc.clone().multiplyScalar(1.5);   // текстура волосся сіра — трохи підсилюємо
-  o.traverse(x=>{if(Q_HAIR.includes(x.name))x.visible=(x.name===hair||hair==='Hair_Long'&&x.name==='Hair_Short')&&!helm;   // під шапкою чи шоломом волосся не видно; під довгим — коротка стрижка, щоб маківка не світилась
+  o.traverse(x=>{if(Q_HAIR.includes(x.name))x.visible=(x.name===hair||hair==='Hair_Long'&&x.name==='Hair_Parted')&&!helm;   // під шапкою чи шоломом волосся не видно; під довгим — зачесане, щоб маківка не світилась
     else if(x.name==='Usy'||x.name==='Usy_S')x.visible=x.name===usy;else if(x.name==='Beard')x.visible=!!beard;else if(/^Eyes_\d$/.test(x.name))x.visible=x.name==='Eyes_'+(F.eye|0);
     if(x.morphTargetDictionary)for(const [k] of FACE_MORPH){const j=x.morphTargetDictionary[k];if(j!==undefined)x.morphTargetInfluences[j]=(F.m&&F.m[k])||0}
     if(x.isMesh){const m=x.material;if(Q_SKIN.test(m.name)){linMat(m);m.color.copy(skin)}else if(Q_HAIRM.test(m.name)){linMat(m);m.color.copy(m.map?hcT:hc)}}})}
